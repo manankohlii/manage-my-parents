@@ -19,10 +19,10 @@ const DashboardTabs = () => {
         <TabsList className="grid w-full grid-cols-3 mb-8">
           <TabsTrigger 
             value="my-challenges" 
-            className="flex items-center gap-2 transition-colors"
+            className="flex items-center gap-2 transition-colors text-white"
             style={{ 
-              backgroundColor: activeTab === "my-challenges" ? "#0EA5E9" : "",
-              color: activeTab === "my-challenges" ? "white" : ""
+              backgroundColor: activeTab === "my-challenges" ? "#0EA5E9" : "#38BDF8",
+              filter: activeTab === "my-challenges" ? "brightness(100%)" : "brightness(85%)"
             }}
           >
             <Search className="text-current" size={16} />
@@ -30,10 +30,10 @@ const DashboardTabs = () => {
           </TabsTrigger>
           <TabsTrigger 
             value="add-challenge" 
-            className="flex items-center gap-2 transition-colors"
+            className="flex items-center gap-2 transition-colors text-white"
             style={{ 
-              backgroundColor: activeTab === "add-challenge" ? "#10B981" : "",
-              color: activeTab === "add-challenge" ? "white" : ""
+              backgroundColor: activeTab === "add-challenge" ? "#10B981" : "#34D399",
+              filter: activeTab === "add-challenge" ? "brightness(100%)" : "brightness(85%)"
             }}
           >
             <Plus className="text-current" size={16} />
@@ -41,10 +41,10 @@ const DashboardTabs = () => {
           </TabsTrigger>
           <TabsTrigger 
             value="explore" 
-            className="flex items-center gap-2 transition-colors"
+            className="flex items-center gap-2 transition-colors text-white"
             style={{ 
-              backgroundColor: activeTab === "explore" ? "#8B5CF6" : "",
-              color: activeTab === "explore" ? "white" : ""
+              backgroundColor: activeTab === "explore" ? "#8B5CF6" : "#A78BFA",
+              filter: activeTab === "explore" ? "brightness(100%)" : "brightness(85%)"
             }}
           >
             <Filter className="text-current" size={16} />
