@@ -21,23 +21,9 @@ import { Search, Edit, Trash2 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { getUserChallenges, deleteChallenge, Challenge } from "@/services/challengesService";
 
-// Create a context to enable tab navigation
-type TabContextType = {
-  setActiveTab: (tab: string) => void;
-};
-
-// Using React Context API for tab navigation
-import React, { createContext, useContext } from "react";
-
-const TabContext = createContext<TabContextType | undefined>(undefined);
-
-export const useTabContext = () => {
-  const context = useContext(TabContext);
-  if (context === undefined) {
-    throw new Error('useTabContext must be used within a TabContextProvider');
-  }
-  return context;
-};
+// Import the TabContext directly from DashboardTabs
+import { TabContext } from "./DashboardTabs";
+import { useContext } from "react";
 
 const MyChallenges = () => {
   const { user } = useAuth();
@@ -48,7 +34,7 @@ const MyChallenges = () => {
   const [filterCountry, setFilterCountry] = useState("all");
   const [searchTerm, setSearchTerm] = useState("");
   
-  // Get the setActiveTab function from context if it exists
+  // Get the setActiveTab function from context
   const tabContext = useContext(TabContext);
 
   useEffect(() => {
@@ -77,8 +63,8 @@ const MyChallenges = () => {
   };
 
   const navigateToAddChallenge = () => {
-    // If we have access to the tab context, use it to navigate
-    if (tabContext?.setActiveTab) {
+    // Use the context to navigate to add-challenge tab
+    if (tabContext && tabContext.setActiveTab) {
       tabContext.setActiveTab("add-challenge");
     }
   };
