@@ -26,15 +26,24 @@ const DashboardTabs = () => {
         </TabsTrigger>
       </TabsList>
       
-      <TabsContent value="my-challenges" className="mt-6">
+      <TabsContent 
+        value="my-challenges" 
+        className="mt-6 bg-blue-50 dark:bg-blue-950/20 rounded-lg p-6"
+      >
         <MyChallenges />
       </TabsContent>
       
-      <TabsContent value="add-challenge" className="mt-6">
+      <TabsContent 
+        value="add-challenge" 
+        className="mt-6 bg-green-50 dark:bg-green-950/20 rounded-lg p-6"
+      >
         <AddChallenge />
       </TabsContent>
       
-      <TabsContent value="explore" className="mt-6">
+      <TabsContent 
+        value="explore" 
+        className="mt-6 bg-amber-50 dark:bg-amber-950/20 rounded-lg p-6"
+      >
         <ExploreChallenges />
       </TabsContent>
     </Tabs>
