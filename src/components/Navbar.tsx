@@ -156,6 +156,13 @@ const Navbar = () => {
                 >
                   Profile
                 </Link>
+                <Link 
+                  to="/settings" 
+                  className="text-gray-600 hover:text-primary block px-3 py-2 rounded-md text-base font-medium"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  Settings
+                </Link>
                 <button 
                   onClick={() => {
                     handleSignOut();
