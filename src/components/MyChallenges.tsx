@@ -124,7 +124,7 @@ const MyChallenges = () => {
               <SelectValue placeholder="Age Group" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">All Age Groups</SelectItem>
+              <SelectItem value="all">All Age Groups</SelectItem>
               <SelectItem value="60-65">60-65</SelectItem>
               <SelectItem value="65-70">65-70</SelectItem>
               <SelectItem value="70+">70+</SelectItem>
@@ -136,7 +136,7 @@ const MyChallenges = () => {
               <SelectValue placeholder="Country" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">All Countries</SelectItem>
+              <SelectItem value="all">All Countries</SelectItem>
               <SelectItem value="United States">United States</SelectItem>
               <SelectItem value="Canada">Canada</SelectItem>
               <SelectItem value="United Kingdom">United Kingdom</SelectItem>
