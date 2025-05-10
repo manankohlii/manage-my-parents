@@ -16,7 +16,7 @@ const HomePage = () => {
               </h1>
               <p className="text-lg md:text-xl mb-10 opacity-90">
                 Share challenges, find solutions, and connect with others facing similar
-                parent-child dynamics in a safe and supportive environment.
+                parent issues in a safe and supportive environment.
               </p>
               <div className="flex flex-col sm:flex-row gap-4">
                 <Button asChild size="lg" className="bg-white text-blue-600 hover:bg-gray-100">
