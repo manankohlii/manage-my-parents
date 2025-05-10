@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { 
   Card, 
   CardContent, 
@@ -19,55 +19,35 @@ import { Input } from "@/components/ui/input";
 import TagBadge from "./TagBadge";
 import { Search, Edit, Trash2 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
-
-// Mock data for challenges
-const mockUserChallenges = [
-  {
-    id: "1",
-    title: "Managing medication schedule",
-    description: "My mother often forgets to take her medication on time. What are some effective ways to help her remember?",
-    tags: ["medication", "memory", "care"],
-    mood: "concerned",
-    createdAt: "2024-04-15T10:30:00Z",
-    solutions: 3,
-    ageGroup: "70+",
-    location: "United States"
-  },
-  {
-    id: "2",
-    title: "Remote monitoring options",
-    description: "I live far from my parents and worry about their wellbeing. What are good remote monitoring solutions that aren't intrusive?",
-    tags: ["technology", "remote-care", "privacy"],
-    mood: "worried",
-    createdAt: "2024-05-01T09:15:00Z",
-    solutions: 5,
-    ageGroup: "65-70",
-    location: "Canada"
-  },
-  {
-    id: "3",
-    title: "Financial planning assistance",
-    description: "My father is having trouble managing his finances since retirement. How can I help without taking over completely?",
-    tags: ["finances", "independence", "retirement"],
-    mood: "concerned",
-    createdAt: "2024-05-05T14:45:00Z",
-    solutions: 2,
-    ageGroup: "65-70",
-    location: "United States"
-  }
-];
+import { getUserChallenges, deleteChallenge, Challenge } from "@/services/challengesService";
 
 const MyChallenges = () => {
   const { user } = useAuth();
-  const [challenges, setChallenges] = useState(mockUserChallenges);
+  const [challenges, setChallenges] = useState<Challenge[]>([]);
+  const [loading, setLoading] = useState(true);
   const [sortBy, setSortBy] = useState("newest");
-  const [filterAgeGroup, setFilterAgeGroup] = useState("");
-  const [filterCountry, setFilterCountry] = useState("");
+  const [filterAgeGroup, setFilterAgeGroup] = useState("all");
+  const [filterCountry, setFilterCountry] = useState("all");
   const [searchTerm, setSearchTerm] = useState("");
 
-  const handleDeleteChallenge = (id: string) => {
-    setChallenges(challenges.filter(challenge => challenge.id !== id));
-    // In a real app, you would delete the challenge from the database
+  useEffect(() => {
+    const loadChallenges = async () => {
+      if (!user?.id) return;
+      
+      setLoading(true);
+      const userChallenges = await getUserChallenges(user.id);
+      setChallenges(userChallenges);
+      setLoading(false);
+    };
+
+    loadChallenges();
+  }, [user?.id]);
+
+  const handleDeleteChallenge = async (id: string) => {
+    const success = await deleteChallenge(id);
+    if (success) {
+      setChallenges(challenges.filter(challenge => challenge.id !== id));
+    }
   };
 
   const handleEditChallenge = (id: string) => {
@@ -76,21 +56,21 @@ const MyChallenges = () => {
   };
 
   const filteredChallenges = challenges
-    .filter(challenge => !filterAgeGroup || challenge.ageGroup === filterAgeGroup)
-    .filter(challenge => !filterCountry || challenge.location === filterCountry)
+    .filter(challenge => filterAgeGroup === "all" || challenge.age_group === filterAgeGroup)
+    .filter(challenge => filterCountry === "all" || challenge.location === filterCountry)
     .filter(challenge => 
       !searchTerm || 
       challenge.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       challenge.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      challenge.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()))
+      (challenge.tags && challenge.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase())))
     )
     .sort((a, b) => {
       if (sortBy === "newest") {
-        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+        return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
       } else if (sortBy === "oldest") {
-        return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+        return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
       } else if (sortBy === "most_solutions") {
-        return b.solutions - a.solutions;
+        return (b.solutions_count || 0) - (a.solutions_count || 0);
       }
       return 0;
     });
@@ -127,7 +107,9 @@ const MyChallenges = () => {
               <SelectItem value="all">All Age Groups</SelectItem>
               <SelectItem value="60-65">60-65</SelectItem>
               <SelectItem value="65-70">65-70</SelectItem>
-              <SelectItem value="70+">70+</SelectItem>
+              <SelectItem value="70-75">70-75</SelectItem>
+              <SelectItem value="75-80">75-80</SelectItem>
+              <SelectItem value="80+">80+</SelectItem>
             </SelectContent>
           </Select>
           
@@ -141,16 +123,23 @@ const MyChallenges = () => {
               <SelectItem value="Canada">Canada</SelectItem>
               <SelectItem value="United Kingdom">United Kingdom</SelectItem>
               <SelectItem value="Australia">Australia</SelectItem>
+              <SelectItem value="Other">Other</SelectItem>
             </SelectContent>
           </Select>
         </div>
       </div>
 
-      {filteredChallenges.length === 0 ? (
+      {loading ? (
+        <div className="text-center py-8">
+          <div className="animate-pulse">Loading your challenges...</div>
+        </div>
+      ) : filteredChallenges.length === 0 ? (
         <Card className="text-center p-8">
           <CardContent>
             <p className="text-muted-foreground">
-              You haven't created any challenges yet or none match your filters.
+              {challenges.length === 0 
+                ? "You haven't created any challenges yet." 
+                : "None of your challenges match the current filters."}
             </p>
             <Button variant="default" className="mt-4">Create Your First Challenge</Button>
           </CardContent>
@@ -184,14 +173,14 @@ const MyChallenges = () => {
                 <p className="text-muted-foreground mb-3">{challenge.description}</p>
                 
                 <div className="flex flex-wrap gap-2 mb-3">
-                  {challenge.tags.map((tag) => (
+                  {challenge.tags && challenge.tags.map((tag) => (
                     <TagBadge key={tag} text={tag} />
                   ))}
                 </div>
                 
                 <div className="text-sm text-muted-foreground">
                   <div className="flex items-center justify-between">
-                    <span>Age Group: {challenge.ageGroup}</span>
+                    <span>Age Group: {challenge.age_group}</span>
                     <span>Location: {challenge.location}</span>
                     <span>Mood: {challenge.mood}</span>
                   </div>
@@ -199,10 +188,10 @@ const MyChallenges = () => {
               </CardContent>
               <CardFooter className="border-t pt-4 flex justify-between">
                 <span className="text-sm text-muted-foreground">
-                  Posted on {new Date(challenge.createdAt).toLocaleDateString()}
+                  Posted on {new Date(challenge.created_at).toLocaleDateString()}
                 </span>
                 <Button variant="link" className="px-0">
-                  View {challenge.solutions} solutions
+                  View {challenge.solutions_count || 0} solutions
                 </Button>
               </CardFooter>
             </Card>

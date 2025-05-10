@@ -30,6 +30,7 @@ import {
 import TagBadge from "./TagBadge";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
+import { createChallenge, getAllTags } from "@/services/challengesService";
 
 // Suggested tags based on common terms in eldercare
 const suggestedTags = [
@@ -51,7 +52,7 @@ type FormValues = {
   title: string;
   description: string;
   mood: string;
-  ageGroup: string;
+  age_group: string;
   location: string;
 };
 
@@ -60,32 +61,45 @@ const AddChallenge = () => {
   const [tags, setTags] = useState<string[]>([]);
   const [tagInput, setTagInput] = useState("");
   const [recommendedTags, setRecommendedTags] = useState<string[]>([]);
+  const [existingTags, setExistingTags] = useState<string[]>([]);
+  const [submitting, setSubmitting] = useState(false);
   
   const form = useForm<FormValues>({
     defaultValues: {
       title: "",
       description: "",
       mood: "",
-      ageGroup: "",
+      age_group: "",
       location: "",
     },
   });
   
   const description = form.watch("description");
+
+  // Load existing tags from the database
+  useEffect(() => {
+    const loadTags = async () => {
+      const dbTags = await getAllTags();
+      setExistingTags(dbTags);
+    };
+
+    loadTags();
+  }, []);
   
   // Simple algorithm to recommend tags based on content
-  // In a real app, this could be powered by NLP or AI
   useEffect(() => {
     if (description) {
       const lowerDesc = description.toLowerCase();
-      const recommended = suggestedTags.filter(tag => 
+      // Combine suggested tags with existing tags from the database for recommendations
+      const allPossibleTags = [...new Set([...suggestedTags, ...existingTags])];
+      const recommended = allPossibleTags.filter(tag => 
         lowerDesc.includes(tag.toLowerCase()) && !tags.includes(tag)
       );
       setRecommendedTags(recommended.slice(0, 5));
     } else {
       setRecommendedTags([]);
     }
-  }, [description, tags]);
+  }, [description, tags, existingTags]);
   
   const handleAddTag = () => {
     if (tagInput.trim() && !tags.includes(tagInput.trim())) {
@@ -105,27 +119,34 @@ const AddChallenge = () => {
     setTags(tags.filter(tag => tag !== tagToRemove));
   };
   
-  const onSubmit = (values: FormValues) => {
+  const onSubmit = async (values: FormValues) => {
+    if (!user?.id) {
+      toast.error("You must be logged in to create a challenge");
+      return;
+    }
+
     if (tags.length === 0) {
       toast.error("Please add at least one tag");
       return;
     }
     
-    // In a real app, you would save this to the database
-    const newChallenge = {
-      ...values,
-      tags,
-      createdAt: new Date().toISOString(),
-      userId: user?.id,
-    };
+    setSubmitting(true);
     
-    console.log("New challenge:", newChallenge);
-    toast.success("Challenge posted successfully!");
-    
-    // Reset form
-    form.reset();
-    setTags([]);
-    setTagInput("");
+    try {
+      const result = await createChallenge({
+        ...values,
+        tags
+      }, user.id);
+      
+      if (result) {
+        // Reset form
+        form.reset();
+        setTags([]);
+        setTagInput("");
+      }
+    } finally {
+      setSubmitting(false);
+    }
   };
   
   return (
@@ -192,6 +213,12 @@ const AddChallenge = () => {
                   value={tagInput}
                   onChange={(e) => setTagInput(e.target.value)}
                   placeholder="Add relevant tags..."
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      handleAddTag();
+                    }
+                  }}
                 />
                 <Button type="button" onClick={handleAddTag}>Add Tag</Button>
               </div>
@@ -242,7 +269,7 @@ const AddChallenge = () => {
               
               <FormField
                 control={form.control}
-                name="ageGroup"
+                name="age_group"
                 rules={{ required: "Age group is required" }}
                 render={({ field }) => (
                   <FormItem>
@@ -293,8 +320,13 @@ const AddChallenge = () => {
               />
             </div>
             
-            <Button type="submit" size="lg" className="w-full md:w-auto">
-              Post Challenge
+            <Button 
+              type="submit" 
+              size="lg" 
+              className="w-full md:w-auto"
+              disabled={submitting}
+            >
+              {submitting ? "Posting..." : "Post Challenge"}
             </Button>
           </form>
         </Form>
