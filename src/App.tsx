@@ -11,6 +11,7 @@ import CommunityPage from "./pages/CommunityPage";
 import AuthPage from "./pages/AuthPage";
 import PostDetailPage from "./pages/PostDetailPage";
 import CreatePostPage from "./pages/CreatePostPage";
+import ProfilePage from "./pages/ProfilePage";
 import NotFound from "./pages/NotFound";
 import { AuthProvider } from "./contexts/AuthContext";
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -33,6 +34,7 @@ const App = () => (
               <Route path="/community" element={<CommunityPage />} />
               <Route path="/post/:id" element={<PostDetailPage />} />
               <Route path="/post/new" element={<CreatePostPage />} />
+              <Route path="/profile" element={<ProfilePage />} />
             </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>
