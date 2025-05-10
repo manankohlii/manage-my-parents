@@ -21,6 +21,24 @@ import { Search, Edit, Trash2 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { getUserChallenges, deleteChallenge, Challenge } from "@/services/challengesService";
 
+// Create a context to enable tab navigation
+type TabContextType = {
+  setActiveTab: (tab: string) => void;
+};
+
+// Using React Context API for tab navigation
+import React, { createContext, useContext } from "react";
+
+const TabContext = createContext<TabContextType | undefined>(undefined);
+
+export const useTabContext = () => {
+  const context = useContext(TabContext);
+  if (context === undefined) {
+    throw new Error('useTabContext must be used within a TabContextProvider');
+  }
+  return context;
+};
+
 const MyChallenges = () => {
   const { user } = useAuth();
   const [challenges, setChallenges] = useState<Challenge[]>([]);
@@ -29,6 +47,9 @@ const MyChallenges = () => {
   const [filterAgeGroup, setFilterAgeGroup] = useState("all");
   const [filterCountry, setFilterCountry] = useState("all");
   const [searchTerm, setSearchTerm] = useState("");
+  
+  // Get the setActiveTab function from context if it exists
+  const tabContext = useContext(TabContext);
 
   useEffect(() => {
     const loadChallenges = async () => {
@@ -53,6 +74,13 @@ const MyChallenges = () => {
   const handleEditChallenge = (id: string) => {
     // Navigate to edit challenge page or open a modal
     console.log(`Edit challenge ${id}`);
+  };
+
+  const navigateToAddChallenge = () => {
+    // If we have access to the tab context, use it to navigate
+    if (tabContext?.setActiveTab) {
+      tabContext.setActiveTab("add-challenge");
+    }
   };
 
   const filteredChallenges = challenges
@@ -141,7 +169,13 @@ const MyChallenges = () => {
                 ? "You haven't created any challenges yet." 
                 : "None of your challenges match the current filters."}
             </p>
-            <Button variant="default" className="mt-4">Create Your First Challenge</Button>
+            <Button 
+              variant="default" 
+              className="mt-4"
+              onClick={navigateToAddChallenge}
+            >
+              Create Your First Challenge
+            </Button>
           </CardContent>
         </Card>
       ) : (
