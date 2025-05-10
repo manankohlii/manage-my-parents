@@ -1,33 +1,68 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { toast } from "sonner";
+import { useAuth } from "@/contexts/AuthContext";
+import { AlertCircle } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 const LoginForm = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const { signIn, user } = useAuth();
   const navigate = useNavigate();
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    // In a real app, this would validate and authenticate with a backend
-    if (email && password) {
-      toast.success("Login successful!");
+  // Redirect if already logged in
+  useEffect(() => {
+    if (user) {
       navigate("/dashboard");
-    } else {
-      toast.error("Please fill in all fields");
+    }
+  }, [user, navigate]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    
+    if (!email || !password) {
+      setError("Please fill in all fields");
+      return;
+    }
+    
+    setIsLoading(true);
+    
+    try {
+      const { error, success } = await signIn(email, password);
+      
+      if (success) {
+        toast.success("Login successful!");
+      } else if (error) {
+        setError(error.message);
+      }
+    } catch (err) {
+      setError("An unexpected error occurred");
+      console.error("Login error:", err);
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
+      {error && (
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      )}
+      
       <div className="space-y-2">
         <Label htmlFor="email">Email</Label>
         <Input 
@@ -36,6 +71,7 @@ const LoginForm = () => {
           placeholder="you@example.com" 
           value={email}
           onChange={(e) => setEmail(e.target.value)}
+          disabled={isLoading}
         />
       </div>
       <div className="space-y-2">
@@ -50,9 +86,12 @@ const LoginForm = () => {
           type="password" 
           value={password}
           onChange={(e) => setPassword(e.target.value)}
+          disabled={isLoading}
         />
       </div>
-      <Button type="submit" className="w-full">Login</Button>
+      <Button type="submit" className="w-full" disabled={isLoading}>
+        {isLoading ? "Logging in..." : "Login"}
+      </Button>
     </form>
   );
 };
@@ -67,29 +106,71 @@ const RegisterForm = () => {
   const [city, setCity] = useState("");
   const [country, setCountry] = useState("");
   const [ageCategory, setAgeCategory] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const { signUp, user } = useAuth();
   const navigate = useNavigate();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  // Redirect if already logged in
+  useEffect(() => {
+    if (user) {
+      navigate("/dashboard");
+    }
+  }, [user, navigate]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError(null);
     
     // Simple validation
     if (password !== confirmPassword) {
-      toast.error("Passwords don't match");
+      setError("Passwords don't match");
       return;
     }
 
     if ([firstName, displayName, email, password, ageCategory].some(field => !field)) {
-      toast.error("Please fill in all required fields");
+      setError("Please fill in all required fields");
       return;
     }
 
-    // In a real app, this would register with a backend
-    toast.success("Registration successful!");
-    navigate("/dashboard");
+    setIsLoading(true);
+    
+    try {
+      const { error, success } = await signUp(
+        email, 
+        password,
+        {
+          firstName,
+          lastName,
+          displayName,
+          city,
+          country,
+          ageCategory
+        }
+      );
+      
+      if (success) {
+        toast.success("Registration successful! Check your email to confirm your account.");
+      } else if (error) {
+        setError(error.message);
+      }
+    } catch (err) {
+      setError("An unexpected error occurred");
+      console.error("Registration error:", err);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
+      {error && (
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      )}
+      
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="space-y-2">
           <Label htmlFor="firstName">First Name <span className="text-red-500">*</span></Label>
@@ -98,6 +179,7 @@ const RegisterForm = () => {
             placeholder="First Name" 
             value={firstName}
             onChange={(e) => setFirstName(e.target.value)}
+            disabled={isLoading}
           />
         </div>
         <div className="space-y-2">
@@ -107,6 +189,7 @@ const RegisterForm = () => {
             placeholder="Last Name" 
             value={lastName}
             onChange={(e) => setLastName(e.target.value)}
+            disabled={isLoading}
           />
         </div>
       </div>
@@ -118,6 +201,7 @@ const RegisterForm = () => {
           placeholder="Choose a display name" 
           value={displayName}
           onChange={(e) => setDisplayName(e.target.value)}
+          disabled={isLoading}
         />
         <p className="text-xs text-muted-foreground">This will be visible to others in the community</p>
       </div>
@@ -130,6 +214,7 @@ const RegisterForm = () => {
           placeholder="you@example.com" 
           value={email}
           onChange={(e) => setEmail(e.target.value)}
+          disabled={isLoading}
         />
       </div>
 
@@ -141,6 +226,7 @@ const RegisterForm = () => {
             placeholder="Your city" 
             value={city}
             onChange={(e) => setCity(e.target.value)}
+            disabled={isLoading}
           />
         </div>
         <div className="space-y-2">
@@ -150,13 +236,14 @@ const RegisterForm = () => {
             placeholder="Your country" 
             value={country}
             onChange={(e) => setCountry(e.target.value)}
+            disabled={isLoading}
           />
         </div>
       </div>
 
       <div className="space-y-2">
         <Label htmlFor="ageCategory">Age Category <span className="text-red-500">*</span></Label>
-        <Select value={ageCategory} onValueChange={setAgeCategory}>
+        <Select value={ageCategory} onValueChange={setAgeCategory} disabled={isLoading}>
           <SelectTrigger>
             <SelectValue placeholder="Select an age category" />
           </SelectTrigger>
@@ -176,6 +263,7 @@ const RegisterForm = () => {
           type="password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
+          disabled={isLoading}
         />
       </div>
 
@@ -186,15 +274,21 @@ const RegisterForm = () => {
           type="password"
           value={confirmPassword}
           onChange={(e) => setConfirmPassword(e.target.value)}
+          disabled={isLoading}
         />
       </div>
 
-      <Button type="submit" className="w-full">Create Account</Button>
+      <Button type="submit" className="w-full" disabled={isLoading}>
+        {isLoading ? "Creating Account..." : "Create Account"}
+      </Button>
     </form>
   );
 };
 
 const AuthPage = () => {
+  const location = useLocation();
+  const defaultTab = location.pathname === "/register" ? "register" : "login";
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-muted px-4">
       <div className="max-w-md w-full">
@@ -206,7 +300,7 @@ const AuthPage = () => {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <Tabs defaultValue="login" className="w-full">
+            <Tabs defaultValue={defaultTab} className="w-full">
               <TabsList className="grid w-full grid-cols-2 mb-4">
                 <TabsTrigger value="login">Login</TabsTrigger>
                 <TabsTrigger value="register">Register</TabsTrigger>

@@ -8,12 +8,28 @@ import {
   User,
   Bell,
   Menu,
-  X
+  X,
+  LogOut
 } from "lucide-react";
 import { useState } from "react";
+import { useAuth } from "@/contexts/AuthContext";
+import { 
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { toast } from "sonner";
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const { user, signOut } = useAuth();
+
+  const handleSignOut = async () => {
+    await signOut();
+    toast.success("You have been logged out");
+  };
 
   return (
     <nav className="bg-white shadow-sm sticky top-0 z-50">
@@ -49,11 +65,32 @@ const Navbar = () => {
                   <Bell className="h-5 w-5 text-gray-600" />
                 </Button>
               </Link>
-              <Link to="/profile">
-                <Button variant="ghost" size="icon" className="rounded-full">
-                  <User className="h-5 w-5 text-gray-600" />
-                </Button>
-              </Link>
+              
+              {user ? (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="icon" className="rounded-full">
+                      <User className="h-5 w-5 text-gray-600" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem>
+                      <Link to="/profile" className="w-full">Profile</Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem>
+                      <Link to="/settings" className="w-full">Settings</Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={handleSignOut}>
+                      <LogOut className="mr-2 h-4 w-4" /> Sign out
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              ) : (
+                <Link to="/login">
+                  <Button variant="outline">Sign In</Button>
+                </Link>
+              )}
             </div>
           </div>
           
@@ -109,13 +146,35 @@ const Navbar = () => {
             >
               Notifications
             </Link>
-            <Link 
-              to="/profile" 
-              className="text-gray-600 hover:text-primary block px-3 py-2 rounded-md text-base font-medium"
-              onClick={() => setIsMenuOpen(false)}
-            >
-              Profile
-            </Link>
+            
+            {user ? (
+              <>
+                <Link 
+                  to="/profile" 
+                  className="text-gray-600 hover:text-primary block px-3 py-2 rounded-md text-base font-medium"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  Profile
+                </Link>
+                <button 
+                  onClick={() => {
+                    handleSignOut();
+                    setIsMenuOpen(false);
+                  }} 
+                  className="text-red-600 hover:text-red-500 flex items-center px-3 py-2 rounded-md text-base font-medium w-full"
+                >
+                  <LogOut className="mr-2 h-4 w-4" /> Sign out
+                </button>
+              </>
+            ) : (
+              <Link 
+                to="/login" 
+                className="text-primary hover:text-primary-dark block px-3 py-2 rounded-md text-base font-medium"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                Sign In
+              </Link>
+            )}
           </div>
         </div>
       )}
