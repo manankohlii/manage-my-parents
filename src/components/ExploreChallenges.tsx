@@ -25,7 +25,7 @@ import {
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import TagBadge from "./TagBadge";
-import { Search, ArrowUp, ArrowDown } from "lucide-react";
+import { Search, ThumbsUp, ThumbsDown } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
@@ -427,7 +427,10 @@ const ExploreChallenges = () => {
                       onClick={() => handleVote(challenge.id, null, 'up')}
                       className={userVotes[challenge.id] === true ? "text-primary" : ""}
                     >
-                      <ArrowUp size={18} />
+                      <ThumbsUp 
+                        size={18} 
+                        className={userVotes[challenge.id] === true ? "text-green-500 fill-green-500" : ""} 
+                      />
                     </Button>
                     <span className="font-medium">{challenge.votes_count || 0}</span>
                     <Button 
@@ -436,7 +439,10 @@ const ExploreChallenges = () => {
                       onClick={() => handleVote(challenge.id, null, 'down')}
                       className={userVotes[challenge.id] === false ? "text-primary" : ""}
                     >
-                      <ArrowDown size={18} />
+                      <ThumbsDown 
+                        size={18} 
+                        className={userVotes[challenge.id] === false ? "text-red-500 fill-red-500" : ""} 
+                      />
                     </Button>
                   </div>
                 </div>
@@ -494,7 +500,10 @@ const ExploreChallenges = () => {
                             onClick={() => handleVote(challenge.id, solution.id, 'up')}
                             disabled={!user}
                           >
-                            <ArrowUp size={16} className={userVotes[solution.id] === true ? "text-primary" : ""} />
+                            <ThumbsUp 
+                              size={16} 
+                              className={userVotes[solution.id] === true ? "text-green-500 fill-green-500" : ""} 
+                            />
                           </Button>
                           <span className="text-sm font-medium min-w-[24px] text-center">{solution.votes || 0}</span>
                           <Button 
@@ -504,7 +513,10 @@ const ExploreChallenges = () => {
                             onClick={() => handleVote(challenge.id, solution.id, 'down')}
                             disabled={!user}
                           >
-                            <ArrowDown size={16} className={userVotes[solution.id] === false ? "text-primary" : ""} />
+                            <ThumbsDown 
+                              size={16} 
+                              className={userVotes[solution.id] === false ? "text-red-500 fill-red-500" : ""} 
+                            />
                           </Button>
                         </div>
                       </div>
