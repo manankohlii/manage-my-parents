@@ -33,21 +33,21 @@ const DashboardTabs = () => {
         
         <TabsContent 
           value="my-challenges" 
-          className="mt-6 bg-blue-50 dark:bg-blue-950/20 rounded-lg p-6"
+          className="mt-6 bg-blue-400/20 dark:bg-blue-600/20 rounded-lg p-6"
         >
           <MyChallenges />
         </TabsContent>
         
         <TabsContent 
           value="add-challenge" 
-          className="mt-6 bg-green-50 dark:bg-green-950/20 rounded-lg p-6"
+          className="mt-6 bg-green-400/20 dark:bg-green-600/20 rounded-lg p-6"
         >
           <AddChallenge />
         </TabsContent>
         
         <TabsContent 
           value="explore" 
-          className="mt-6 bg-amber-50 dark:bg-amber-950/20 rounded-lg p-6"
+          className="mt-6 bg-purple-400/20 dark:bg-purple-600/20 rounded-lg p-6"
         >
           <ExploreChallenges />
         </TabsContent>
