@@ -9,21 +9,30 @@ const HomePage = () => {
       {/* Hero Section */}
       <div className="bg-gradient-to-r from-blue-500 to-teal-400 text-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 md:py-32">
-          <div className="md:max-w-2xl">
-            <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight mb-6">
-              Navigate family relationships with community support
-            </h1>
-            <p className="text-lg md:text-xl mb-10 opacity-90">
-              Share challenges, find solutions, and connect with others facing similar
-              parent-child dynamics in a safe and supportive environment.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4">
-              <Button asChild size="lg" className="bg-white text-blue-600 hover:bg-gray-100">
-                <Link to="/register">Join Our Community</Link>
-              </Button>
-              <Button asChild size="lg" variant="outline" className="bg-transparent border-white text-white hover:bg-white/20">
-                <Link to="/about">Learn More</Link>
-              </Button>
+          <div className="md:grid md:grid-cols-2 md:gap-8 items-center">
+            <div>
+              <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight mb-6">
+                Manage your parents with ideas from your friends!
+              </h1>
+              <p className="text-lg md:text-xl mb-10 opacity-90">
+                Share challenges, find solutions, and connect with others facing similar
+                parent-child dynamics in a safe and supportive environment.
+              </p>
+              <div className="flex flex-col sm:flex-row gap-4">
+                <Button asChild size="lg" className="bg-white text-blue-600 hover:bg-gray-100">
+                  <Link to="/register">Join Our Community</Link>
+                </Button>
+                <Button asChild size="lg" variant="outline" className="bg-transparent border-white text-white hover:bg-white/20">
+                  <Link to="/about">Learn More</Link>
+                </Button>
+              </div>
+            </div>
+            <div className="mt-10 md:mt-0">
+              <img 
+                src="/lovable-uploads/1c998e1b-3de5-4859-be85-a15075155f15.png" 
+                alt="Diverse young people with thought bubbles showing different expressions in multiple languages" 
+                className="rounded-lg shadow-lg w-full"
+              />
             </div>
           </div>
         </div>
