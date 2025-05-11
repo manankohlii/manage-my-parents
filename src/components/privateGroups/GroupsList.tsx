@@ -8,32 +8,32 @@ import { useToast } from "@/components/ui/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 
-// Mock data for now - would come from Supabase in a real implementation
+// Mock data themed around parenting and family challenges
 const mockGroups = [
   { 
     id: "1", 
-    name: "Design Thinkers", 
+    name: "Parenting Support Circle", 
     memberCount: 8, 
     lastActive: "2025-05-10T14:48:00", 
-    description: "A group focused on design thinking methodologies and practices.",
+    description: "A supportive group for parents to discuss challenges, share advice, and find solutions related to raising children of all ages.",
     unreadMessages: 5,
     newIssues: 2
   },
   { 
     id: "2", 
-    name: "Ed-Tech Innovation", 
+    name: "Teen Parenting Group", 
     memberCount: 12, 
     lastActive: "2025-05-09T10:23:00", 
-    description: "Exploring innovative approaches in educational technology.",
+    description: "For parents of teenagers facing unique challenges and seeking advice on communication, boundaries, and development.",
     unreadMessages: 0,
     newIssues: 1
   },
   { 
     id: "3", 
-    name: "AI Ethics", 
+    name: "New Parents' Corner", 
     memberCount: 6, 
     lastActive: "2025-05-08T16:05:00", 
-    description: "Discussing the ethical implications of artificial intelligence.",
+    description: "Support and guidance for first-time parents navigating the early years with infants and toddlers.",
     unreadMessages: 3,
     newIssues: 0
   }

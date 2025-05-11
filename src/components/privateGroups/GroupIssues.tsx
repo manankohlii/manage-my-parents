@@ -1,7 +1,7 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
+import { Plus, ThumbsUp, ThumbsDown } from "lucide-react";
 import IssuesList from "./issues/IssuesList";
 import IssueFilter from "./issues/IssueFilter";
 import IssueForm from "./issues/IssueForm";
@@ -29,7 +29,9 @@ const GroupIssues = ({ groupId }: GroupIssuesProps) => {
     addIssue,
     selectedIssue,
     selectIssue,
-    getIssueSolutions
+    getIssueSolutions,
+    userVotes,
+    handleVote
   } = useIssues(groupId);
 
   // Determine active tab based on selected issue
@@ -72,6 +74,8 @@ const GroupIssues = ({ groupId }: GroupIssuesProps) => {
             formatDate={formatDate}
             onOpenAddDialog={() => setIsAddDialogOpen(true)}
             onSelectIssue={selectIssue}
+            userVotes={userVotes}
+            onVote={handleVote}
           />
         </TabsContent>
 
@@ -82,6 +86,8 @@ const GroupIssues = ({ groupId }: GroupIssuesProps) => {
               solutions={getIssueSolutions(selectedIssue)}
               formatDate={formatDate}
               onBack={() => selectIssue("")}
+              userVotes={userVotes}
+              onVote={handleVote}
             />
           </TabsContent>
         )}
