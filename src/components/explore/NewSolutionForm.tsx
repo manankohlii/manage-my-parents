@@ -2,6 +2,7 @@
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { 
+  Form,
   FormField,
   FormItem, 
   FormLabel,
@@ -11,6 +12,7 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { useForm } from "react-hook-form";
+import * as z from "zod";
 
 interface NewSolutionFormProps {
   challengeId: string;
@@ -23,6 +25,11 @@ interface NewSolutionFormProps {
   user: any;
 }
 
+// Create a schema for solution validation
+const FormSchema = z.object({
+  solution: z.string().min(1, "Solution is required")
+});
+
 const NewSolutionForm = ({
   challengeId,
   isOpen,
@@ -33,7 +40,12 @@ const NewSolutionForm = ({
   loadingSolution,
   user
 }: NewSolutionFormProps) => {
-  const form = useForm();
+  // Initialize form with react-hook-form
+  const form = useForm<z.infer<typeof FormSchema>>({
+    defaultValues: {
+      solution: newSolution
+    }
+  });
   
   const handleOpenChange = (open: boolean) => {
     if (!user && open) {
@@ -41,6 +53,11 @@ const NewSolutionForm = ({
       return;
     }
     setIsOpen(open ? challengeId : null);
+  };
+
+  // Handle form submission
+  const onSubmit = () => {
+    handleSubmitSolution(challengeId);
   };
 
   return (
@@ -52,53 +69,59 @@ const NewSolutionForm = ({
         <Button variant="outline">Contribute a Solution</Button>
       </PopoverTrigger>
       <PopoverContent className="w-[450px]">
-        <form 
-          className="space-y-4" 
-          onSubmit={(e) => {
-            e.preventDefault();
-            handleSubmitSolution(challengeId);
-          }}
-        >
-          <h4 className="text-lg font-medium mb-2">Add Your Solution</h4>
-          
-          <FormField
-            control={form.control}
-            name="solution"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Your Solution</FormLabel>
-                <FormControl>
-                  <Textarea
-                    placeholder="Share your experience or advice..." 
-                    className="min-h-[150px] resize-none" 
-                    value={newSolution}
-                    onChange={(e) => setNewSolution(e.target.value)}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          
-          <div className="flex justify-end space-x-2">
-            <Button 
-              variant="ghost" 
-              onClick={() => {
-                setIsOpen(null);
-                setNewSolution("");
-              }}
-              type="button"
-            >
-              Cancel
-            </Button>
-            <Button 
-              type="submit"
-              disabled={loadingSolution}
-            >
-              {loadingSolution ? "Submitting..." : "Submit"}
-            </Button>
-          </div>
-        </form>
+        <Form {...form}>
+          <form 
+            className="space-y-4" 
+            onSubmit={(e) => {
+              e.preventDefault();
+              onSubmit();
+            }}
+          >
+            <h4 className="text-lg font-medium mb-2">Add Your Solution</h4>
+            
+            <FormField
+              control={form.control}
+              name="solution"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Your Solution</FormLabel>
+                  <FormControl>
+                    <Textarea
+                      placeholder="Share your experience or advice..." 
+                      className="min-h-[150px] resize-none" 
+                      value={newSolution}
+                      onChange={(e) => {
+                        setNewSolution(e.target.value);
+                        field.onChange(e);
+                      }}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            
+            <div className="flex justify-end space-x-2">
+              <Button 
+                variant="ghost" 
+                onClick={() => {
+                  setIsOpen(null);
+                  setNewSolution("");
+                  form.reset();
+                }}
+                type="button"
+              >
+                Cancel
+              </Button>
+              <Button 
+                type="submit"
+                disabled={loadingSolution}
+              >
+                {loadingSolution ? "Submitting..." : "Submit"}
+              </Button>
+            </div>
+          </form>
+        </Form>
       </PopoverContent>
     </Popover>
   );
