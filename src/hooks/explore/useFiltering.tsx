@@ -1,11 +1,10 @@
-
 import { useState } from "react";
 import { Challenge } from "@/services/challenges/types";
 
 export const useFiltering = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [sortBy, setSortBy] = useState("popular");
-  const [filterAgeGroup, setFilterAgeGroup] = useState("all");
+  const [filterAgeGroup, setFilterAgeGroup] = useState("");
   const [filterLocation, setFilterLocation] = useState("all");
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
 
@@ -13,7 +12,7 @@ export const useFiltering = () => {
   const getFilteredChallenges = (challenges: Challenge[]) => {
     return challenges
       .filter(challenge => {
-        if (filterAgeGroup === "all") return true;
+        if (filterAgeGroup === "") return true;
         
         // Match challenges with the corresponding age group range
         return challenge.age_group === filterAgeGroup;

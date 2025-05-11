@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { 
   Command, 
@@ -87,7 +86,6 @@ const ChallengeFilters = ({
               <SelectValue placeholder="Age Group" />
             </SelectTrigger>
             <SelectContent>
-              {/* Removed "All Age Groups" option */}
               <SelectItem value="13-19">Teenagers (13-19)</SelectItem>
               <SelectItem value="20-34">Young Adults (20-34)</SelectItem>
               <SelectItem value="35-49">Adults (35-49)</SelectItem>
