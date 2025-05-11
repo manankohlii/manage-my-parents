@@ -56,6 +56,17 @@ export const useChallengeListing = () => {
       loadUserVotesForChallenges(challenges);
     }
   }, [challenges, user?.id]);
+  
+  // Load solutions for challenges with solutions_count > 0
+  useEffect(() => {
+    if (challenges.length > 0) {
+      challenges.forEach(challenge => {
+        if ((challenge.solutions_count || 0) > 0) {
+          loadSolutions(challenge.id);
+        }
+      });
+    }
+  }, [challenges]);
 
   // Modified handleSubmitSolution to also update challenge stats
   const handleSubmitSolutionWithStats = async (challengeId: string) => {

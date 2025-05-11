@@ -43,6 +43,7 @@ const ChallengeCard = ({
 }: ChallengeCardProps) => {
   const isUpvoted = userVotes[challenge.id] === true;
   const isDownvoted = userVotes[challenge.id] === false;
+  // Get solutions for this challenge or an empty array if undefined
   const challengeSolutions = solutions?.[challenge.id] || [];
 
   const handleSolutionSubmit = async (solution: string) => {

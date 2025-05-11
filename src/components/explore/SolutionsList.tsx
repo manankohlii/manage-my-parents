@@ -18,7 +18,10 @@ const SolutionsList = ({
   userVotes,
   user
 }: SolutionsListProps) => {
-  if (!solutions || solutions.length === 0) {
+  // Check if solutions exists and has items
+  const hasSolutions = solutions && solutions.length > 0;
+
+  if (!hasSolutions) {
     return (
       <div className="px-6 py-4 text-center text-muted-foreground">
         No solutions yet. Be the first to contribute!

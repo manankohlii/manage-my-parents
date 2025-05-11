@@ -11,8 +11,6 @@ export const useSolutions = (user: any, updateUserVotesForSolutions: (solutionId
 
   // Load solutions for a challenge when expanded
   const loadSolutions = async (challengeId: string) => {
-    if (solutions[challengeId]) return;
-    
     try {
       const fetchedSolutions = await getSolutions(challengeId);
       setSolutions(prev => ({
