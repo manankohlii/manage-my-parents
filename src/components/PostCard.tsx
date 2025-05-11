@@ -6,30 +6,30 @@ import { MessageSquare, Heart } from "lucide-react";
 import TagBadge from "./TagBadge";
 import { Link } from "react-router-dom";
 
-interface PostCardProps {
+interface Author {
+  name: string;
+  avatar?: string;
+}
+
+export interface Post {
   id: string;
   title: string;
   content: string;
-  author: {
-    name: string;
-    avatar?: string;
-  };
+  author: Author;
   tags: string[];
   likes: number;
   comments: number;
   createdAt: string;
+  isSolved?: boolean;
 }
 
-const PostCard = ({
-  id,
-  title,
-  content,
-  author,
-  tags,
-  likes,
-  comments,
-  createdAt,
-}: PostCardProps) => {
+interface PostCardProps {
+  post: Post;
+}
+
+const PostCard = ({ post }: PostCardProps) => {
+  const { id, title, content, author, tags, likes, comments, createdAt } = post;
+  
   return (
     <Card className="mb-4 overflow-hidden hover:shadow-md transition-shadow">
       <CardHeader className="pb-2">
