@@ -16,17 +16,7 @@ export const useFiltering = () => {
         if (filterAgeGroup === "all") return true;
         
         // Match challenges with the corresponding age group range
-        switch (filterAgeGroup) {
-          case "13-19":
-          case "20-34":
-          case "35-49":
-          case "50-64":
-          case "65-79":
-          case "80+":
-            return challenge.age_group === filterAgeGroup;
-          default:
-            return true;
-        }
+        return challenge.age_group === filterAgeGroup;
       })
       .filter(challenge => filterLocation === "all" || challenge.location === filterLocation)
       .filter(challenge => {
