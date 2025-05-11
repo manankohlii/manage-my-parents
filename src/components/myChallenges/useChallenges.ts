@@ -8,7 +8,6 @@ export const useChallenges = () => {
   const [challenges, setChallenges] = useState<Challenge[]>([]);
   const [loading, setLoading] = useState(true);
   const [sortBy, setSortBy] = useState("newest");
-  const [filterAgeGroup, setFilterAgeGroup] = useState("all");
   const [filterCountry, setFilterCountry] = useState("all");
   const [searchTerm, setSearchTerm] = useState("");
 
@@ -34,7 +33,6 @@ export const useChallenges = () => {
 
   const getFilteredChallenges = () => {
     return challenges
-      .filter(challenge => filterAgeGroup === "all" || challenge.age_group === filterAgeGroup)
       .filter(challenge => filterCountry === "all" || challenge.location === filterCountry)
       .filter(challenge => 
         !searchTerm || 
@@ -59,8 +57,6 @@ export const useChallenges = () => {
     loading,
     sortBy,
     setSortBy,
-    filterAgeGroup,
-    setFilterAgeGroup,
     filterCountry,
     setFilterCountry,
     searchTerm,

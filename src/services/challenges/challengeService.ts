@@ -68,7 +68,6 @@ export const createChallenge = async (challengeData: ChallengeInput, userId: str
         title: challengeData.title,
         description: challengeData.description,
         mood: challengeData.mood,
-        age_group: challengeData.age_group,
         location: challengeData.location,
         user_id: userId
       })

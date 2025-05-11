@@ -9,7 +9,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Edit, Trash2 } from "lucide-react";
 import TagBadge from "../TagBadge";
-import { Challenge } from "@/services/challengesService";
+import { Challenge } from "@/services/challenges";
 import { useState } from "react";
 import { Solution } from "@/services/solutionsService";
 import { getSolutions } from "@/services/solutionsService";
@@ -89,7 +89,6 @@ const ChallengeCard = ({ challenge, onDelete, onEdit }: ChallengeCardProps) => {
         
         <div className="text-sm text-muted-foreground">
           <div className="flex items-center justify-between">
-            <span>Age Group: {challenge.age_group}</span>
             <span>Location: {challenge.location}</span>
             <span>Mood: {challenge.mood}</span>
           </div>

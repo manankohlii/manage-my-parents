@@ -15,8 +15,6 @@ const MyChallenges = () => {
     challenges,
     sortBy,
     setSortBy,
-    filterAgeGroup,
-    setFilterAgeGroup,
     filterCountry,
     setFilterCountry,
     searchTerm,
@@ -43,8 +41,6 @@ const MyChallenges = () => {
         setSearchTerm={setSearchTerm}
         sortBy={sortBy}
         setSortBy={setSortBy}
-        filterAgeGroup={filterAgeGroup}
-        setFilterAgeGroup={setFilterAgeGroup}
         filterCountry={filterCountry}
         setFilterCountry={setFilterCountry}
       />
