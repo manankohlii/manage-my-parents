@@ -1,9 +1,9 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { formatDistanceToNow } from "date-fns";
 import TagBadge from "../TagBadge";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
-import { MessageCircle } from "lucide-react";
+import { MessageCircle, ThumbsUp, ThumbsDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Challenge } from "@/services/challenges/types";
 import SolutionsList from "./SolutionsList";
@@ -19,11 +19,11 @@ interface ChallengeCardProps {
   setNewSolution: (value: string) => void;
   loadingSolution: boolean;
   userVotes: Record<string, boolean | null>;
-  openSolutionForm: string | null;
-  setOpenSolutionForm: (isOpen: string | null) => void;
+  openSolutionForm: boolean;
+  setOpenSolutionForm: (isOpen: boolean) => void;
   user: any;
-  solutions?: Record<string, Solution[]>;
-  handleVote: (challengeId: string, solutionId: string, voteType: 'up' | 'down') => Promise<void>;
+  solutions?: Solution[];
+  handleVote: (challengeId: string, solutionId: string | null, voteType: 'up' | 'down') => Promise<void>;
 }
 
 const ChallengeCard = ({
@@ -38,25 +38,17 @@ const ChallengeCard = ({
   openSolutionForm,
   setOpenSolutionForm,
   user,
-  solutions,
+  solutions = [],
   handleVote
 }: ChallengeCardProps) => {
-  // Get solutions for this challenge or an empty array if undefined
-  const challengeSolutions = solutions?.[challenge.id] || [];
   const [showSolutions, setShowSolutions] = useState(false);
-
+  
   const handleSolutionSubmit = async (solution: string) => {
     setNewSolution(solution);
     await handleSubmitSolution(challenge.id);
   };
 
   const toggleSolutions = () => {
-    if (!showSolutions) {
-      // Load solutions when opening
-      setOpenSolutionForm(challenge.id);
-    } else {
-      setOpenSolutionForm(null);
-    }
     setShowSolutions(!showSolutions);
   };
 
@@ -80,13 +72,36 @@ const ChallengeCard = ({
       <CardContent>
         <p className="text-sm text-gray-700 mb-4">{challenge.description}</p>
         
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-2">
+            <Button 
+              variant="ghost" 
+              size="sm"
+              onClick={() => handleUpvote(challenge.id)}
+              disabled={!user}
+              className="flex items-center"
+            >
+              <ThumbsUp className={`h-4 w-4 mr-1 ${userVotes[challenge.id] === true ? "text-green-500 fill-green-500" : ""}`} />
+              <span>{challenge.votes_count || 0}</span>
+            </Button>
+            <Button 
+              variant="ghost" 
+              size="sm"
+              onClick={() => handleDownvote(challenge.id)}
+              disabled={!user}
+            >
+              <ThumbsDown className={`h-4 w-4 ${userVotes[challenge.id] === false ? "text-red-500 fill-red-500" : ""}`} />
+            </Button>
+          </div>
+        </div>
+        
         {/* Add the Solution Form */}
         <SolutionForm
           challengeId={challenge.id}
           onSubmit={(solution) => handleSolutionSubmit(solution)}
           loading={loadingSolution}
           user={user}
-          solutions={challengeSolutions}
+          solutions={solutions || []}
         />
       </CardContent>
       
@@ -94,7 +109,7 @@ const ChallengeCard = ({
       {showSolutions && (
         <SolutionsList 
           challengeId={challenge.id}
-          solutions={challengeSolutions}
+          solutions={solutions || []}
           handleVote={handleVote}
           userVotes={userVotes}
           user={user}

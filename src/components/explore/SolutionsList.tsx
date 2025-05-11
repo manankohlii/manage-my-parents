@@ -12,14 +12,14 @@ interface SolutionsListProps {
 }
 
 const SolutionsList = ({ 
-  solutions = [], // Provide a default empty array
+  solutions = [], 
   challengeId, 
   handleVote, 
   userVotes,
   user
 }: SolutionsListProps) => {
   // Check if solutions exists and has items
-  const hasSolutions = solutions && solutions.length > 0;
+  const hasSolutions = Array.isArray(solutions) && solutions.length > 0;
 
   if (!hasSolutions) {
     return (

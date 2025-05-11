@@ -1,37 +1,13 @@
-import { useState, useEffect } from "react";
-import { getAllChallenges, Challenge } from "@/services/challenges";
+
+import { useChallengeListing } from "@/hooks/explore/useChallengeListing";
 import ChallengeCard from "@/components/explore/ChallengeCard";
-import { useAuth } from "@/contexts/AuthContext";
-import { useVoting } from "@/hooks/explore/useVoting";
-import { useSolutions } from "@/hooks/explore/useSolutions";
-import { useFiltering } from "@/hooks/explore/useFiltering";
-import { toast } from "sonner";
+import { Skeleton } from "@/components/ui/skeleton";
+import { ThumbsUp, ThumbsDown } from "lucide-react";
 
 const CommunityPage = () => {
-  const { user } = useAuth();
-  const [challenges, setChallenges] = useState<Challenge[]>([]);
-  const [loading, setLoading] = useState(true);
-  
   const {
-    userVotes,
-    loadUserVotesForChallenges,
-    updateUserVotesForSolutions,
-    handleVote
-  } = useVoting(user);
-  
-  const {
-    solutions,
-    setSolutions,
-    openPopover,
-    setOpenPopover,
-    newSolution,
-    setNewSolution,
-    loadingSolution,
-    loadSolutions,
-    handleSubmitSolution
-  } = useSolutions(user, updateUserVotesForSolutions);
-  
-  const {
+    loading,
+    filteredChallenges,
     searchTerm,
     setSearchTerm,
     sortBy,
@@ -40,53 +16,28 @@ const CommunityPage = () => {
     setFilterAgeGroup,
     filterLocation,
     setFilterLocation,
-    selectedTags,
-    setSelectedTags,
-    getFilteredChallenges
-  } = useFiltering();
-  
-  useEffect(() => {
-    const fetchChallenges = async () => {
-      setLoading(true);
-      try {
-        const fetchedChallenges = await getAllChallenges();
-        setChallenges(fetchedChallenges);
-        
-        // Pre-load solutions for challenges with solutions_count > 0
-        fetchedChallenges.forEach(challenge => {
-          if ((challenge.solutions_count || 0) > 0) {
-            loadSolutions(challenge.id);
-          }
-        });
-        
-        if (user?.id) {
-          loadUserVotesForChallenges(fetchedChallenges);
-        }
-      } catch (error) {
-        console.error("Error fetching challenges:", error);
-        toast.error("Failed to load challenges");
-      } finally {
-        setLoading(false);
-      }
-    };
-    
-    fetchChallenges();
-  }, [loadSolutions, loadUserVotesForChallenges, user?.id]);
-
-  const handleSolutionSubmit = async (challengeId: string) => {
-    await handleSubmitSolution(challengeId);
-  };
+    solutions,
+    userVotes,
+    handleVote,
+    openPopover,
+    setOpenPopover,
+    handleSubmitSolution,
+    newSolution,
+    setNewSolution,
+    loadingSolution,
+    user
+  } = useChallengeListing();
 
   return (
     <div className="container mx-auto py-8">
       <h1 className="text-3xl font-bold mb-6">Community Challenges</h1>
       
       {/* Search and Filters */}
-      <div className="mb-4 flex items-center space-x-4">
+      <div className="mb-4 flex flex-wrap gap-2 items-center">
         <input
           type="text"
           placeholder="Search challenges..."
-          className="border p-2 rounded w-1/3"
+          className="border p-2 rounded flex-grow md:flex-grow-0 md:w-1/3"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
         />
@@ -98,7 +49,7 @@ const CommunityPage = () => {
         >
           <option value="newest">Newest</option>
           <option value="oldest">Oldest</option>
-          {/* Add more sorting options here */}
+          <option value="most_solutions">Most Solutions</option>
         </select>
         
         <select
@@ -120,29 +71,38 @@ const CommunityPage = () => {
           <option value="">All Locations</option>
           <option value="US">United States</option>
           <option value="CA">Canada</option>
-          {/* Add more location options here */}
+          <option value="UK">United Kingdom</option>
+          <option value="AU">Australia</option>
         </select>
       </div>
       
       {loading ? (
-        <p>Loading challenges...</p>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {[1, 2, 3, 4, 5, 6].map((index) => (
+            <Skeleton key={index} className="h-64 w-full rounded-lg" />
+          ))}
+        </div>
+      ) : filteredChallenges.length === 0 ? (
+        <div className="text-center py-12">
+          <p className="text-xl text-gray-500">No challenges found matching your criteria.</p>
+        </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {getFilteredChallenges(challenges).map((challenge) => (
+          {filteredChallenges.map((challenge) => (
             <ChallengeCard
               key={challenge.id}
               challenge={challenge}
-              handleUpvote={() => {}} // Implement upvote logic
-              handleDownvote={() => {}} // Implement downvote logic
-              handleSubmitSolution={handleSolutionSubmit}
+              handleUpvote={() => handleVote(challenge.id, null, 'up')} 
+              handleDownvote={() => handleVote(challenge.id, null, 'down')}
+              handleSubmitSolution={handleSubmitSolution}
               newSolution={newSolution}
               setNewSolution={setNewSolution}
               loadingSolution={loadingSolution}
               userVotes={userVotes}
-              openSolutionForm={openPopover}
-              setOpenSolutionForm={setOpenPopover}
+              openSolutionForm={openPopover === challenge.id}
+              setOpenSolutionForm={(isOpen) => setOpenPopover(isOpen ? challenge.id : null)}
               user={user}
-              solutions={solutions}
+              solutions={solutions && solutions[challenge.id]}
               handleVote={handleVote}
             />
           ))}

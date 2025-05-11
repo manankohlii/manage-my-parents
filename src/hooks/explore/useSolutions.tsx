@@ -12,17 +12,30 @@ export const useSolutions = (user: any, updateUserVotesForSolutions: (solutionId
   // Load solutions for a challenge when expanded
   const loadSolutions = async (challengeId: string) => {
     try {
+      // Check if we already have solutions for this challenge to avoid duplicate loads
+      if (solutions[challengeId] && solutions[challengeId].length > 0) {
+        return;
+      }
+
       const fetchedSolutions = await getSolutions(challengeId);
+      
       setSolutions(prev => ({
         ...prev,
         [challengeId]: fetchedSolutions
       }));
       
       // Update user votes for these solutions
-      const solutionIds = fetchedSolutions.map(solution => solution.id);
-      updateUserVotesForSolutions(solutionIds);
+      if (fetchedSolutions && fetchedSolutions.length > 0) {
+        const solutionIds = fetchedSolutions.map(solution => solution.id);
+        updateUserVotesForSolutions(solutionIds);
+      }
     } catch (error) {
       console.error("Error loading solutions:", error);
+      // Make sure we still set an empty array to prevent repeated loading attempts
+      setSolutions(prev => ({
+        ...prev,
+        [challengeId]: []
+      }));
       toast.error("Failed to load solutions");
     }
   };
@@ -46,7 +59,9 @@ export const useSolutions = (user: any, updateUserVotesForSolutions: (solutionId
       if (solution) {
         // Update the solutions list
         setSolutions(prev => {
-          const updatedSolutions = prev[challengeId] ? [solution, ...prev[challengeId]] : [solution];
+          const currentSolutions = prev[challengeId] || [];
+          const updatedSolutions = [solution, ...currentSolutions];
+          
           return {
             ...prev,
             [challengeId]: updatedSolutions
@@ -58,6 +73,7 @@ export const useSolutions = (user: any, updateUserVotesForSolutions: (solutionId
         toast.success("Solution submitted successfully!");
       }
     } catch (error) {
+      console.error("Error submitting solution:", error);
       toast.error("Failed to submit solution");
     } finally {
       setLoadingSolution(false);
