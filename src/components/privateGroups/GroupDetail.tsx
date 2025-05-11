@@ -23,10 +23,10 @@ const mockGroup = {
   memberCount: 8,
   createdAt: "2025-04-15T10:00:00",
   members: [
-    { id: "user1", name: "Sarah Johnson", email: "sarah@example.com", avatar: "", role: "admin" },
-    { id: "user2", name: "Michael Chen", email: "michael@example.com", avatar: "", role: "member" },
-    { id: "user3", name: "Emma Wilson", email: "emma@example.com", avatar: "", role: "member" },
-    { id: "user4", name: "David Kim", email: "david@example.com", avatar: "", role: "member" }
+    { id: "user1", name: "Sarah Johnson", email: "sarah@example.com", avatar: "", role: "admin" as const },
+    { id: "user2", name: "Michael Chen", email: "michael@example.com", avatar: "", role: "member" as const },
+    { id: "user3", name: "Emma Wilson", email: "emma@example.com", avatar: "", role: "member" as const },
+    { id: "user4", name: "David Kim", email: "david@example.com", avatar: "", role: "member" as const }
   ]
 };
 
