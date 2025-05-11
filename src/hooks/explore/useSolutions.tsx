@@ -66,6 +66,7 @@ export const useSolutions = (user: any, updateUserVotesForSolutions: (solutionId
 
   return {
     solutions,
+    setSolutions,
     openPopover,
     setOpenPopover,
     newSolution,
