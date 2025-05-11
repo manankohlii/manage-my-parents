@@ -1,20 +1,31 @@
 
-import { useState } from "react";
+import { useState, createContext } from "react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import MyChallenges from "./MyChallenges";
 import AddChallenge from "./AddChallenge";
 import ExploreChallenges from "./ExploreChallenges";
 import { Search, Plus, Filter } from "lucide-react";
-import { createContext } from "react";
 
 // Create TabContext
-export const TabContext = createContext<{ setActiveTab: (tab: string) => void } | undefined>(undefined);
+export const TabContext = createContext<{ 
+  setActiveTab: (tab: string) => void;
+  activeTab: string;
+} | undefined>(undefined);
 
 const DashboardTabs = () => {
   const [activeTab, setActiveTab] = useState("my-challenges");
   
+  const getTabTitle = () => {
+    switch (activeTab) {
+      case "my-challenges": return "My Challenges";
+      case "add-challenge": return "Add New Challenge";
+      case "explore": return "Explore Challenges";
+      default: return "My Challenges";
+    }
+  };
+  
   return (
-    <TabContext.Provider value={{ setActiveTab }}>
+    <TabContext.Provider value={{ setActiveTab, activeTab }}>
       <Tabs value={activeTab} className="w-full" onValueChange={setActiveTab}>
         <TabsList className="grid w-full grid-cols-3 mb-8">
           <TabsTrigger 
