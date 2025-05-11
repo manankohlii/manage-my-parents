@@ -7,7 +7,6 @@ import { ThumbsUp, ThumbsDown, MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Challenge } from "@/services/challengesService";
 import SolutionsList from "./SolutionsList";
-import NewSolutionForm from "./NewSolutionForm";
 import { Solution } from "@/services/solutionsService";
 
 interface ChallengeCardProps {
@@ -70,16 +69,6 @@ const ChallengeCard = ({
         solutions={challengeSolutions}
         handleVote={handleVote}
         userVotes={userVotes}
-        user={user}
-      />
-      <NewSolutionForm
-        challengeId={challenge.id}
-        isOpen={openSolutionForm === challenge.id}
-        setIsOpen={setOpenSolutionForm}
-        handleSubmitSolution={handleSubmitSolution}
-        newSolution={newSolution}
-        setNewSolution={setNewSolution}
-        loadingSolution={loadingSolution}
         user={user}
       />
       <CardFooter className="flex items-center justify-between">
