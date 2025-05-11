@@ -1,9 +1,9 @@
-
 import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
-import { createChallenge, getAllTags } from "@/services/challengesService";
+import { createChallenge, getAllTags } from "@/services/challenges";
+import { supabase } from "@/integrations/supabase/client";
 import {
   Form,
   FormControl,

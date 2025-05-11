@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from "react";
-import { getUserChallenges, deleteChallenge, Challenge } from "@/services/challengesService";
+import { getUserChallenges, deleteChallenge, Challenge } from "@/services/challenges";
 import { useAuth } from "@/contexts/AuthContext";
 
 export const useChallenges = () => {
