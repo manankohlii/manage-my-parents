@@ -15,8 +15,14 @@ export const useVoting = (user: any) => {
       const votes: Record<string, boolean | null> = {};
       
       for (const challenge of challenges) {
-        const vote = await getUserChallengeVote(challenge.id, user.id);
-        votes[challenge.id] = vote;
+        try {
+          const vote = await getUserChallengeVote(challenge.id, user.id);
+          votes[challenge.id] = vote;
+        } catch (error) {
+          console.error(`Error loading vote for challenge ${challenge.id}:`, error);
+          // Continue with other challenges even if one fails
+          votes[challenge.id] = null;
+        }
       }
       
       setUserVotes(votes);
@@ -40,14 +46,19 @@ export const useVoting = (user: any) => {
   
   // Update user votes state when new solutions are loaded
   const updateUserVotesForSolutions = (solutionIds: string[]) => {
-    if (!user?.id) return;
+    if (!user?.id || solutionIds.length === 0) return;
     
     const loadVotes = async () => {
       const updatedVotes = { ...userVotes };
       
       for (const solutionId of solutionIds) {
-        const vote = await loadUserVotesForSolutions(solutionId);
-        updatedVotes[solutionId] = vote;
+        try {
+          const vote = await loadUserVotesForSolutions(solutionId);
+          updatedVotes[solutionId] = vote;
+        } catch (error) {
+          console.error(`Error getting vote for solution ${solutionId}:`, error);
+          updatedVotes[solutionId] = null;
+        }
       }
       
       setUserVotes(updatedVotes);
@@ -63,36 +74,41 @@ export const useVoting = (user: any) => {
     }
     
     const isUpvote = voteType === 'up';
-    let success;
+    let success = false;
     
-    if (solutionId) {
-      // Vote on a solution
-      success = await voteSolution(solutionId, user.id, isUpvote);
-      
-      if (success) {
-        // Update user votes
-        setUserVotes(prev => {
-          const currentVote = prev[solutionId];
-          return {
-            ...prev,
-            [solutionId]: currentVote === isUpvote ? null : isUpvote
-          };
-        });
+    try {
+      if (solutionId) {
+        // Vote on a solution
+        success = await voteSolution(solutionId, user.id, isUpvote);
+        
+        if (success) {
+          // Update user votes
+          setUserVotes(prev => {
+            const currentVote = prev[solutionId];
+            return {
+              ...prev,
+              [solutionId]: currentVote === isUpvote ? null : isUpvote
+            };
+          });
+        }
+      } else {
+        // Vote on a challenge
+        success = await voteChallenge(challengeId, user.id, isUpvote);
+        
+        if (success) {
+          // Update user votes
+          setUserVotes(prev => {
+            const currentVote = prev[challengeId];
+            return {
+              ...prev,
+              [challengeId]: currentVote === isUpvote ? null : isUpvote
+            };
+          });
+        }
       }
-    } else {
-      // Vote on a challenge
-      success = await voteChallenge(challengeId, user.id, isUpvote);
-      
-      if (success) {
-        // Update user votes
-        setUserVotes(prev => {
-          const currentVote = prev[challengeId];
-          return {
-            ...prev,
-            [challengeId]: currentVote === isUpvote ? null : isUpvote
-          };
-        });
-      }
+    } catch (error) {
+      console.error("Error voting:", error);
+      toast.error("Failed to register your vote");
     }
   };
 
