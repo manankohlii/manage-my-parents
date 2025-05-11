@@ -31,6 +31,7 @@ import TagBadge from "./TagBadge";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { createChallenge, getAllTags } from "@/services/challengesService";
+import { supabase } from "@/integrations/supabase/client";
 
 // Suggested tags based on common terms in eldercare
 const suggestedTags = [
@@ -53,7 +54,6 @@ type FormValues = {
   description: string;
   mood: string;
   age_group: string;
-  location: string;
 };
 
 const AddChallenge = () => {
@@ -63,6 +63,7 @@ const AddChallenge = () => {
   const [recommendedTags, setRecommendedTags] = useState<string[]>([]);
   const [existingTags, setExistingTags] = useState<string[]>([]);
   const [submitting, setSubmitting] = useState(false);
+  const [userLocation, setUserLocation] = useState({ city: "", country: "" });
   
   const form = useForm<FormValues>({
     defaultValues: {
@@ -70,11 +71,38 @@ const AddChallenge = () => {
       description: "",
       mood: "",
       age_group: "",
-      location: "",
     },
   });
   
   const description = form.watch("description");
+  
+  // Fetch user profile data including location
+  useEffect(() => {
+    const fetchProfileData = async () => {
+      if (user?.id) {
+        try {
+          const { data, error } = await supabase
+            .from("profiles")
+            .select("city, country")
+            .eq("id", user.id)
+            .single();
+          
+          if (error) {
+            console.error("Error fetching user profile:", error);
+          } else if (data) {
+            setUserLocation({
+              city: data.city || "",
+              country: data.country || ""
+            });
+          }
+        } catch (error) {
+          console.error("Error fetching user profile:", error);
+        }
+      }
+    };
+    
+    fetchProfileData();
+  }, [user]);
 
   // Load existing tags from the database
   useEffect(() => {
@@ -135,6 +163,10 @@ const AddChallenge = () => {
     try {
       const result = await createChallenge({
         ...values,
+        // Use the user's location from their profile
+        location: userLocation.city ? 
+          `${userLocation.city}${userLocation.country ? ', ' + userLocation.country : ''}` : 
+          userLocation.country,
         tags
       }, user.id);
       
@@ -148,6 +180,9 @@ const AddChallenge = () => {
       setSubmitting(false);
     }
   };
+  
+  // Display a message if location info is missing
+  const locationInfoMissing = !userLocation.city && !userLocation.country;
   
   return (
     <Card className="w-full max-w-4xl mx-auto">
@@ -240,7 +275,7 @@ const AddChallenge = () => {
               )}
             </div>
             
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <FormField
                 control={form.control}
                 name="mood"
@@ -292,32 +327,29 @@ const AddChallenge = () => {
                   </FormItem>
                 )}
               />
-              
-              <FormField
-                control={form.control}
-                name="location"
-                rules={{ required: "Location is required" }}
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Your Location</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select country" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="United States">United States</SelectItem>
-                        <SelectItem value="Canada">Canada</SelectItem>
-                        <SelectItem value="United Kingdom">United Kingdom</SelectItem>
-                        <SelectItem value="Australia">Australia</SelectItem>
-                        <SelectItem value="Other">Other</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+            </div>
+            
+            {/* Display user location information */}
+            <div className="bg-muted/30 p-3 rounded-md">
+              <p className="text-sm font-medium mb-1">Your Location</p>
+              {locationInfoMissing ? (
+                <p className="text-sm text-muted-foreground">
+                  No location information in your profile. 
+                  <Button 
+                    variant="link" 
+                    className="p-0 h-auto text-sm" 
+                    onClick={() => navigate('/profile')}
+                  >
+                    Update your profile
+                  </Button>
+                </p>
+              ) : (
+                <p className="text-sm">
+                  {userLocation.city && userLocation.country 
+                    ? `${userLocation.city}, ${userLocation.country}` 
+                    : userLocation.city || userLocation.country}
+                </p>
+              )}
             </div>
             
             <Button 

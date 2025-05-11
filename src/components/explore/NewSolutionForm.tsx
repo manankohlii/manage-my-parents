@@ -26,12 +26,12 @@ const NewSolutionForm = ({
   loadingSolution,
   user
 }: NewSolutionFormProps) => {
-  const handleOpenChange = () => {
-    if (!user) {
+  const handleOpenChange = (open: boolean) => {
+    if (!user && open) {
       toast.error("You must be logged in to submit a solution");
       return;
     }
-    setIsOpen(isOpen ? null : challengeId);
+    setIsOpen(open ? challengeId : null);
   };
 
   return (
