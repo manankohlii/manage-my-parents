@@ -66,29 +66,29 @@ const NewSolutionForm = ({
       onOpenChange={handleOpenChange}
     >
       <PopoverTrigger asChild>
-        <Button variant="outline">Contribute a Solution</Button>
+        <Button variant="outline" className="bg-background hover:bg-accent hover:text-accent-foreground">Contribute a Solution</Button>
       </PopoverTrigger>
-      <PopoverContent className="w-[450px]">
+      <PopoverContent className="w-[500px] p-6">
         <Form {...form}>
           <form 
-            className="space-y-4" 
+            className="space-y-6" 
             onSubmit={(e) => {
               e.preventDefault();
               onSubmit();
             }}
           >
-            <h4 className="text-lg font-medium mb-2">Add Your Solution</h4>
+            <h4 className="text-lg font-medium">Add Your Solution</h4>
             
             <FormField
               control={form.control}
               name="solution"
               render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Your Solution</FormLabel>
+                <FormItem className="space-y-2">
+                  <FormLabel className="font-medium">Your Solution</FormLabel>
                   <FormControl>
                     <Textarea
                       placeholder="Share your experience or advice..." 
-                      className="min-h-[150px] resize-none" 
+                      className="min-h-[150px] bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 resize-none" 
                       value={newSolution}
                       onChange={(e) => {
                         setNewSolution(e.target.value);
@@ -101,21 +101,23 @@ const NewSolutionForm = ({
               )}
             />
             
-            <div className="flex justify-end space-x-2">
+            <div className="flex justify-end space-x-3">
               <Button 
-                variant="ghost" 
+                variant="outline" 
                 onClick={() => {
                   setIsOpen(null);
                   setNewSolution("");
                   form.reset();
                 }}
                 type="button"
+                className="px-4"
               >
                 Cancel
               </Button>
               <Button 
                 type="submit"
                 disabled={loadingSolution}
+                className="bg-primary text-primary-foreground hover:bg-primary/90 px-4"
               >
                 {loadingSolution ? "Submitting..." : "Submit"}
               </Button>
