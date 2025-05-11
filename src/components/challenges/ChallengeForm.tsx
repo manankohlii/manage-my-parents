@@ -1,48 +1,18 @@
+
 import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { createChallenge, getAllTags } from "@/services/challenges";
 import { supabase } from "@/integrations/supabase/client";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import TagsDisplay from "./TagsDisplay";
-import TagInput from "./TagInput";
-import PopularTags from "./PopularTags";
-import RecommendedTags from "./RecommendedTags";
+import { Form } from "@/components/ui/form";
+import TitleField from "./forms/TitleField";
+import DescriptionField from "./forms/DescriptionField";
+import MoodSelection from "./forms/MoodSelection";
+import AgeGroupSelection from "./forms/AgeGroupSelection";
+import TagsSection from "./forms/TagsSection";
+import FormButtons from "./forms/FormButtons";
 import LocationInfo from "./LocationInfo";
-
-// Suggested tags based on common terms in eldercare
-const suggestedTags = [
-  "medication", "memory", "mobility", "healthcare", "finances", 
-  "independence", "social", "technology", "safety", "nutrition",
-  "mental-health", "housing", "transportation", "legal", "communication"
-];
-
-const moods = [
-  { value: "hopeful", label: "Hopeful" },
-  { value: "concerned", label: "Concerned" },
-  { value: "confused", label: "Confused" },
-  { value: "frustrated", label: "Frustrated" },
-  { value: "overwhelmed", label: "Overwhelmed" },
-  { value: "grateful", label: "Grateful" },
-];
 
 type FormValues = {
   title: string;
@@ -54,11 +24,9 @@ type FormValues = {
 const ChallengeForm = () => {
   const { user } = useAuth();
   const [tags, setTags] = useState<string[]>([]);
-  const [tagInput, setTagInput] = useState("");
-  const [recommendedTags, setRecommendedTags] = useState<string[]>([]);
+  const [submitting, setSubmitting] = useState(false);
   const [existingTags, setExistingTags] = useState<string[]>([]);
   const [popularTags, setPopularTags] = useState<string[]>([]);
-  const [submitting, setSubmitting] = useState(false);
   const [userLocation, setUserLocation] = useState({ city: "", country: "" });
   
   const form = useForm<FormValues>({
@@ -115,38 +83,6 @@ const ChallengeForm = () => {
     loadTags();
   }, []);
   
-  // Simple algorithm to recommend tags based on content
-  useEffect(() => {
-    if (description) {
-      const lowerDesc = description.toLowerCase();
-      // Combine suggested tags with existing tags from the database for recommendations
-      const allPossibleTags = [...new Set([...suggestedTags, ...existingTags])];
-      const recommended = allPossibleTags.filter(tag => 
-        lowerDesc.includes(tag.toLowerCase()) && !tags.includes(tag)
-      );
-      setRecommendedTags(recommended.slice(0, 5));
-    } else {
-      setRecommendedTags([]);
-    }
-  }, [description, tags, existingTags]);
-  
-  const handleRemoveTag = (tagToRemove: string) => {
-    setTags(tags.filter(tag => tag !== tagToRemove));
-  };
-  
-  const handleAddRecommendedTag = (tag: string) => {
-    if (!tags.includes(tag)) {
-      setTags([...tags, tag]);
-      setRecommendedTags(recommendedTags.filter(t => t !== tag));
-    }
-  };
-  
-  const handleAddPopularTag = (tag: string) => {
-    if (!tags.includes(tag)) {
-      setTags([...tags, tag]);
-    }
-  };
-  
   const onSubmit = async (values: FormValues) => {
     if (!user?.id) {
       toast.error("You must be logged in to create a challenge");
@@ -174,7 +110,6 @@ const ChallengeForm = () => {
         // Reset form
         form.reset();
         setTags([]);
-        setTagInput("");
       }
     } finally {
       setSubmitting(false);
@@ -184,127 +119,26 @@ const ChallengeForm = () => {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-        <FormField
-          control={form.control}
-          name="title"
-          rules={{ required: "Title is required" }}
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Challenge Title</FormLabel>
-              <FormControl>
-                <Input placeholder="What's the main issue you're facing?" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+        <TitleField control={form.control} />
         
-        <FormField
-          control={form.control}
-          name="description"
-          rules={{ required: "Description is required" }}
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Description</FormLabel>
-              <FormControl>
-                <Textarea 
-                  placeholder="Describe your challenge in detail..." 
-                  className="min-h-[150px]" 
-                  {...field} 
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+        <DescriptionField control={form.control} />
         
-        <div>
-          <FormLabel>Tags</FormLabel>
-          <TagsDisplay tags={tags} onRemoveTag={handleRemoveTag} />
-          
-          <TagInput 
-            tags={tags}
-            setTags={setTags}
-            existingTags={existingTags}
-            tagInput={tagInput}
-            setTagInput={setTagInput}
-          />
-          
-          <PopularTags 
-            popularTags={popularTags}
-            onAddTag={handleAddPopularTag}
-          />
-          
-          <RecommendedTags 
-            recommendedTags={recommendedTags}
-            onAddTag={handleAddRecommendedTag}
-          />
-        </div>
+        <TagsSection 
+          tags={tags}
+          setTags={setTags}
+          description={description}
+          existingTags={existingTags}
+          popularTags={popularTags}
+        />
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <FormField
-            control={form.control}
-            name="mood"
-            rules={{ required: "Please select a mood" }}
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Your Mood</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="How are you feeling?" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    {moods.map(mood => (
-                      <SelectItem key={mood.value} value={mood.value}>
-                        {mood.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          
-          <FormField
-            control={form.control}
-            name="age_group"
-            rules={{ required: "Age group is required" }}
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Parent's Age Group</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select age group" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    <SelectItem value="60-65">60-65 years</SelectItem>
-                    <SelectItem value="65-70">65-70 years</SelectItem>
-                    <SelectItem value="70-75">70-75 years</SelectItem>
-                    <SelectItem value="75-80">75-80 years</SelectItem>
-                    <SelectItem value="80+">80+ years</SelectItem>
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+          <MoodSelection control={form.control} />
+          <AgeGroupSelection control={form.control} />
         </div>
         
         <LocationInfo userLocation={userLocation} />
         
-        <Button 
-          type="submit" 
-          size="lg" 
-          className="w-full md:w-auto"
-          disabled={submitting}
-        >
-          {submitting ? "Posting..." : "Post Challenge"}
-        </Button>
+        <FormButtons submitting={submitting} />
       </form>
     </Form>
   );
