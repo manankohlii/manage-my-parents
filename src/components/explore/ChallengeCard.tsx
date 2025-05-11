@@ -106,10 +106,10 @@ const ChallengeCard = ({
              {challenge.votes_count < 0 ? Math.abs(challenge.votes_count) : ''}
           </Button>
         </div>
-        <Button variant="ghost">
+        <div className="flex items-center">
           <MessageCircle className="h-4 w-4 mr-1" />
           {challenge.solutions_count} Solutions
-        </Button>
+        </div>
       </CardFooter>
     </Card>
   );
