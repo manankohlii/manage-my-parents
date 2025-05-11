@@ -33,7 +33,7 @@ const SettingsPage = () => {
       </div>
       
       <Tabs defaultValue="account" className="max-w-3xl">
-        <TabsList className="mb-4">
+        <TabsList className="mb-4 bg-transparent">
           <TabsTrigger value="account">Account</TabsTrigger>
           <TabsTrigger value="notifications">Notifications</TabsTrigger>
           <TabsTrigger value="appearance">Appearance</TabsTrigger>
