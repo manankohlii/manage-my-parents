@@ -40,6 +40,27 @@ const CommunityPage = () => {
     return () => clearTimeout(timer);
   }, []);
 
+  // Handle post voting
+  const handlePostVote = (postId: string, voteType: 'up' | 'down') => {
+    setPosts(currentPosts => 
+      currentPosts.map(post => {
+        if (post.id === postId) {
+          const updatedLikes = voteType === 'up' 
+            ? post.likes + 1 
+            : post.likes - 1;
+          
+          return { ...post, likes: updatedLikes };
+        }
+        return post;
+      })
+    );
+    
+    toast({
+      title: `${voteType === 'up' ? 'Upvoted' : 'Downvoted'} post`,
+      description: `You've ${voteType === 'up' ? 'upvoted' : 'downvoted'} this post.`
+    });
+  };
+
   // Filter and sort posts
   const filteredPosts = posts
     .filter(post => {
@@ -53,6 +74,8 @@ const CommunityPage = () => {
         return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
       } else if (sortBy === "most_comments") {
         return b.comments - a.comments;
+      } else if (sortBy === "most_likes") {
+        return b.likes - a.likes;
       }
       return 0;
     });
@@ -79,6 +102,7 @@ const CommunityPage = () => {
             <SelectItem value="newest">Newest</SelectItem>
             <SelectItem value="oldest">Oldest</SelectItem>
             <SelectItem value="most_comments">Most Comments</SelectItem>
+            <SelectItem value="most_likes">Most Likes</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -99,7 +123,11 @@ const CommunityPage = () => {
       ) : (
         <div className="space-y-6">
           {filteredPosts.map((post) => (
-            <PostCard key={post.id} post={post} />
+            <PostCard 
+              key={post.id} 
+              post={post}
+              onVote={handlePostVote} 
+            />
           ))}
         </div>
       )}

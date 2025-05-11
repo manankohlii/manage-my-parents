@@ -2,9 +2,10 @@
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { Avatar } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { MessageSquare, Heart } from "lucide-react";
+import { MessageSquare, ThumbsUp, ThumbsDown } from "lucide-react";
 import TagBadge from "./TagBadge";
 import { Link } from "react-router-dom";
+import { useState } from "react";
 
 interface Author {
   name: string;
@@ -25,10 +26,22 @@ export interface Post {
 
 interface PostCardProps {
   post: Post;
+  onVote?: (postId: string, voteType: 'up' | 'down') => void;
 }
 
-const PostCard = ({ post }: PostCardProps) => {
+const PostCard = ({ post, onVote }: PostCardProps) => {
   const { id, title, content, author, tags, likes, comments, createdAt, isSolved } = post;
+  const [currentLikes, setCurrentLikes] = useState(likes);
+  
+  const handleVote = (voteType: 'up' | 'down') => {
+    // Update local state immediately for a responsive UI feel
+    setCurrentLikes(prevLikes => voteType === 'up' ? prevLikes + 1 : prevLikes - 1);
+    
+    // Call the parent component's vote handler if provided
+    if (onVote) {
+      onVote(id, voteType);
+    }
+  };
   
   return (
     <Card className="mb-4 overflow-hidden hover:shadow-md transition-shadow">
@@ -64,10 +77,25 @@ const PostCard = ({ post }: PostCardProps) => {
         </div>
       </CardContent>
       <CardFooter className="pt-0 border-t border-border flex justify-between">
-        <Button variant="ghost" size="sm" className="text-muted-foreground">
-          <Heart className="h-4 w-4 mr-1" />
-          <span>{likes}</span>
-        </Button>
+        <div className="flex items-center space-x-2">
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            className="text-muted-foreground"
+            onClick={() => handleVote('up')}
+          >
+            <ThumbsUp className="h-4 w-4 mr-1" />
+          </Button>
+          <span>{currentLikes}</span>
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            className="text-muted-foreground"
+            onClick={() => handleVote('down')}
+          >
+            <ThumbsDown className="h-4 w-4" />
+          </Button>
+        </div>
         <Button variant="ghost" size="sm" className="text-muted-foreground">
           <MessageSquare className="h-4 w-4 mr-1" />
           <span>{comments}</span>
