@@ -4,7 +4,6 @@ export interface Challenge {
   title: string;
   description: string;
   mood: string;
-  age_group: string;
   location: string;
   created_at: string;
   updated_at: string;
@@ -18,7 +17,6 @@ export interface ChallengeInput {
   title: string;
   description: string;
   mood: string;
-  age_group: string;
   location: string;
   tags: string[];
 }

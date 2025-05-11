@@ -9,7 +9,6 @@ import { Form } from "@/components/ui/form";
 import TitleField from "./forms/TitleField";
 import DescriptionField from "./forms/DescriptionField";
 import MoodSelection from "./forms/MoodSelection";
-import AgeGroupSelection from "./forms/AgeGroupSelection";
 import TagsSection from "./forms/TagsSection";
 import FormButtons from "./forms/FormButtons";
 import LocationInfo from "./LocationInfo";
@@ -18,7 +17,6 @@ type FormValues = {
   title: string;
   description: string;
   mood: string;
-  age_group: string;
 };
 
 const ChallengeForm = () => {
@@ -34,7 +32,6 @@ const ChallengeForm = () => {
       title: "",
       description: "",
       mood: "",
-      age_group: "",
     },
   });
   
@@ -131,9 +128,10 @@ const ChallengeForm = () => {
           popularTags={popularTags}
         />
         
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <MoodSelection control={form.control} />
-          <AgeGroupSelection control={form.control} />
+        <div className="flex flex-col md:flex-row gap-4">
+          <div className="w-full">
+            <MoodSelection control={form.control} />
+          </div>
         </div>
         
         <LocationInfo userLocation={userLocation} />
