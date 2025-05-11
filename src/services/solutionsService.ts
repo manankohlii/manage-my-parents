@@ -89,10 +89,71 @@ export const createSolution = async (
     if (error) throw error;
     
     toast.success("Solution submitted successfully!");
-    return data;
+    
+    // Return the created solution with additional fields
+    return {
+      ...data,
+      votes: 0,
+      author_name: "You" // This is temporary, will be replaced on next fetch
+    };
   } catch (error) {
     console.error("Error creating solution:", error);
     toast.error("Failed to submit solution");
     return null;
+  }
+};
+
+// Vote on a solution
+export const voteSolution = async (
+  solutionId: string, 
+  userId: string, 
+  isUpvote: boolean | null
+) => {
+  try {
+    // First check if the user has already voted on this solution
+    const { data: existingVote, error: fetchError } = await supabase
+      .from("solution_votes")
+      .select("*")
+      .eq("solution_id", solutionId)
+      .eq("user_id", userId)
+      .maybeSingle();
+
+    if (fetchError) throw fetchError;
+
+    if (isUpvote === null) {
+      // User is removing their vote
+      if (existingVote) {
+        const { error: deleteError } = await supabase
+          .from("solution_votes")
+          .delete()
+          .eq("id", existingVote.id);
+
+        if (deleteError) throw deleteError;
+      }
+    } else if (!existingVote) {
+      // User is adding a new vote
+      const { error: insertError } = await supabase
+        .from("solution_votes")
+        .insert({
+          solution_id: solutionId,
+          user_id: userId,
+          is_upvote: isUpvote
+        });
+
+      if (insertError) throw insertError;
+    } else {
+      // User is changing their vote
+      const { error: updateError } = await supabase
+        .from("solution_votes")
+        .update({ is_upvote: isUpvote })
+        .eq("id", existingVote.id);
+
+      if (updateError) throw updateError;
+    }
+
+    return true;
+  } catch (error) {
+    console.error("Error voting on solution:", error);
+    throw error;
   }
 };

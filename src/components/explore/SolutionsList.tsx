@@ -1,5 +1,4 @@
 
-import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { ThumbsUp, ThumbsDown } from "lucide-react";
 import { Solution } from "@/services/solutionsService";
@@ -19,16 +18,23 @@ const SolutionsList = ({
   userVotes,
   user
 }: SolutionsListProps) => {
-  if (!solutions || !solutions.length) return null;
+  if (!solutions || solutions.length === 0) {
+    return (
+      <div className="px-6 py-4 text-center text-muted-foreground">
+        No solutions yet. Be the first to contribute!
+      </div>
+    );
+  }
 
   return (
     <div className="px-6 space-y-3">
+      <h3 className="text-lg font-medium">Solutions ({solutions.length})</h3>
       {solutions.map((solution) => (
         <div 
           key={solution.id} 
           className="bg-muted p-3 rounded-md flex justify-between items-start"
         >
-          <div>
+          <div className="flex-1">
             <p className="text-sm">{solution.text}</p>
             <p className="text-xs text-muted-foreground mt-1">
               By {solution.author_name || "Anonymous User"} • {new Date(solution.created_at).toLocaleDateString()}

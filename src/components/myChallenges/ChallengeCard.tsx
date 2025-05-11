@@ -10,11 +10,12 @@ import { Button } from "@/components/ui/button";
 import { Edit, Trash2 } from "lucide-react";
 import TagBadge from "../TagBadge";
 import { Challenge } from "@/services/challenges";
-import { useState } from "react";
-import { Solution } from "@/services/solutionsService";
-import { getSolutions } from "@/services/solutionsService";
+import { useState, useEffect } from "react";
+import { Solution, getSolutions, voteSolution } from "@/services/solutionsService";
 import SolutionsList from "../explore/SolutionsList";
+import SolutionForm from "../explore/SolutionForm";
 import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "sonner";
 
 interface ChallengeCardProps {
   challenge: Challenge;
@@ -26,6 +27,7 @@ const ChallengeCard = ({ challenge, onDelete, onEdit }: ChallengeCardProps) => {
   const [showSolutions, setShowSolutions] = useState(false);
   const [solutions, setSolutions] = useState<Solution[]>([]);
   const [loading, setLoading] = useState(false);
+  const [submittingForm, setSubmittingForm] = useState(false);
   const { user } = useAuth();
   const [userVotes, setUserVotes] = useState<Record<string, boolean | null>>({});
 
@@ -40,20 +42,92 @@ const ChallengeCard = ({ challenge, onDelete, onEdit }: ChallengeCardProps) => {
     try {
       const fetchedSolutions = await getSolutions(challenge.id);
       setSolutions(fetchedSolutions);
+      
+      // Initialize user votes state
+      if (user) {
+        const initialUserVotes: Record<string, boolean | null> = {};
+        fetchedSolutions.forEach(solution => {
+          // For simplicity, we'll just use the presence of upvote/downvote markers in the data
+          // In a real app, you would fetch actual user votes from a separate API call
+          initialUserVotes[solution.id] = null;
+        });
+        setUserVotes(initialUserVotes);
+      }
+      
       setShowSolutions(true);
     } catch (error) {
       console.error("Failed to fetch solutions:", error);
+      toast.error("Failed to load solutions");
     } finally {
       setLoading(false);
     }
   };
 
-  // This is a placeholder - in a real app, you would implement this properly
-  const handleVote = async (challengeId: string, solutionId: string, voteType: 'up' | 'down') => {
-    console.log(`Vote ${voteType} for solution ${solutionId}`);
-    // Here you would call your API to register the vote
-    // and then update the solutions state
+  const handleSubmitSolution = async (solutionText: string) => {
+    if (!user) {
+      toast.error("You must be logged in to submit solutions");
+      return;
+    }
+    
+    setSubmittingForm(true);
+    try {
+      const newSolution = await createSolution(challenge.id, solutionText, user.id);
+      if (newSolution) {
+        // Add the new solution to the list
+        setSolutions([newSolution, ...solutions]);
+        
+        // Update challenge's solution count in parent component if needed
+        // This would require passing a callback from the parent
+      }
+      return true;
+    } catch (error) {
+      console.error("Failed to submit solution:", error);
+      toast.error("Failed to submit solution");
+      return false;
+    } finally {
+      setSubmittingForm(false);
+    }
   };
+
+  const handleVote = async (challengeId: string, solutionId: string, voteType: 'up' | 'down') => {
+    if (!user) {
+      toast.error("You must be logged in to vote");
+      return;
+    }
+
+    try {
+      // Determine if this is an upvote (true) or downvote (false)
+      const isUpvote = voteType === 'up';
+      
+      // If user already voted the same way, consider it a vote removal
+      const isRemovingVote = userVotes[solutionId] === isUpvote;
+      
+      // Update optimistic UI first
+      setUserVotes(prev => ({
+        ...prev,
+        [solutionId]: isRemovingVote ? null : isUpvote
+      }));
+      
+      // Update the solution in the database
+      await voteSolution(solutionId, user.id, isRemovingVote ? null : isUpvote);
+      
+      // Refresh solutions to get updated vote counts
+      const updatedSolutions = await getSolutions(challengeId);
+      setSolutions(updatedSolutions);
+    } catch (error) {
+      console.error("Failed to register vote:", error);
+      toast.error("Failed to register your vote");
+      
+      // Revert optimistic UI update on error
+      setUserVotes(prev => ({
+        ...prev,
+        [solutionId]: prev[solutionId]
+      }));
+    }
+  };
+
+  // Import the createSolution function from the service
+  const { createSolution } = require("@/services/solutionsService");
 
   return (
     <Card key={challenge.id} className="w-full">
@@ -96,13 +170,23 @@ const ChallengeCard = ({ challenge, onDelete, onEdit }: ChallengeCardProps) => {
       </CardContent>
       
       {showSolutions && (
-        <SolutionsList 
-          challengeId={challenge.id}
-          solutions={solutions}
-          handleVote={handleVote}
-          userVotes={userVotes}
-          user={user}
-        />
+        <>
+          <SolutionsList 
+            challengeId={challenge.id}
+            solutions={solutions}
+            handleVote={handleVote}
+            userVotes={userVotes}
+            user={user}
+          />
+          
+          <SolutionForm
+            challengeId={challenge.id}
+            onSubmit={handleSubmitSolution}
+            loading={submittingForm}
+            user={user}
+            solutions={solutions}
+          />
+        </>
       )}
       
       <CardFooter className="border-t pt-4 flex justify-between">
