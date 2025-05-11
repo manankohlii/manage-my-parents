@@ -46,8 +46,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setSession(newSession);
         setUser(newSession?.user ?? null);
         
-        // Handle redirects
-        if (event === 'SIGNED_IN') {
+        // Only handle explicit sign-in and sign-out events, not the initial session check
+        if (event === 'SIGNED_IN' && newSession) {
           // Don't redirect from within onAuthStateChange to avoid infinite loops
           setTimeout(() => {
             navigate('/dashboard');

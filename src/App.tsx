@@ -28,14 +28,21 @@ const App = () => (
           <Routes>
             <Route path="/login" element={<AuthPage />} />
             <Route path="/register" element={<AuthPage />} />
-            <Route element={<ProtectedRoute><Layout /></ProtectedRoute>}>
+            
+            {/* Public homepage in Layout */}
+            <Route element={<Layout />}>
               <Route path="/" element={<HomePage />} />
+            </Route>
+            
+            {/* Protected routes in Layout */}
+            <Route element={<ProtectedRoute><Layout /></ProtectedRoute>}>
               <Route path="/dashboard" element={<DashboardPage />} />
               <Route path="/post/:id" element={<PostDetailPage />} />
               <Route path="/post/new" element={<CreatePostPage />} />
               <Route path="/profile" element={<ProfilePage />} />
               <Route path="/settings" element={<SettingsPage />} />
             </Route>
+            
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AuthProvider>

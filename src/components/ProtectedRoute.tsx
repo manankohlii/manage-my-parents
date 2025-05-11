@@ -12,7 +12,12 @@ export default function ProtectedRoute({
   const navigate = useNavigate();
 
   useEffect(() => {
+    // Only redirect to login if user is not authenticated and not loading
     if (!loading && !user) {
+      // Check if we're on the homepage - allow public access
+      if (window.location.pathname === "/") {
+        return; // Allow access to home page without authentication
+      }
       navigate("/login");
     }
   }, [user, loading, navigate]);
@@ -28,5 +33,11 @@ export default function ProtectedRoute({
     );
   }
 
+  // Allow rendering children for the home page without requiring auth
+  if (window.location.pathname === "/") {
+    return <>{children}</>;
+  }
+
+  // For other protected routes, only render if authenticated
   return user ? <>{children}</> : null;
 }
