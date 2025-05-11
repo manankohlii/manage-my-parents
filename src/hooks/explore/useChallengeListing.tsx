@@ -6,8 +6,12 @@ import { useSolutions } from "@/hooks/explore/useSolutions";
 import { useVoting } from "@/hooks/explore/useVoting";
 import { useEffect } from "react";
 
+// Add debugging console logs
+console.log("Loading useChallengeListing hook");
+
 export const useChallengeListing = () => {
   const { user } = useAuth();
+  console.log("Current user:", user);
   
   // Use our refactored hooks
   const { 
@@ -17,6 +21,8 @@ export const useChallengeListing = () => {
     allTags,
     updateChallengeStats
   } = useChallenges();
+  
+  console.log("Challenges from useChallenges:", challenges);
   
   const {
     searchTerm,
@@ -61,6 +67,7 @@ export const useChallengeListing = () => {
   // Load solutions for challenges with solutions_count > 0
   useEffect(() => {
     if (challenges.length > 0) {
+      console.log("Loading solutions for challenges:", challenges);
       challenges.forEach(challenge => {
         if ((challenge.solutions_count || 0) > 0) {
           loadSolutions(challenge.id);
@@ -167,9 +174,12 @@ export const useChallengeListing = () => {
     }
   };
 
+  const filteredChallenges = getFilteredChallenges(challenges);
+  console.log("Filtered challenges:", filteredChallenges);
+
   return {
     loading,
-    filteredChallenges: getFilteredChallenges(challenges),
+    filteredChallenges,
     searchTerm,
     setSearchTerm,
     sortBy,

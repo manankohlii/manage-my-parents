@@ -1,101 +1,94 @@
 
-import { useChallengeListing } from "@/hooks/explore/useChallengeListing";
-import ChallengeCard from "@/components/explore/ChallengeCard";
+import { useEffect, useState } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { mockPosts } from "@/data/mockData";
+import PostCard from "@/components/PostCard";
+
+// Added console logs for debugging
+console.log("Loading CommunityPage component");
+console.log("Mock posts data:", mockPosts);
 
 const CommunityPage = () => {
-  const {
-    loading,
-    filteredChallenges,
-    searchTerm,
-    setSearchTerm,
-    sortBy,
-    setSortBy,
-    filterAgeGroup,
-    setFilterAgeGroup,
-    filterLocation,
-    setFilterLocation,
-    solutions,
-    userVotes,
-    handleVote,
-    openPopover,
-    setOpenPopover,
-    handleSubmitSolution,
-    newSolution,
-    setNewSolution,
-    loadingSolution,
-    user
-  } = useChallengeListing();
+  const [loading, setLoading] = useState(true);
+  const [posts, setPosts] = useState(mockPosts);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [sortBy, setSortBy] = useState("newest");
+  const [filterLocation, setFilterLocation] = useState("");
+
+  // Simulate data loading
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      console.log("Setting posts:", mockPosts);
+      setPosts(mockPosts);
+      setLoading(false);
+    }, 1000);
+
+    return () => clearTimeout(timer);
+  }, []);
+
+  // Filter and sort posts
+  const filteredPosts = posts.filter(post => {
+    const matchesSearch = post.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
+                          post.content.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    return matchesSearch;
+  }).sort((a, b) => {
+    if (sortBy === "newest") {
+      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+    } else if (sortBy === "oldest") {
+      return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+    } else if (sortBy === "most_comments") {
+      return b.comments - a.comments;
+    }
+    return 0;
+  });
 
   return (
     <div className="container mx-auto py-8">
-      <h1 className="text-3xl font-bold mb-6">Community Challenges</h1>
+      <h1 className="text-3xl font-bold mb-6">Community Forum</h1>
       
       {/* Search and Filters */}
       <div className="mb-4 flex flex-wrap gap-2 items-center">
-        <input
+        <Input
           type="text"
-          placeholder="Search challenges..."
+          placeholder="Search posts..."
           className="border p-2 rounded flex-grow md:flex-grow-0 md:w-1/3"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
         />
         
-        <select
-          className="border p-2 rounded"
-          value={sortBy}
-          onChange={(e) => setSortBy(e.target.value)}
-        >
-          <option value="newest">Newest</option>
-          <option value="oldest">Oldest</option>
-          <option value="most_solutions">Most Solutions</option>
-        </select>
-        
-        {/* Age Group filter removed */}
-        
-        <select
-          className="border p-2 rounded"
-          value={filterLocation}
-          onChange={(e) => setFilterLocation(e.target.value)}
-        >
-          <option value="">All Locations</option>
-          <option value="US">United States</option>
-          <option value="CA">Canada</option>
-          <option value="UK">United Kingdom</option>
-          <option value="AU">Australia</option>
-        </select>
+        <Select value={sortBy} onValueChange={setSortBy}>
+          <SelectTrigger className="w-[180px]">
+            <SelectValue placeholder="Sort by" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="newest">Newest</SelectItem>
+            <SelectItem value="oldest">Oldest</SelectItem>
+            <SelectItem value="most_comments">Most Comments</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
       
-      {/* Challenge cards rendering */}
+      {/* Posts rendering */}
       {loading ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {[1, 2, 3, 4, 5, 6].map((index) => (
-            <Skeleton key={index} className="h-64 w-full rounded-lg" />
+        <div className="space-y-6">
+          {[1, 2, 3].map((index) => (
+            <Skeleton key={index} className="h-40 w-full rounded-lg" />
           ))}
         </div>
-      ) : filteredChallenges.length === 0 ? (
-        <div className="text-center py-12">
-          <p className="text-xl text-gray-500">No challenges found matching your criteria.</p>
-        </div>
+      ) : filteredPosts.length === 0 ? (
+        <Card>
+          <CardContent className="text-center py-12">
+            <p className="text-xl text-gray-500">No posts found matching your criteria.</p>
+          </CardContent>
+        </Card>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredChallenges.map((challenge) => (
-            <ChallengeCard
-              key={challenge.id}
-              challenge={challenge}
-              handleUpvote={() => handleVote(challenge.id, null, 'up')} 
-              handleDownvote={() => handleVote(challenge.id, null, 'down')}
-              handleSubmitSolution={handleSubmitSolution}
-              newSolution={newSolution}
-              setNewSolution={setNewSolution}
-              loadingSolution={loadingSolution}
-              userVotes={userVotes}
-              openSolutionForm={openPopover === challenge.id}
-              setOpenSolutionForm={(isOpen) => setOpenPopover(isOpen ? challenge.id : null)}
-              user={user}
-              solutions={solutions[challenge.id] || []}
-              handleVote={handleVote}
-            />
+        <div className="space-y-6">
+          {filteredPosts.map((post) => (
+            <PostCard key={post.id} post={post} />
           ))}
         </div>
       )}
