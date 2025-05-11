@@ -26,7 +26,7 @@ const TagBadge = ({ text, className, size = 'md', onClick }: TagBadgeProps) => {
       )}
       onClick={onClick}
     >
-      #{text}
+      {text}
     </span>
   );
 };
