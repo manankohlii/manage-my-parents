@@ -5,14 +5,13 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { mockPosts } from "@/data/mockData";
-import PostCard, { Post } from "@/components/PostCard";
+import PostCard from "@/components/PostCard";
 
-// Clear console logs for debugging
 console.log("Loading CommunityPage component");
 
 const CommunityPage = () => {
   const [loading, setLoading] = useState(true);
-  const [posts, setPosts] = useState<Post[]>([]);
+  const [posts, setPosts] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [sortBy, setSortBy] = useState("newest");
 
