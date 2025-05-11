@@ -2,7 +2,7 @@
 import { Card, CardContent } from "@/components/ui/card";
 import ChallengeFilters from "./explore/ChallengeFilters";
 import ChallengeCard from "./explore/ChallengeCard";
-import { useChallengeListing } from "./explore/useChallengeListing";
+import { useChallengeListing } from "@/hooks/explore/useChallengeListing";
 
 const ExploreChallenges = () => {
   const {
@@ -73,10 +73,10 @@ const ExploreChallenges = () => {
               setNewSolution={setNewSolution}
               loadingSolution={loadingSolution}
               userVotes={userVotes}
-              openSolutionForm={openPopover}
-              setOpenSolutionForm={setOpenPopover}
+              openSolutionForm={openPopover === challenge.id}
+              setOpenSolutionForm={(isOpen) => setOpenPopover(isOpen ? challenge.id : null)}
               user={user}
-              solutions={solutions}
+              solutions={solutions[challenge.id] || []}
               handleVote={handleVote}
             />
           ))}

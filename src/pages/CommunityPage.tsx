@@ -2,7 +2,6 @@
 import { useChallengeListing } from "@/hooks/explore/useChallengeListing";
 import ChallengeCard from "@/components/explore/ChallengeCard";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ThumbsUp, ThumbsDown } from "lucide-react";
 
 const CommunityPage = () => {
   const {
@@ -102,7 +101,7 @@ const CommunityPage = () => {
               openSolutionForm={openPopover === challenge.id}
               setOpenSolutionForm={(isOpen) => setOpenPopover(isOpen ? challenge.id : null)}
               user={user}
-              solutions={solutions && solutions[challenge.id]}
+              solutions={solutions[challenge.id] || []}
               handleVote={handleVote}
             />
           ))}
