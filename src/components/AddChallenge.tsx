@@ -1,6 +1,6 @@
-
 import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
+import { useNavigate } from "react-router-dom";
 import { 
   Card, 
   CardContent, 
@@ -58,6 +58,7 @@ type FormValues = {
 
 const AddChallenge = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [tags, setTags] = useState<string[]>([]);
   const [tagInput, setTagInput] = useState("");
   const [recommendedTags, setRecommendedTags] = useState<string[]>([]);
