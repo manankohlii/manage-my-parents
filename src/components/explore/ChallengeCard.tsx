@@ -1,3 +1,4 @@
+
 import React from "react";
 import { formatDistanceToNow } from "date-fns";
 import TagBadge from "../TagBadge";
@@ -7,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Challenge } from "@/services/challengesService";
 import SolutionsList from "./SolutionsList";
 import NewSolutionForm from "./NewSolutionForm";
+import { Solution } from "@/services/solutionsService";
 
 interface ChallengeCardProps {
   challenge: Challenge;
@@ -16,10 +18,12 @@ interface ChallengeCardProps {
   newSolution: string;
   setNewSolution: (value: string) => void;
   loadingSolution: boolean;
-  userVotes: Record<string, boolean>;
+  userVotes: Record<string, boolean | null>;
   openSolutionForm: string | null;
   setOpenSolutionForm: (isOpen: string | null) => void;
   user: any;
+  solutions?: Record<string, Solution[]>;
+  handleVote: (challengeId: string, solutionId: string, voteType: 'up' | 'down') => Promise<void>;
 }
 
 const ChallengeCard = ({
@@ -33,10 +37,13 @@ const ChallengeCard = ({
   userVotes,
   openSolutionForm,
   setOpenSolutionForm,
-  user
+  user,
+  solutions,
+  handleVote
 }: ChallengeCardProps) => {
   const isUpvoted = userVotes[challenge.id] === true;
   const isDownvoted = userVotes[challenge.id] === false;
+  const challengeSolutions = solutions?.[challenge.id] || [];
 
   return (
     <Card className="w-full">
@@ -58,7 +65,13 @@ const ChallengeCard = ({
       <CardContent>
         <p className="text-sm text-gray-700">{challenge.description}</p>
       </CardContent>
-      <SolutionsList challengeId={challenge.id} />
+      <SolutionsList 
+        challengeId={challenge.id}
+        solutions={challengeSolutions}
+        handleVote={handleVote}
+        userVotes={userVotes}
+        user={user}
+      />
       <NewSolutionForm
         challengeId={challenge.id}
         isOpen={openSolutionForm === challenge.id}

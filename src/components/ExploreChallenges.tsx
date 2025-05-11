@@ -66,17 +66,18 @@ const ExploreChallenges = () => {
             <ChallengeCard
               key={challenge.id}
               challenge={challenge}
-              handleVote={handleVote}
-              userVotes={userVotes}
-              loadSolutions={loadSolutions}
-              solutions={solutions}
-              user={user}
-              openPopover={openPopover}
-              setOpenPopover={setOpenPopover}
+              handleUpvote={(challengeId) => handleVote(challengeId, null, 'up')}
+              handleDownvote={(challengeId) => handleVote(challengeId, null, 'down')}
               handleSubmitSolution={handleSubmitSolution}
               newSolution={newSolution}
               setNewSolution={setNewSolution}
               loadingSolution={loadingSolution}
+              userVotes={userVotes}
+              openSolutionForm={openPopover}
+              setOpenSolutionForm={setOpenPopover}
+              user={user}
+              solutions={solutions}
+              handleVote={handleVote}
             />
           ))}
         </div>

@@ -8,7 +8,7 @@ import { toast } from "sonner";
 interface NewSolutionFormProps {
   challengeId: string;
   isOpen: boolean;
-  setIsOpen: (isOpen: boolean | null) => void;
+  setIsOpen: (isOpen: string | null) => void;
   handleSubmitSolution: (challengeId: string) => Promise<void>;
   newSolution: string;
   setNewSolution: (value: string) => void;

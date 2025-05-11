@@ -13,13 +13,13 @@ interface SolutionsListProps {
 }
 
 const SolutionsList = ({ 
-  solutions, 
+  solutions = [], // Provide a default empty array
   challengeId, 
   handleVote, 
   userVotes,
   user
 }: SolutionsListProps) => {
-  if (!solutions.length) return null;
+  if (!solutions || !solutions.length) return null;
 
   return (
     <div className="mt-4 space-y-3">
