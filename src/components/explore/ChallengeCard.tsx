@@ -3,7 +3,7 @@ import React from "react";
 import { formatDistanceToNow } from "date-fns";
 import TagBadge from "../TagBadge";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
-import { ThumbsUp, ThumbsDown, MessageCircle } from "lucide-react";
+import { MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Challenge } from "@/services/challengesService";
 import SolutionsList from "./SolutionsList";
@@ -41,8 +41,6 @@ const ChallengeCard = ({
   solutions,
   handleVote
 }: ChallengeCardProps) => {
-  const isUpvoted = userVotes[challenge.id] === true;
-  const isDownvoted = userVotes[challenge.id] === false;
   // Get solutions for this challenge or an empty array if undefined
   const challengeSolutions = solutions?.[challenge.id] || [];
 
@@ -87,25 +85,7 @@ const ChallengeCard = ({
         userVotes={userVotes}
         user={user}
       />
-      <CardFooter className="flex items-center justify-between">
-        <div className="flex items-center space-x-2">
-          <Button
-            variant="ghost"
-            onClick={() => handleUpvote(challenge.id)}
-            className={isUpvoted ? "text-green-500" : ""}
-          >
-            <ThumbsUp className="h-4 w-4 mr-1" />
-            {challenge.votes_count > 0 ? challenge.votes_count : ''}
-          </Button>
-          <Button
-            variant="ghost"
-            onClick={() => handleDownvote(challenge.id)}
-            className={isDownvoted ? "text-red-500" : ""}
-          >
-            <ThumbsDown className="h-4 w-4 mr-1" />
-             {challenge.votes_count < 0 ? Math.abs(challenge.votes_count) : ''}
-          </Button>
-        </div>
+      <CardFooter className="flex items-center justify-end">
         <div className="flex items-center">
           <MessageCircle className="h-4 w-4 mr-1" />
           {challenge.solutions_count} Solutions
