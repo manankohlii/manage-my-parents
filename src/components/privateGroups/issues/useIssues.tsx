@@ -1,7 +1,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useToast } from "@/components/ui/use-toast";
-import { mockIssues, Issue } from "./mockIssueData";
+import { mockIssues, mockSolutions, Issue } from "./mockIssueData";
 
 export const useIssues = (groupId: string) => {
   const [issues, setIssues] = useState<Issue[]>([]);
@@ -9,6 +9,7 @@ export const useIssues = (groupId: string) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterTag, setFilterTag] = useState("");
   const [selectedIssue, setSelectedIssue] = useState<string | null>(null);
+  const [solutions, setSolutions] = useState<Record<string, any>>({});
   
   const { toast } = useToast();
 
@@ -20,31 +21,9 @@ export const useIssues = (groupId: string) => {
         setLoading(true);
         await new Promise(resolve => setTimeout(resolve, 800));
         
-        // Enhance mock data with random tag distribution for better testing
-        const enhancedMockIssues = mockIssues.map(issue => {
-          // Ensure each issue has 1-3 random tags for better filtering experience
-          const allAvailableTags = Array.from(
-            new Set(mockIssues.flatMap(i => i.tags))
-          );
-          
-          if (issue.tags.length === 0) {
-            const numTags = Math.floor(Math.random() * 3) + 1;
-            const randomTags = [];
-            for (let i = 0; i < numTags; i++) {
-              const randomTag = allAvailableTags[
-                Math.floor(Math.random() * allAvailableTags.length)
-              ];
-              if (!randomTags.includes(randomTag)) {
-                randomTags.push(randomTag);
-              }
-            }
-            return {...issue, tags: randomTags};
-          }
-          
-          return issue;
-        });
-        
-        setIssues(enhancedMockIssues);
+        // Use our mock data with additional tags for better filtering
+        setIssues(mockIssues);
+        setSolutions(mockSolutions);
       } catch (error) {
         console.error("Error loading issues:", error);
         toast({
@@ -95,6 +74,10 @@ export const useIssues = (groupId: string) => {
     setSelectedIssue(issueId);
   }, []);
 
+  const getIssueSolutions = useCallback((issueId: string) => {
+    return solutions[issueId] || [];
+  }, [solutions]);
+
   return {
     issues,
     loading,
@@ -107,6 +90,8 @@ export const useIssues = (groupId: string) => {
     formatDate,
     addIssue,
     selectedIssue,
-    selectIssue
+    selectIssue,
+    getIssueSolutions,
+    solutions
   };
 };

@@ -23,6 +23,7 @@ interface IssuesListProps {
   loading: boolean;
   formatDate: (dateString: string) => string;
   onOpenAddDialog: () => void;
+  onSelectIssue: (issueId: string) => void;
 }
 
 const IssuesList = ({ 
@@ -30,7 +31,8 @@ const IssuesList = ({
   filteredIssues, 
   loading, 
   formatDate, 
-  onOpenAddDialog 
+  onOpenAddDialog,
+  onSelectIssue
 }: IssuesListProps) => {
   return (
     <Card>
@@ -73,6 +75,7 @@ const IssuesList = ({
                   key={issue.id} 
                   issue={issue} 
                   formatDate={formatDate}
+                  onSelect={onSelectIssue}
                 />
               ))}
             </TableBody>
