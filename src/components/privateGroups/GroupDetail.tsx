@@ -15,18 +15,20 @@ interface GroupDetailProps {
   onBack: () => void;
 }
 
-// Mock group data
+// Mock group data with parent-children theme
 const mockGroup = {
   id: "1",
-  name: "Design Thinkers",
-  description: "A group focused on design thinking methodologies and practices.",
+  name: "Parenting Support Circle",
+  description: "A supportive group for parents to discuss challenges, share advice, and find solutions related to raising children of all ages.",
   memberCount: 8,
   createdAt: "2025-04-15T10:00:00",
   members: [
     { id: "user1", name: "Sarah Johnson", email: "sarah@example.com", avatar: "", role: "admin" as const },
     { id: "user2", name: "Michael Chen", email: "michael@example.com", avatar: "", role: "member" as const },
     { id: "user3", name: "Emma Wilson", email: "emma@example.com", avatar: "", role: "member" as const },
-    { id: "user4", name: "David Kim", email: "david@example.com", avatar: "", role: "member" as const }
+    { id: "user4", name: "David Kim", email: "david@example.com", avatar: "", role: "member" as const },
+    { id: "user5", name: "Jessica Martinez", email: "jessica@example.com", avatar: "", role: "member" as const },
+    { id: "user6", name: "Robert Taylor", email: "robert@example.com", avatar: "", role: "member" as const }
   ]
 };
 

@@ -27,37 +27,47 @@ interface GroupIssuesProps {
   groupId: string;
 }
 
-// Mock issues data
+// Mock issues data with parent-children themes
 const mockIssues: Issue[] = [
   {
     id: "issue1",
-    title: "How to improve user engagement in education apps?",
-    description: "I've been working on an educational app and struggling with keeping users engaged over time. Would love some insights from the group.",
+    title: "How to discuss screen time limits with teenagers?",
+    description: "My teenager is constantly on their devices and I'm concerned about the impact on their sleep and social development. I'd like advice on how to set reasonable screen time limits without causing conflict.",
     userId: "user1",
     userName: "Sarah Johnson",
     createdAt: "2025-05-08T14:30:00",
-    tags: ["education", "engagement", "design"],
-    solutionCount: 3
+    tags: ["teens", "screen-time", "boundaries"],
+    solutionCount: 4
   },
   {
     id: "issue2",
-    title: "Ethical considerations in AI design",
-    description: "I'm designing an AI component for a project and want to ensure we're considering ethical implications properly.",
+    title: "Supporting a child through school anxiety",
+    description: "My 9-year-old has developed anxiety about going to school. They complain of stomachaches every morning and sometimes cry when it's time to leave. How can I support them and reduce their anxiety?",
     userId: "user3",
     userName: "Emma Wilson",
     createdAt: "2025-05-09T11:15:00",
-    tags: ["ai", "ethics", "design"],
-    solutionCount: 2
+    tags: ["anxiety", "school", "emotional-support"],
+    solutionCount: 3
   },
   {
     id: "issue3",
-    title: "Best frameworks for rapid prototyping",
-    description: "Looking for recommendations on frameworks that allow for quick iteration while still maintaining good design principles.",
+    title: "Handling sibling rivalry between young children",
+    description: "I have a 4-year-old and a 6-year-old who are constantly competing for attention and fighting. I'm exhausted from mediating their conflicts. What strategies work for reducing sibling rivalry?",
     userId: "user2",
     userName: "Michael Chen",
     createdAt: "2025-05-10T09:45:00",
-    tags: ["development", "prototyping", "frameworks"],
-    solutionCount: 1
+    tags: ["siblings", "conflict-resolution", "family-dynamics"],
+    solutionCount: 2
+  },
+  {
+    id: "issue4",
+    title: "Talking to teens about dating and relationships",
+    description: "My 15-year-old daughter seems interested in dating and I want to have open conversations about healthy relationships, but I'm not sure how to approach it without seeming intrusive or making her uncomfortable.",
+    userId: "user4",
+    userName: "David Kim",
+    createdAt: "2025-05-07T16:20:00",
+    tags: ["teens", "relationships", "communication"],
+    solutionCount: 5
   }
 ];
 
