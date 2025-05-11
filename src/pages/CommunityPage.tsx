@@ -6,22 +6,35 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { mockPosts } from "@/data/mockData";
 import PostCard from "@/components/PostCard";
-
-console.log("Loading CommunityPage component");
+import { Post } from "@/components/PostCard";
+import { toast } from "@/components/ui/use-toast";
 
 const CommunityPage = () => {
   const [loading, setLoading] = useState(true);
-  const [posts, setPosts] = useState([]);
+  const [posts, setPosts] = useState<Post[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [sortBy, setSortBy] = useState("newest");
 
-  // Simulate data loading
+  // Load mock data
   useEffect(() => {
-    console.log("Loading posts from mock data");
+    console.log("Loading community posts from mock data");
     const timer = setTimeout(() => {
-      console.log("Setting posts:", mockPosts);
-      setPosts(mockPosts);
-      setLoading(false);
+      try {
+        setPosts(mockPosts);
+        console.log("Community posts loaded:", mockPosts);
+        setLoading(false);
+        toast({
+          title: "Community posts loaded",
+          description: `${mockPosts.length} posts have been loaded successfully.`
+        });
+      } catch (error) {
+        console.error("Error loading posts:", error);
+        toast({
+          variant: "destructive",
+          title: "Error loading posts",
+          description: "There was a problem loading the community posts."
+        });
+      }
     }, 1000);
 
     return () => clearTimeout(timer);
@@ -30,10 +43,8 @@ const CommunityPage = () => {
   // Filter and sort posts
   const filteredPosts = posts
     .filter(post => {
-      const matchesSearch = post.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                          post.content.toLowerCase().includes(searchTerm.toLowerCase());
-      
-      return matchesSearch;
+      return post.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
+             post.content.toLowerCase().includes(searchTerm.toLowerCase());
     })
     .sort((a, b) => {
       if (sortBy === "newest") {
