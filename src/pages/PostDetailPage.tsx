@@ -5,7 +5,7 @@ import { Avatar } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
-import { Heart, MessageSquare, Share, Flag, ArrowLeft } from "lucide-react";
+import { ThumbsUp, ThumbsDown, MessageSquare, Share, Flag, ArrowLeft } from "lucide-react";
 import TagBadge from "@/components/TagBadge";
 import { mockPosts, mockComments } from "@/data/mockData";
 import { toast } from "sonner";
@@ -14,6 +14,7 @@ const PostDetailPage = () => {
   const { id } = useParams<{ id: string }>();
   const [commentText, setCommentText] = useState("");
   const [comments, setComments] = useState(mockComments);
+  const [postLikes, setPostLikes] = useState(0);
 
   // Find the post from our mock data
   const post = mockPosts.find((p) => p.id === id);
@@ -32,6 +33,16 @@ const PostDetailPage = () => {
       </div>
     );
   }
+
+  // Initialize post likes from the post data
+  useState(() => {
+    setPostLikes(post.likes);
+  });
+
+  const handleVote = (voteType: 'up' | 'down') => {
+    setPostLikes(prevLikes => voteType === 'up' ? prevLikes + 1 : prevLikes - 1);
+    toast.success(`${voteType === 'up' ? 'Upvoted' : 'Downvoted'} post`);
+  };
 
   const handleAddComment = () => {
     if (!commentText.trim()) {
@@ -98,10 +109,25 @@ const PostDetailPage = () => {
           </div>
         </CardContent>
         <CardFooter className="border-t border-border flex justify-between">
-          <Button variant="ghost" size="sm" className="text-muted-foreground">
-            <Heart className="h-4 w-4 mr-1" />
-            <span>{post.likes}</span>
-          </Button>
+          <div className="flex items-center space-x-2">
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="text-muted-foreground"
+              onClick={() => handleVote('up')}
+            >
+              <ThumbsUp className="h-4 w-4 mr-1" />
+            </Button>
+            <span>{postLikes}</span>
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="text-muted-foreground"
+              onClick={() => handleVote('down')}
+            >
+              <ThumbsDown className="h-4 w-4" />
+            </Button>
+          </div>
           <Button variant="ghost" size="sm" className="text-muted-foreground">
             <MessageSquare className="h-4 w-4 mr-1" />
             <span>{comments.length}</span>
@@ -157,10 +183,15 @@ const PostDetailPage = () => {
                 </div>
                 <p className="text-sm">{comment.content}</p>
                 <div className="flex space-x-4 mt-2">
-                  <Button variant="ghost" size="sm" className="h-6 px-2 text-xs text-muted-foreground">
-                    <Heart className="h-3 w-3 mr-1" />
-                    <span>{comment.likes}</span>
-                  </Button>
+                  <div className="flex items-center space-x-1">
+                    <Button variant="ghost" size="sm" className="h-6 px-2 text-xs text-muted-foreground">
+                      <ThumbsUp className="h-3 w-3 mr-1" />
+                    </Button>
+                    <span className="text-xs text-muted-foreground">{comment.likes}</span>
+                    <Button variant="ghost" size="sm" className="h-6 px-2 text-xs text-muted-foreground">
+                      <ThumbsDown className="h-3 w-3" />
+                    </Button>
+                  </div>
                   <Button variant="ghost" size="sm" className="h-6 px-2 text-xs text-muted-foreground">
                     Reply
                   </Button>
