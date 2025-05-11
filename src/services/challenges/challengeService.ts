@@ -69,7 +69,8 @@ export const createChallenge = async (challengeData: ChallengeInput, userId: str
         description: challengeData.description,
         mood: challengeData.mood,
         location: challengeData.location,
-        user_id: userId
+        user_id: userId,
+        age_group: "not_specified" // Adding a default value for age_group since it's required
       })
       .select()
       .single();
