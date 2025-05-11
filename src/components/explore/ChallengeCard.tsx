@@ -7,6 +7,7 @@ import { ThumbsUp, ThumbsDown, MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Challenge } from "@/services/challengesService";
 import SolutionsList from "./SolutionsList";
+import SolutionForm from "./SolutionForm";
 import { Solution } from "@/services/solutionsService";
 
 interface ChallengeCardProps {
@@ -44,6 +45,11 @@ const ChallengeCard = ({
   const isDownvoted = userVotes[challenge.id] === false;
   const challengeSolutions = solutions?.[challenge.id] || [];
 
+  const handleSolutionSubmit = async (solution: string) => {
+    setNewSolution(solution);
+    await handleSubmitSolution(challenge.id);
+  };
+
   return (
     <Card className="w-full">
       <CardHeader>
@@ -63,6 +69,15 @@ const ChallengeCard = ({
       </CardHeader>
       <CardContent>
         <p className="text-sm text-gray-700">{challenge.description}</p>
+        
+        {/* Add the Solution Form */}
+        <SolutionForm
+          challengeId={challenge.id}
+          onSubmit={(solution) => handleSolutionSubmit(solution)}
+          loading={loadingSolution}
+          user={user}
+          solutions={challengeSolutions}
+        />
       </CardContent>
       <SolutionsList 
         challengeId={challenge.id}

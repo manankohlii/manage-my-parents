@@ -22,8 +22,7 @@ const SolutionsList = ({
   if (!solutions || !solutions.length) return null;
 
   return (
-    <div className="mt-4 space-y-3">
-      <h3 className="font-medium">Solutions ({solutions.length})</h3>
+    <div className="px-6 space-y-3">
       {solutions.map((solution) => (
         <div 
           key={solution.id} 
