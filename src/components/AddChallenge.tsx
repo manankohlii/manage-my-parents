@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
@@ -32,6 +33,7 @@ import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { createChallenge, getAllTags } from "@/services/challengesService";
 import { supabase } from "@/integrations/supabase/client";
+import { Tag } from "lucide-react";
 
 // Suggested tags based on common terms in eldercare
 const suggestedTags = [
@@ -63,8 +65,11 @@ const AddChallenge = () => {
   const [tagInput, setTagInput] = useState("");
   const [recommendedTags, setRecommendedTags] = useState<string[]>([]);
   const [existingTags, setExistingTags] = useState<string[]>([]);
+  const [popularTags, setPopularTags] = useState<string[]>([]);
+  const [filteredTags, setFilteredTags] = useState<string[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [userLocation, setUserLocation] = useState({ city: "", country: "" });
+  const [showAutocomplete, setShowAutocomplete] = useState(false);
   
   const form = useForm<FormValues>({
     defaultValues: {
@@ -105,15 +110,35 @@ const AddChallenge = () => {
     fetchProfileData();
   }, [user]);
 
-  // Load existing tags from the database
+  // Load existing tags and popular tags from the database
   useEffect(() => {
     const loadTags = async () => {
       const dbTags = await getAllTags();
       setExistingTags(dbTags);
+      
+      // Set some popular tags (in a real app, we would count tag usage)
+      // For now, we'll just use the first 5-8 tags as "popular"
+      const popular = dbTags.slice(0, Math.min(8, dbTags.length));
+      setPopularTags(popular);
     };
 
     loadTags();
   }, []);
+  
+  // Filter tags for autocomplete based on input
+  useEffect(() => {
+    if (tagInput) {
+      const filtered = existingTags.filter(tag => 
+        tag.toLowerCase().includes(tagInput.toLowerCase()) && 
+        !tags.includes(tag)
+      );
+      setFilteredTags(filtered.slice(0, 5));
+      setShowAutocomplete(filtered.length > 0);
+    } else {
+      setFilteredTags([]);
+      setShowAutocomplete(false);
+    }
+  }, [tagInput, existingTags, tags]);
   
   // Simple algorithm to recommend tags based on content
   useEffect(() => {
@@ -134,6 +159,15 @@ const AddChallenge = () => {
     if (tagInput.trim() && !tags.includes(tagInput.trim())) {
       setTags([...tags, tagInput.trim()]);
       setTagInput("");
+      setShowAutocomplete(false);
+    }
+  };
+  
+  const handleSelectAutocompleteTag = (tag: string) => {
+    if (!tags.includes(tag)) {
+      setTags([...tags, tag]);
+      setTagInput("");
+      setShowAutocomplete(false);
     }
   };
   
@@ -141,6 +175,12 @@ const AddChallenge = () => {
     if (!tags.includes(tag)) {
       setTags([...tags, tag]);
       setRecommendedTags(recommendedTags.filter(t => t !== tag));
+    }
+  };
+  
+  const handleAddPopularTag = (tag: string) => {
+    if (!tags.includes(tag)) {
+      setTags([...tags, tag]);
     }
   };
   
@@ -244,7 +284,7 @@ const AddChallenge = () => {
                 ))}
               </div>
               
-              <div className="flex gap-2">
+              <div className="flex gap-2 relative">
                 <Input
                   value={tagInput}
                   onChange={(e) => setTagInput(e.target.value)}
@@ -255,9 +295,48 @@ const AddChallenge = () => {
                       handleAddTag();
                     }
                   }}
+                  onFocus={() => tagInput && setShowAutocomplete(filteredTags.length > 0)}
+                  onBlur={() => setTimeout(() => setShowAutocomplete(false), 100)}
                 />
                 <Button type="button" onClick={handleAddTag}>Add Tag</Button>
+                
+                {/* Tag Autocomplete dropdown */}
+                {showAutocomplete && filteredTags.length > 0 && (
+                  <div className="absolute top-full left-0 mt-1 w-[calc(100%-5rem)] bg-white dark:bg-gray-800 border rounded-md shadow-lg z-10">
+                    {filteredTags.map((tag) => (
+                      <div 
+                        key={tag}
+                        className="px-3 py-2 hover:bg-muted cursor-pointer flex items-center gap-2"
+                        onClick={() => handleSelectAutocompleteTag(tag)}
+                      >
+                        <Tag size={14} />
+                        {tag}
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
+              
+              {/* Popular Tags Section */}
+              {popularTags.length > 0 && (
+                <div className="mt-4">
+                  <p className="text-sm text-muted-foreground mb-2 flex items-center">
+                    <Tag size={14} className="mr-1" />
+                    Popular tags:
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {popularTags.map(tag => (
+                      <TagBadge 
+                        key={tag} 
+                        text={tag}
+                        onClick={() => handleAddPopularTag(tag)}
+                        className="cursor-pointer bg-muted hover:bg-primary hover:text-white"
+                        size="sm"
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
               
               {recommendedTags.length > 0 && (
                 <div className="mt-2">
