@@ -6,16 +6,28 @@ import {
   Users
 } from "lucide-react";
 import DashboardTabs from "@/components/DashboardTabs";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useContext } from "react";
 import { TabContext } from "@/components/DashboardTabs";
 
 const DashboardPage = () => {
   const [currentTabTitle, setCurrentTabTitle] = useState("My Challenges");
+  const tabContext = useContext(TabContext);
   
-  // Update page title based on active tab
-  const handleTabChange = (tabTitle: string) => {
-    setCurrentTabTitle(tabTitle);
-  };
+  // Update page title based on active tab (now safely using hook at component level)
+  useEffect(() => {
+    if (tabContext) {
+      // Get tab title based on active tab
+      const getTitle = () => {
+        switch (tabContext.activeTab) {
+          case "my-challenges": return "My Challenges";
+          case "add-challenge": return "Add New Challenge";
+          case "explore": return "Explore Challenges";
+          default: return "My Challenges";
+        }
+      };
+      setCurrentTabTitle(getTitle());
+    }
+  }, [tabContext?.activeTab]);
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -59,35 +71,15 @@ const DashboardPage = () => {
       
       {/* Current Tab Title Display */}
       <div className="mb-4">
-        <TabContext.Consumer>
-          {(context) => {
-            useEffect(() => {
-              if (context) {
-                // Get tab title based on active tab
-                const getTitle = () => {
-                  switch (context.activeTab) {
-                    case "my-challenges": return "My Challenges";
-                    case "add-challenge": return "Add New Challenge";
-                    case "explore": return "Explore Challenges";
-                    default: return "My Challenges";
-                  }
-                };
-                setCurrentTabTitle(getTitle());
-              }
-            }, [context?.activeTab]);
-            
-            return (
-              <div className="flex items-center">
-                <h2 className="text-2xl font-semibold">{currentTabTitle}</h2>
-                <div className={`ml-3 h-2 w-2 rounded-full ${
-                  context?.activeTab === "my-challenges" ? "bg-blue-500" : 
-                  context?.activeTab === "add-challenge" ? "bg-green-500" : 
-                  "bg-purple-500"
-                }`}></div>
-              </div>
-            );
-          }}
-        </TabContext.Consumer>
+        {/* Now rendering content directly without useEffect inside render */}
+        <div className="flex items-center">
+          <h2 className="text-2xl font-semibold">{currentTabTitle}</h2>
+          <div className={`ml-3 h-2 w-2 rounded-full ${
+            tabContext?.activeTab === "my-challenges" ? "bg-blue-500" : 
+            tabContext?.activeTab === "add-challenge" ? "bg-green-500" : 
+            "bg-purple-500"
+          }`}></div>
+        </div>
       </div>
 
       {/* Tabs Interface */}
