@@ -22,6 +22,7 @@ const DashboardPage = () => {
           case "my-challenges": return "My Challenges";
           case "add-challenge": return "Add New Challenge";
           case "explore": return "Explore Challenges";
+          case "private-groups": return "Private Groups";
           default: return "My Challenges";
         }
       };
