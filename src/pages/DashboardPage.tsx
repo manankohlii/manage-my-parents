@@ -68,19 +68,6 @@ const DashboardPage = () => {
           </div>
         </Card>
       </div>
-      
-      {/* Current Tab Title Display */}
-      <div className="mb-4">
-        {/* Now rendering content directly without useEffect inside render */}
-        <div className="flex items-center">
-          <h2 className="text-2xl font-semibold">{currentTabTitle}</h2>
-          <div className={`ml-3 h-2 w-2 rounded-full ${
-            tabContext?.activeTab === "my-challenges" ? "bg-blue-500" : 
-            tabContext?.activeTab === "add-challenge" ? "bg-green-500" : 
-            "bg-purple-500"
-          }`}></div>
-        </div>
-      </div>
 
       {/* Tabs Interface */}
       <DashboardTabs />
