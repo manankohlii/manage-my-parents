@@ -51,16 +51,7 @@ const CommunityPage = () => {
           <option value="most_solutions">Most Solutions</option>
         </select>
         
-        <select
-          className="border p-2 rounded"
-          value={filterAgeGroup}
-          onChange={(e) => setFilterAgeGroup(e.target.value)}
-        >
-          <option value="">All Ages</option>
-          <option value="0-12">0-12</option>
-          <option value="13-18">13-18</option>
-          <option value="19+">19+</option>
-        </select>
+        {/* Age Group filter removed */}
         
         <select
           className="border p-2 rounded"
@@ -75,6 +66,7 @@ const CommunityPage = () => {
         </select>
       </div>
       
+      {/* Challenge cards rendering */}
       {loading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {[1, 2, 3, 4, 5, 6].map((index) => (
