@@ -57,7 +57,10 @@ export const useSolutions = (user: any, updateUserVotesForSolutions: (solutionId
         
         setNewSolution("");
         setOpenPopover(null);
+        toast.success("Solution submitted successfully!");
       }
+    } catch (error) {
+      toast.error("Failed to submit solution");
     } finally {
       setLoadingSolution(false);
     }

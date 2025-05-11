@@ -25,7 +25,7 @@ const DescriptionField = ({ control }: DescriptionFieldProps) => {
           <FormControl>
             <Textarea 
               placeholder="Describe your challenge in detail..." 
-              className="min-h-[150px]" 
+              className="min-h-[150px] resize-none" 
               {...field} 
             />
           </FormControl>
