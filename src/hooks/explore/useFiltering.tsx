@@ -12,9 +12,9 @@ export const useFiltering = () => {
   const getFilteredChallenges = (challenges: Challenge[]) => {
     return challenges
       .filter(challenge => {
+        // Keep the age group filter logic but it will now always return true
+        // since we've removed the UI element and default to empty string
         if (filterAgeGroup === "") return true;
-        
-        // Match challenges with the corresponding age group range
         return challenge.age_group === filterAgeGroup;
       })
       .filter(challenge => filterLocation === "all" || challenge.location === filterLocation)

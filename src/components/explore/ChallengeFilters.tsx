@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { 
   Command, 
@@ -81,19 +82,7 @@ const ChallengeFilters = ({
             </SelectContent>
           </Select>
           
-          <Select value={filterAgeGroup} onValueChange={setFilterAgeGroup}>
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Age Group" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="13-19">Teenagers (13-19)</SelectItem>
-              <SelectItem value="20-34">Young Adults (20-34)</SelectItem>
-              <SelectItem value="35-49">Adults (35-49)</SelectItem>
-              <SelectItem value="50-64">Middle-aged (50-64)</SelectItem>
-              <SelectItem value="65-79">Seniors (65-79)</SelectItem>
-              <SelectItem value="80+">Elderly (80+)</SelectItem>
-            </SelectContent>
-          </Select>
+          {/* Age Group filter removed */}
           
           <Select value={filterLocation} onValueChange={setFilterLocation}>
             <SelectTrigger className="w-[180px]">
