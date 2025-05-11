@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import { mockIssues, Issue } from "./mockIssueData";
 
@@ -8,6 +8,7 @@ export const useIssues = (groupId: string) => {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterTag, setFilterTag] = useState("");
+  const [selectedIssue, setSelectedIssue] = useState<string | null>(null);
   
   const { toast } = useToast();
 
@@ -16,9 +17,36 @@ export const useIssues = (groupId: string) => {
     const loadIssues = async () => {
       try {
         // Would fetch from Supabase in a real implementation
+        setLoading(true);
         await new Promise(resolve => setTimeout(resolve, 800));
-        setIssues(mockIssues);
+        
+        // Enhance mock data with random tag distribution for better testing
+        const enhancedMockIssues = mockIssues.map(issue => {
+          // Ensure each issue has 1-3 random tags for better filtering experience
+          const allAvailableTags = Array.from(
+            new Set(mockIssues.flatMap(i => i.tags))
+          );
+          
+          if (issue.tags.length === 0) {
+            const numTags = Math.floor(Math.random() * 3) + 1;
+            const randomTags = [];
+            for (let i = 0; i < numTags; i++) {
+              const randomTag = allAvailableTags[
+                Math.floor(Math.random() * allAvailableTags.length)
+              ];
+              if (!randomTags.includes(randomTag)) {
+                randomTags.push(randomTag);
+              }
+            }
+            return {...issue, tags: randomTags};
+          }
+          
+          return issue;
+        });
+        
+        setIssues(enhancedMockIssues);
       } catch (error) {
+        console.error("Error loading issues:", error);
         toast({
           title: "Failed to load issues",
           description: "Could not load group issues. Please try again.",
@@ -59,9 +87,13 @@ export const useIssues = (groupId: string) => {
     new Set(issues.flatMap(issue => issue.tags))
   ).sort();
 
-  const addIssue = (newIssue: Issue) => {
-    setIssues([newIssue, ...issues]);
-  };
+  const addIssue = useCallback((newIssue: Issue) => {
+    setIssues(prev => [newIssue, ...prev]);
+  }, []);
+
+  const selectIssue = useCallback((issueId: string) => {
+    setSelectedIssue(issueId);
+  }, []);
 
   return {
     issues,
@@ -73,6 +105,8 @@ export const useIssues = (groupId: string) => {
     filteredIssues,
     allTags,
     formatDate,
-    addIssue
+    addIssue,
+    selectedIssue,
+    selectIssue
   };
 };
