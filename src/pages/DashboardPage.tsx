@@ -16,7 +16,7 @@ const DashboardPage = () => {
       </div>
 
       {/* Stats Section */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 md:gap-6 mb-8">
         <Card className="p-4 flex items-center space-x-4">
           <div className="bg-primary/10 p-3 rounded-full">
             <MessageSquare className="h-6 w-6 text-primary" />
