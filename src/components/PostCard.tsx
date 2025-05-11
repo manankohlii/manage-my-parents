@@ -66,7 +66,7 @@ const PostCard = ({ post, onVote }: PostCardProps) => {
         </div>
       </CardHeader>
       <CardContent className="pb-3">
-        <Link to={`/post/${id}`} className="hover:underline">
+        <Link to={`/post/${id}`} className="hover:underline block">
           <h3 className="font-bold text-lg mb-2">{title}</h3>
         </Link>
         <p className="text-muted-foreground mb-3 line-clamp-3">{content}</p>
@@ -96,10 +96,12 @@ const PostCard = ({ post, onVote }: PostCardProps) => {
             <ThumbsDown className="h-4 w-4" />
           </Button>
         </div>
-        <Button variant="ghost" size="sm" className="text-muted-foreground">
-          <MessageSquare className="h-4 w-4 mr-1" />
-          <span>{comments}</span>
-        </Button>
+        <Link to={`/post/${id}`} className="inline-block">
+          <Button variant="ghost" size="sm" className="text-muted-foreground">
+            <MessageSquare className="h-4 w-4 mr-1" />
+            <span>{comments}</span>
+          </Button>
+        </Link>
       </CardFooter>
     </Card>
   );
