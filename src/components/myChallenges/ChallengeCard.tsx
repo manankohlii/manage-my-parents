@@ -11,9 +11,8 @@ import { Edit, Trash2 } from "lucide-react";
 import TagBadge from "../TagBadge";
 import { Challenge } from "@/services/challenges";
 import { useState, useEffect } from "react";
-import { Solution, getSolutions, voteSolution, createSolution } from "@/services/solutionsService";
+import { Solution, getSolutions, voteSolution } from "@/services/solutionsService";
 import SolutionsList from "../explore/SolutionsList";
-import SolutionForm from "../explore/SolutionForm";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 
@@ -27,7 +26,6 @@ const ChallengeCard = ({ challenge, onDelete, onEdit }: ChallengeCardProps) => {
   const [showSolutions, setShowSolutions] = useState(false);
   const [solutions, setSolutions] = useState<Solution[]>([]);
   const [loading, setLoading] = useState(false);
-  const [submittingForm, setSubmittingForm] = useState(false);
   const { user } = useAuth();
   const [userVotes, setUserVotes] = useState<Record<string, boolean | null>>({});
 
@@ -60,30 +58,6 @@ const ChallengeCard = ({ challenge, onDelete, onEdit }: ChallengeCardProps) => {
       toast.error("Failed to load solutions");
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handleSubmitSolution = async (solutionText: string): Promise<void> => {
-    if (!user) {
-      toast.error("You must be logged in to submit solutions");
-      return;
-    }
-    
-    setSubmittingForm(true);
-    try {
-      const newSolution = await createSolution(challenge.id, solutionText, user.id);
-      if (newSolution) {
-        // Add the new solution to the list
-        setSolutions([newSolution, ...solutions]);
-        
-        // Update challenge's solution count in parent component if needed
-        // This would require passing a callback from the parent
-      }
-    } catch (error) {
-      console.error("Failed to submit solution:", error);
-      toast.error("Failed to submit solution");
-    } finally {
-      setSubmittingForm(false);
     }
   };
 
@@ -165,23 +139,13 @@ const ChallengeCard = ({ challenge, onDelete, onEdit }: ChallengeCardProps) => {
       </CardContent>
       
       {showSolutions && (
-        <>
-          <SolutionsList 
-            challengeId={challenge.id}
-            solutions={solutions}
-            handleVote={handleVote}
-            userVotes={userVotes}
-            user={user}
-          />
-          
-          <SolutionForm
-            challengeId={challenge.id}
-            onSubmit={handleSubmitSolution}
-            loading={submittingForm}
-            user={user}
-            solutions={solutions}
-          />
-        </>
+        <SolutionsList 
+          challengeId={challenge.id}
+          solutions={solutions}
+          handleVote={handleVote}
+          userVotes={userVotes}
+          user={user}
+        />
       )}
       
       <CardFooter className="border-t pt-4 flex justify-between">
