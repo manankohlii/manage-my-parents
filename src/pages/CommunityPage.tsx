@@ -42,6 +42,13 @@ const CommunityPage = () => {
       try {
         const fetchedChallenges = await getAllChallenges();
         setChallenges(fetchedChallenges);
+        
+        // Pre-load solutions for challenges with solutions_count > 0
+        fetchedChallenges.forEach(challenge => {
+          if ((challenge.solutions_count || 0) > 0) {
+            loadSolutions(challenge.id);
+          }
+        });
       } catch (error) {
         console.error("Error fetching challenges:", error);
       } finally {
@@ -50,7 +57,7 @@ const CommunityPage = () => {
     };
     
     fetchChallenges();
-  }, []);
+  }, [loadSolutions]);
 
   const toggleTag = (tag: string) => {
     if (selectedTags.includes(tag)) {

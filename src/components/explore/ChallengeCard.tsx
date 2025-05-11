@@ -1,11 +1,11 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { formatDistanceToNow } from "date-fns";
 import TagBadge from "../TagBadge";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Challenge } from "@/services/challengesService";
+import { Challenge } from "@/services/challenges/types";
 import SolutionsList from "./SolutionsList";
 import SolutionForm from "./SolutionForm";
 import { Solution } from "@/services/solutionsService";
@@ -43,10 +43,21 @@ const ChallengeCard = ({
 }: ChallengeCardProps) => {
   // Get solutions for this challenge or an empty array if undefined
   const challengeSolutions = solutions?.[challenge.id] || [];
+  const [showSolutions, setShowSolutions] = useState(false);
 
   const handleSolutionSubmit = async (solution: string) => {
     setNewSolution(solution);
     await handleSubmitSolution(challenge.id);
+  };
+
+  const toggleSolutions = () => {
+    if (!showSolutions) {
+      // Load solutions when opening
+      setOpenSolutionForm(challenge.id);
+    } else {
+      setOpenSolutionForm(null);
+    }
+    setShowSolutions(!showSolutions);
   };
 
   return (
@@ -67,7 +78,7 @@ const ChallengeCard = ({
         </div>
       </CardHeader>
       <CardContent>
-        <p className="text-sm text-gray-700">{challenge.description}</p>
+        <p className="text-sm text-gray-700 mb-4">{challenge.description}</p>
         
         {/* Add the Solution Form */}
         <SolutionForm
@@ -78,18 +89,29 @@ const ChallengeCard = ({
           solutions={challengeSolutions}
         />
       </CardContent>
-      <SolutionsList 
-        challengeId={challenge.id}
-        solutions={challengeSolutions}
-        handleVote={handleVote}
-        userVotes={userVotes}
-        user={user}
-      />
+      
+      {/* Only show solutions if expanded */}
+      {showSolutions && (
+        <SolutionsList 
+          challengeId={challenge.id}
+          solutions={challengeSolutions}
+          handleVote={handleVote}
+          userVotes={userVotes}
+          user={user}
+        />
+      )}
+      
       <CardFooter className="flex items-center justify-end">
-        <div className="flex items-center">
+        <Button 
+          variant="ghost" 
+          size="sm" 
+          onClick={toggleSolutions}
+          className="flex items-center"
+        >
           <MessageCircle className="h-4 w-4 mr-1" />
-          {challenge.solutions_count} Solutions
-        </div>
+          {challenge.solutions_count || 0} Solutions
+          {showSolutions ? ' (Hide)' : ' (View)'}
+        </Button>
       </CardFooter>
     </Card>
   );

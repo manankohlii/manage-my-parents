@@ -30,7 +30,7 @@ const SolutionsList = ({
   }
 
   return (
-    <div className="px-6 space-y-3">
+    <div className="px-6 space-y-3 pb-4">
       <h3 className="text-lg font-medium">Solutions ({solutions.length})</h3>
       {solutions.map((solution) => (
         <div 
