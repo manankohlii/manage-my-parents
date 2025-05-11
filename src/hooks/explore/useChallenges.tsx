@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from "react";
-import { getAllChallenges, Challenge } from "@/services/challengesService";
+import { getAllChallenges, Challenge } from "@/services/challenges";
 import { getAllTags } from "@/services/challenges/tagService";
 import { toast } from "sonner";
 
