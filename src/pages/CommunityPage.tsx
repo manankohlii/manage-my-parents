@@ -5,21 +5,20 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { mockPosts } from "@/data/mockData";
-import PostCard from "@/components/PostCard";
+import PostCard, { Post } from "@/components/PostCard";
 
-// Added console logs for debugging
+// Clear console logs for debugging
 console.log("Loading CommunityPage component");
-console.log("Mock posts data:", mockPosts);
 
 const CommunityPage = () => {
   const [loading, setLoading] = useState(true);
-  const [posts, setPosts] = useState(mockPosts);
+  const [posts, setPosts] = useState<Post[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [sortBy, setSortBy] = useState("newest");
-  const [filterLocation, setFilterLocation] = useState("");
 
   // Simulate data loading
   useEffect(() => {
+    console.log("Loading posts from mock data");
     const timer = setTimeout(() => {
       console.log("Setting posts:", mockPosts);
       setPosts(mockPosts);
@@ -30,21 +29,23 @@ const CommunityPage = () => {
   }, []);
 
   // Filter and sort posts
-  const filteredPosts = posts.filter(post => {
-    const matchesSearch = post.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
+  const filteredPosts = posts
+    .filter(post => {
+      const matchesSearch = post.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
                           post.content.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    return matchesSearch;
-  }).sort((a, b) => {
-    if (sortBy === "newest") {
-      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-    } else if (sortBy === "oldest") {
-      return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
-    } else if (sortBy === "most_comments") {
-      return b.comments - a.comments;
-    }
-    return 0;
-  });
+      
+      return matchesSearch;
+    })
+    .sort((a, b) => {
+      if (sortBy === "newest") {
+        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+      } else if (sortBy === "oldest") {
+        return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+      } else if (sortBy === "most_comments") {
+        return b.comments - a.comments;
+      }
+      return 0;
+    });
 
   return (
     <div className="container mx-auto py-8">

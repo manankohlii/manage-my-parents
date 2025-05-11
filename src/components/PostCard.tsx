@@ -28,7 +28,7 @@ interface PostCardProps {
 }
 
 const PostCard = ({ post }: PostCardProps) => {
-  const { id, title, content, author, tags, likes, comments, createdAt } = post;
+  const { id, title, content, author, tags, likes, comments, createdAt, isSolved } = post;
   
   return (
     <Card className="mb-4 overflow-hidden hover:shadow-md transition-shadow">
@@ -45,6 +45,11 @@ const PostCard = ({ post }: PostCardProps) => {
               <p className="text-xs text-muted-foreground">{createdAt}</p>
             </div>
           </div>
+          {isSolved && (
+            <span className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">
+              Solved
+            </span>
+          )}
         </div>
       </CardHeader>
       <CardContent className="pb-3">
