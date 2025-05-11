@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button";
 import { 
   Search, 
   Home, 
-  MessageSquare, 
   User,
   Bell,
   Menu,
@@ -46,10 +45,6 @@ const Navbar = () => {
             <Link to="/dashboard" className="text-gray-600 hover:text-primary px-3 py-2 rounded-md text-sm font-medium flex items-center">
               <Home className="h-4 w-4 mr-1" />
               <span>Dashboard</span>
-            </Link>
-            <Link to="/community" className="text-gray-600 hover:text-primary px-3 py-2 rounded-md text-sm font-medium flex items-center">
-              <MessageSquare className="h-4 w-4 mr-1" />
-              <span>Community</span>
             </Link>
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
@@ -121,13 +116,6 @@ const Navbar = () => {
               onClick={() => setIsMenuOpen(false)}
             >
               Dashboard
-            </Link>
-            <Link 
-              to="/community" 
-              className="text-gray-600 hover:text-primary block px-3 py-2 rounded-md text-base font-medium"
-              onClick={() => setIsMenuOpen(false)}
-            >
-              Community
             </Link>
             <div className="px-3 py-2">
               <div className="relative">
