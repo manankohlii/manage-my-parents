@@ -11,7 +11,7 @@ import { Edit, Trash2 } from "lucide-react";
 import TagBadge from "../TagBadge";
 import { Challenge } from "@/services/challenges";
 import { useState, useEffect } from "react";
-import { Solution, getSolutions, voteSolution } from "@/services/solutionsService";
+import { Solution, getSolutions, voteSolution, createSolution } from "@/services/solutionsService";
 import SolutionsList from "../explore/SolutionsList";
 import SolutionForm from "../explore/SolutionForm";
 import { useAuth } from "@/contexts/AuthContext";
@@ -63,7 +63,7 @@ const ChallengeCard = ({ challenge, onDelete, onEdit }: ChallengeCardProps) => {
     }
   };
 
-  const handleSubmitSolution = async (solutionText: string) => {
+  const handleSubmitSolution = async (solutionText: string): Promise<void> => {
     if (!user) {
       toast.error("You must be logged in to submit solutions");
       return;
@@ -79,11 +79,9 @@ const ChallengeCard = ({ challenge, onDelete, onEdit }: ChallengeCardProps) => {
         // Update challenge's solution count in parent component if needed
         // This would require passing a callback from the parent
       }
-      return true;
     } catch (error) {
       console.error("Failed to submit solution:", error);
       toast.error("Failed to submit solution");
-      return false;
     } finally {
       setSubmittingForm(false);
     }
@@ -125,9 +123,6 @@ const ChallengeCard = ({ challenge, onDelete, onEdit }: ChallengeCardProps) => {
       }));
     }
   };
-
-  // Import the createSolution function from the service
-  const { createSolution } = require("@/services/solutionsService");
 
   return (
     <Card key={challenge.id} className="w-full">
