@@ -1,17 +1,56 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Search, Plus } from "lucide-react";
-import PostCard from "@/components/PostCard";
+import ChallengeCard from "@/components/explore/ChallengeCard";
 import TagBadge from "@/components/TagBadge";
 import { Link } from "react-router-dom";
-import { mockPosts, mockTrendingTags } from "@/data/mockData";
+import { mockTrendingTags } from "@/data/mockData";
+import { getAllChallenges } from "@/services/challenges";
+import { Challenge } from "@/services/challenges/types";
+import { useSolutions } from "@/hooks/explore/useSolutions";
+import { useVoting } from "@/hooks/explore/useVoting";
+import { useAuth } from "@/contexts/AuthContext";
 
 const CommunityPage = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [challenges, setChallenges] = useState<Challenge[]>([]);
+  const [loading, setLoading] = useState(true);
+  
+  const { user } = useAuth();
+  
+  const { userVotes, updateUserVotesForSolutions, handleVote } = useVoting(user);
+  
+  const {
+    solutions,
+    openPopover,
+    setOpenPopover,
+    newSolution, 
+    setNewSolution,
+    loadingSolution,
+    loadSolutions,
+    handleSubmitSolution
+  } = useSolutions(user, updateUserVotesForSolutions);
+
+  // Load challenges from the database
+  useEffect(() => {
+    const fetchChallenges = async () => {
+      setLoading(true);
+      try {
+        const fetchedChallenges = await getAllChallenges();
+        setChallenges(fetchedChallenges);
+      } catch (error) {
+        console.error("Error fetching challenges:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchChallenges();
+  }, []);
 
   const toggleTag = (tag: string) => {
     if (selectedTags.includes(tag)) {
@@ -21,12 +60,19 @@ const CommunityPage = () => {
     }
   };
 
-  const filteredPosts = mockPosts.filter((post) => {
-    // If no tags selected, show all posts
-    if (selectedTags.length === 0) return true;
+  const filteredChallenges = challenges.filter((challenge) => {
+    // Filter by search query
+    const matchesSearch = 
+      searchQuery === "" || 
+      challenge.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      challenge.description?.toLowerCase().includes(searchQuery.toLowerCase());
     
-    // Show posts that have at least one of the selected tags
-    return post.tags.some((tag) => selectedTags.includes(tag));
+    // Filter by selected tags
+    const matchesTags = 
+      selectedTags.length === 0 || 
+      challenge.tags?.some(tag => selectedTags.includes(tag));
+    
+    return matchesSearch && matchesTags;
   });
 
   return (
@@ -36,7 +82,7 @@ const CommunityPage = () => {
         <Button asChild>
           <Link to="/post/new">
             <Plus className="mr-2 h-4 w-4" />
-            New Post
+            New Challenge
           </Link>
         </Button>
       </div>
@@ -48,7 +94,7 @@ const CommunityPage = () => {
           <Input
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search community posts..."
+            placeholder="Search community challenges..."
             className="w-full pl-12 py-6 text-base rounded-full"
           />
         </div>
@@ -68,62 +114,116 @@ const CommunityPage = () => {
         </div>
       </div>
 
-      {/* Posts Tabs */}
+      {/* Challenges Tabs */}
       <Tabs defaultValue="latest" className="w-full">
         <TabsList className="mb-6">
           <TabsTrigger value="latest">Latest</TabsTrigger>
           <TabsTrigger value="trending">Trending</TabsTrigger>
           <TabsTrigger value="solved">Solved</TabsTrigger>
         </TabsList>
-        <TabsContent value="latest" className="space-y-6">
-          {filteredPosts.map((post) => (
-            <PostCard
-              key={post.id}
-              id={post.id}
-              title={post.title}
-              content={post.content}
-              author={post.author}
-              tags={post.tags}
-              likes={post.likes}
-              comments={post.comments}
-              createdAt={post.createdAt}
-            />
-          ))}
-        </TabsContent>
-        <TabsContent value="trending" className="space-y-6">
-          {filteredPosts
-            .sort((a, b) => b.likes - a.likes)
-            .map((post) => (
-              <PostCard
-                key={post.id}
-                id={post.id}
-                title={post.title}
-                content={post.content}
-                author={post.author}
-                tags={post.tags}
-                likes={post.likes}
-                comments={post.comments}
-                createdAt={post.createdAt}
-              />
-            ))}
-        </TabsContent>
-        <TabsContent value="solved" className="space-y-6">
-          {filteredPosts
-            .filter((post) => post.isSolved)
-            .map((post) => (
-              <PostCard
-                key={post.id}
-                id={post.id}
-                title={post.title}
-                content={post.content}
-                author={post.author}
-                tags={post.tags}
-                likes={post.likes}
-                comments={post.comments}
-                createdAt={post.createdAt}
-              />
-            ))}
-        </TabsContent>
+        
+        {loading ? (
+          <div className="text-center py-8">
+            <div className="animate-pulse">Loading challenges...</div>
+          </div>
+        ) : filteredChallenges.length === 0 ? (
+          <div className="text-center py-8">
+            <p className="text-muted-foreground">No challenges found.</p>
+          </div>
+        ) : (
+          <>
+            <TabsContent value="latest" className="space-y-6">
+              {filteredChallenges.map((challenge) => (
+                <ChallengeCard
+                  key={challenge.id}
+                  challenge={challenge}
+                  handleUpvote={(challengeId) => handleVote(challengeId, null, 'up')}
+                  handleDownvote={(challengeId) => handleVote(challengeId, null, 'down')}
+                  handleSubmitSolution={(challengeId) => {
+                    loadSolutions(challengeId);
+                    return handleSubmitSolution(challengeId);
+                  }}
+                  newSolution={newSolution}
+                  setNewSolution={setNewSolution}
+                  loadingSolution={loadingSolution}
+                  userVotes={userVotes}
+                  openSolutionForm={openPopover}
+                  setOpenSolutionForm={(challengeId) => {
+                    setOpenPopover(challengeId);
+                    if (challengeId) {
+                      loadSolutions(challengeId);
+                    }
+                  }}
+                  user={user}
+                  solutions={solutions}
+                  handleVote={handleVote}
+                />
+              ))}
+            </TabsContent>
+            
+            <TabsContent value="trending" className="space-y-6">
+              {filteredChallenges
+                .sort((a, b) => (b.votes_count || 0) - (a.votes_count || 0))
+                .map((challenge) => (
+                  <ChallengeCard
+                    key={challenge.id}
+                    challenge={challenge}
+                    handleUpvote={(challengeId) => handleVote(challengeId, null, 'up')}
+                    handleDownvote={(challengeId) => handleVote(challengeId, null, 'down')}
+                    handleSubmitSolution={(challengeId) => {
+                      loadSolutions(challengeId);
+                      return handleSubmitSolution(challengeId);
+                    }}
+                    newSolution={newSolution}
+                    setNewSolution={setNewSolution}
+                    loadingSolution={loadingSolution}
+                    userVotes={userVotes}
+                    openSolutionForm={openPopover}
+                    setOpenSolutionForm={(challengeId) => {
+                      setOpenPopover(challengeId);
+                      if (challengeId) {
+                        loadSolutions(challengeId);
+                      }
+                    }}
+                    user={user}
+                    solutions={solutions}
+                    handleVote={handleVote}
+                  />
+                ))}
+            </TabsContent>
+            
+            <TabsContent value="solved" className="space-y-6">
+              {filteredChallenges
+                .filter((challenge) => (challenge.solutions_count || 0) > 0)
+                .map((challenge) => (
+                  <ChallengeCard
+                    key={challenge.id}
+                    challenge={challenge}
+                    handleUpvote={(challengeId) => handleVote(challengeId, null, 'up')}
+                    handleDownvote={(challengeId) => handleVote(challengeId, null, 'down')}
+                    handleSubmitSolution={(challengeId) => {
+                      loadSolutions(challengeId);
+                      return handleSubmitSolution(challengeId);
+                    }}
+                    newSolution={newSolution}
+                    setNewSolution={setNewSolution}
+                    loadingSolution={loadingSolution}
+                    userVotes={userVotes}
+                    openSolutionForm={openPopover}
+                    setOpenSolutionForm={(challengeId) => {
+                      setOpenPopover(challengeId);
+                      if (challengeId) {
+                        loadSolutions(challengeId);
+                      }
+                    }}
+                    user={user}
+                    solutions={solutions}
+                    handleVote={handleVote}
+                  />
+                ))}
+            </TabsContent>
+          </>
+        )}
       </Tabs>
     </div>
   );
