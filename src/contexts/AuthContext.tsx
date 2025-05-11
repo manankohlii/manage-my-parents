@@ -1,4 +1,3 @@
-
 import { createContext, useContext, useEffect, useState } from "react";
 import { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
@@ -46,13 +45,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setSession(newSession);
         setUser(newSession?.user ?? null);
         
-        // Only handle explicit sign-in and sign-out events, not the initial session check
-        if (event === 'SIGNED_IN' && newSession) {
-          // Don't redirect from within onAuthStateChange to avoid infinite loops
-          setTimeout(() => {
-            navigate('/dashboard');
-          }, 0);
-        } else if (event === 'SIGNED_OUT') {
+        // Only handle explicit sign-out events
+        // Remove the redirect to dashboard for SIGNED_IN events
+        if (event === 'SIGNED_OUT') {
           // Don't redirect from within onAuthStateChange to avoid infinite loops
           setTimeout(() => {
             navigate('/login');
