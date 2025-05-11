@@ -51,7 +51,7 @@ const NewSolutionForm = ({
       <PopoverTrigger asChild>
         <Button variant="outline">Contribute a Solution</Button>
       </PopoverTrigger>
-      <PopoverContent className="w-96 p-4">
+      <PopoverContent className="w-[450px]">
         <form 
           className="space-y-4" 
           onSubmit={(e) => {
@@ -59,18 +59,18 @@ const NewSolutionForm = ({
             handleSubmitSolution(challengeId);
           }}
         >
-          <h4 className="font-medium text-base mb-2">Add Your Solution</h4>
+          <h4 className="text-lg font-medium mb-2">Add Your Solution</h4>
           
           <FormField
             control={form.control}
             name="solution"
             render={({ field }) => (
               <FormItem>
-                <FormLabel className="font-medium text-sm text-gray-700">Your Solution</FormLabel>
+                <FormLabel>Your Solution</FormLabel>
                 <FormControl>
                   <Textarea
-                    placeholder="Share your experience or advice..."
-                    className="min-h-[150px] resize-none bg-background px-3 py-2 text-sm"
+                    placeholder="Share your experience or advice..." 
+                    className="min-h-[150px] resize-none" 
                     value={newSolution}
                     onChange={(e) => setNewSolution(e.target.value)}
                   />
@@ -80,7 +80,7 @@ const NewSolutionForm = ({
             )}
           />
           
-          <div className="flex justify-end space-x-2 pt-2">
+          <div className="flex justify-end space-x-2">
             <Button 
               variant="ghost" 
               onClick={() => {
@@ -88,15 +88,12 @@ const NewSolutionForm = ({
                 setNewSolution("");
               }}
               type="button"
-              size="sm"
             >
               Cancel
             </Button>
             <Button 
               type="submit"
               disabled={loadingSolution}
-              size="sm"
-              className="bg-purple-500 hover:bg-purple-600 text-white"
             >
               {loadingSolution ? "Submitting..." : "Submit"}
             </Button>
