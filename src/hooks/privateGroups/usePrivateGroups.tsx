@@ -30,21 +30,49 @@ export const usePrivateGroups = () => {
     try {
       console.log('Loading groups for user:', user.id);
       
-      // Get groups where user is creator or member
-      const { data: allGroups, error } = await supabase
+      // Method 1: Get groups created by user
+      const { data: createdGroups, error: createdError } = await supabase
         .from('private_groups')
         .select('*')
-        .or(`created_by.eq.${user.id},id.in.(select group_id from group_members where user_id = ${user.id})`)
-        .order('created_at', { ascending: false });
+        .eq('created_by', user.id);
 
-      if (error) {
-        console.error('Error loading groups:', error);
-        throw error;
+      if (createdError) {
+        console.error('Error loading created groups:', createdError);
+        throw createdError;
       }
 
-      console.log('Raw groups data:', allGroups);
+      // Method 2: Get groups where user is a member
+      const { data: membershipData, error: memberError } = await supabase
+        .from('group_members')
+        .select(`
+          group_id,
+          private_groups (
+            id,
+            name,
+            created_by,
+            created_at
+          )
+        `)
+        .eq('user_id', user.id);
 
-      if (!allGroups || allGroups.length === 0) {
+      if (memberError) {
+        console.error('Error loading member groups:', memberError);
+        // Don't throw, just log and continue with created groups only
+        console.warn('Could not load member groups, showing only created groups');
+      }
+
+      // Combine groups from both sources
+      const memberGroups = membershipData?.map(m => m.private_groups).filter(Boolean) || [];
+      const allGroups = [...(createdGroups || []), ...memberGroups];
+
+      // Remove duplicates based on group id
+      const uniqueGroups = allGroups.filter((group, index, self) => 
+        index === self.findIndex(g => g?.id === group?.id)
+      );
+
+      console.log('All unique groups:', uniqueGroups);
+
+      if (!uniqueGroups || uniqueGroups.length === 0) {
         console.log('No groups found for user');
         setGroups([]);
         return;
@@ -52,7 +80,7 @@ export const usePrivateGroups = () => {
 
       // For each group, get member count
       const groupsWithCounts = await Promise.all(
-        allGroups.map(async (group) => {
+        uniqueGroups.map(async (group) => {
           try {
             const { count } = await supabase
               .from('group_members')
@@ -89,6 +117,8 @@ export const usePrivateGroups = () => {
         variant: "destructive",
       });
       setGroups([]);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -118,7 +148,7 @@ export const usePrivateGroups = () => {
 
       console.log('Group created:', group);
 
-      // Add creator as admin member
+      // Add creator as admin member (optional step)
       const { error: memberError } = await supabase
         .from('group_members')
         .insert({
@@ -130,9 +160,6 @@ export const usePrivateGroups = () => {
       if (memberError) {
         console.error('Error adding creator as member:', memberError);
         // Don't throw here as the group was created successfully
-        console.warn('Group created but failed to add creator as member. This may cause issues.');
-      } else {
-        console.log('Creator added as admin member');
       }
 
       toast({
@@ -140,6 +167,7 @@ export const usePrivateGroups = () => {
         description: `Successfully created ${name}.`,
       });
 
+      // Refresh groups list
       await loadGroups();
       return group.id;
     } catch (error) {
@@ -154,14 +182,12 @@ export const usePrivateGroups = () => {
   };
 
   useEffect(() => {
-    if (user) {
-      loadGroups().finally(() => {
-        setLoading(false);
-      });
+    if (user?.id) {
+      loadGroups();
     } else {
       setLoading(false);
     }
-  }, [user]);
+  }, [user?.id]); // Only depend on user.id, not the whole user object
 
   return {
     groups,
