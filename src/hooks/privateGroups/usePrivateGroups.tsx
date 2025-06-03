@@ -41,28 +41,35 @@ export const usePrivateGroups = () => {
         throw createdError;
       }
 
-      // Method 2: Get groups where user is a member
-      const { data: membershipData, error: memberError } = await supabase
+      // Method 2: Get group IDs where user is a member (simple query)
+      const { data: memberships, error: memberError } = await supabase
         .from('group_members')
-        .select(`
-          group_id,
-          private_groups (
-            id,
-            name,
-            created_by,
-            created_at
-          )
-        `)
+        .select('group_id')
         .eq('user_id', user.id);
 
       if (memberError) {
-        console.error('Error loading member groups:', memberError);
-        // Don't throw, just log and continue with created groups only
+        console.error('Error loading memberships:', memberError);
         console.warn('Could not load member groups, showing only created groups');
       }
 
+      // Method 3: Get the actual group data for member groups
+      let memberGroups = [];
+      if (memberships && memberships.length > 0) {
+        const groupIds = memberships.map(m => m.group_id);
+        
+        const { data: memberGroupData, error: groupDataError } = await supabase
+          .from('private_groups')
+          .select('*')
+          .in('id', groupIds);
+
+        if (groupDataError) {
+          console.error('Error loading member group data:', groupDataError);
+        } else {
+          memberGroups = memberGroupData || [];
+        }
+      }
+
       // Combine groups from both sources
-      const memberGroups = membershipData?.map(m => m.private_groups).filter(Boolean) || [];
       const allGroups = [...(createdGroups || []), ...memberGroups];
 
       // Remove duplicates based on group id
