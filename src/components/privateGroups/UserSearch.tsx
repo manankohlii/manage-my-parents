@@ -99,8 +99,10 @@ const UserSearch = ({ groupId, onInviteSent, existingMemberIds }: UserSearchProp
         description: "The user has been invited to join the group.",
       });
 
+      // Remove user from list immediately after successful invite
+      setUsers(prev => prev.filter(u => u.id !== userId));
+
       onInviteSent();
-      setUsers(users.filter(u => u.id !== userId));
     } catch (error) {
       console.error('Error sending invitation:', error);
       toast({

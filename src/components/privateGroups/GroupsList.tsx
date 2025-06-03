@@ -10,9 +10,10 @@ import { usePrivateGroups } from "@/hooks/privateGroups/usePrivateGroups";
 
 interface GroupsListProps {
   onSelectGroup: (groupId: string) => void;
+  refreshTrigger?: number;
 }
 
-const GroupsList = ({ onSelectGroup }: GroupsListProps) => {
+const GroupsList = ({ onSelectGroup, refreshTrigger }: GroupsListProps) => {
   const { groups, loading, refreshGroups } = usePrivateGroups();
   const { user } = useAuth();
 
@@ -20,7 +21,7 @@ const GroupsList = ({ onSelectGroup }: GroupsListProps) => {
     if (user) {
       refreshGroups();
     }
-  }, [user, refreshGroups]);
+  }, [user, refreshGroups, refreshTrigger]);
 
   // Function to format date display
   const formatDate = (dateString: string) => {

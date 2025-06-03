@@ -12,9 +12,14 @@ const PrivateGroups = () => {
   const [activeTab, setActiveTab] = useState("my-groups");
   const [activeGroupId, setActiveGroupId] = useState<string | null>(null);
   const [pendingInvitationsCount, setPendingInvitationsCount] = useState(0);
+  const [groupsRefreshTrigger, setGroupsRefreshTrigger] = useState(0);
 
   const handleInvitationCountChange = (count: number) => {
     setPendingInvitationsCount(count);
+  };
+
+  const handleGroupJoined = () => {
+    setGroupsRefreshTrigger(prev => prev + 1);
   };
 
   return (
@@ -47,7 +52,10 @@ const PrivateGroups = () => {
           </TabsList>
           
           <TabsContent value="my-groups">
-            <GroupsList onSelectGroup={(groupId) => setActiveGroupId(groupId)} />
+            <GroupsList 
+              onSelectGroup={(groupId) => setActiveGroupId(groupId)}
+              refreshTrigger={groupsRefreshTrigger}
+            />
           </TabsContent>
           
           <TabsContent value="create-group">
@@ -55,7 +63,10 @@ const PrivateGroups = () => {
           </TabsContent>
           
           <TabsContent value="invitations">
-            <GroupInvitations onInvitationCountChange={handleInvitationCountChange} />
+            <GroupInvitations 
+              onInvitationCountChange={handleInvitationCountChange}
+              onGroupJoined={handleGroupJoined}
+            />
           </TabsContent>
         </Tabs>
       ) : (

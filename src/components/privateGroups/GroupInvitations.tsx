@@ -19,9 +19,10 @@ interface Invitation {
 
 interface GroupInvitationsProps {
   onInvitationCountChange?: (count: number) => void;
+  onGroupJoined?: () => void;
 }
 
-const GroupInvitations = ({ onInvitationCountChange }: GroupInvitationsProps) => {
+const GroupInvitations = ({ onInvitationCountChange, onGroupJoined }: GroupInvitationsProps) => {
   const [invitations, setInvitations] = useState<Invitation[]>([]);
   const [loading, setLoading] = useState(true);
   const [responding, setResponding] = useState<string | null>(null);
@@ -50,12 +51,15 @@ const GroupInvitations = ({ onInvitationCountChange }: GroupInvitationsProps) =>
 
       // Get group names for all invitations - simple separate query
       const groupIds = invitationsData.map(inv => inv.group_id);
+      console.log('Group IDs to fetch:', groupIds);
+      
       const { data: groupsData, error: groupsError } = await supabase
         .from('private_groups')
         .select('id, name')
         .in('id', groupIds);
 
       if (groupsError) throw groupsError;
+      console.log('Groups data received:', groupsData);
 
       // Get inviter profiles for all invitations - remove email field
       const inviterIds = invitationsData.map(inv => inv.invited_by_user_id);
@@ -70,6 +74,8 @@ const GroupInvitations = ({ onInvitationCountChange }: GroupInvitationsProps) =>
       const formattedInvitations = invitationsData.map(inv => {
         const group = groupsData?.find(g => g.id === inv.group_id);
         const inviter = profilesData?.find(p => p.id === inv.invited_by_user_id);
+        
+        console.log('Found group for invitation:', inv.group_id, ':', group);
         
         const inviterName = inviter?.display_name || 
                            `${inviter?.first_name || ''} ${inviter?.last_name || ''}`.trim() || 
@@ -125,6 +131,9 @@ const GroupInvitations = ({ onInvitationCountChange }: GroupInvitationsProps) =>
           });
 
         if (memberError) throw memberError;
+
+        // Trigger groups refresh
+        onGroupJoined?.();
       }
 
       toast({
