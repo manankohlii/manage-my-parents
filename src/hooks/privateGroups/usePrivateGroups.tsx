@@ -28,20 +28,32 @@ export const usePrivateGroups = () => {
     }
     
     try {
-      console.log('Loading groups for user:', user.id);
+      console.log('=== DEBUG INFO ===');
+      console.log('Current user object:', user);
+      console.log('User ID from auth:', user.id);
+      console.log('User email:', user.email);
       
-      // Just get groups created by user for now
+      // Test if we can query the table at all
+      const { data: allGroups, error: allError } = await supabase
+        .from('private_groups')
+        .select('*');
+      
+      console.log('All groups in table (no filter):', allGroups);
+      console.log('All groups error:', allError);
+      
+      // Now try with the user filter
       const { data: createdGroups, error: createdError } = await supabase
         .from('private_groups')
         .select('*')
         .eq('created_by', user.id);
 
+      console.log('Groups created by current user:', createdGroups);
+      console.log('Query error:', createdError);
+      
       if (createdError) {
         console.error('Error loading created groups:', createdError);
         throw createdError;
       }
-
-      console.log('Created groups:', createdGroups);
 
       // For now, just show created groups (we can add member groups later)
       const groupsWithCounts = (createdGroups || []).map(group => ({
@@ -52,6 +64,7 @@ export const usePrivateGroups = () => {
         newIssues: 0
       }));
 
+      console.log('Final groups with counts:', groupsWithCounts);
       setGroups(groupsWithCounts);
     } catch (error) {
       console.error('Error loading groups:', error);
