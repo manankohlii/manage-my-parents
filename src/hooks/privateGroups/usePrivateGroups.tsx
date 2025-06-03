@@ -45,49 +45,51 @@ export const usePrivateGroups = () => {
 
       console.log('Created groups:', createdGroups);
 
-      // Get groups where user is a member
-      const { data: memberGroups, error: memberError } = await supabase
+      // Get groups where user is a member - simple separate queries
+      const { data: membershipData, error: memberError } = await supabase
         .from('group_members')
-        .select(`
-          group_id,
-          private_groups!inner(
-            id,
-            name,
-            created_by,
-            created_at
-          )
-        `)
+        .select('group_id')
         .eq('user_id', user.id);
 
       if (memberError) {
-        console.error('Error loading member groups:', memberError);
+        console.error('Error loading memberships:', memberError);
         throw memberError;
       }
 
-      console.log('Member groups data:', memberGroups);
+      console.log('Memberships data:', membershipData);
 
-      // Transform member groups data
-      const memberGroupsFormatted = (memberGroups || []).map(member => ({
-        id: member.private_groups.id,
-        name: member.private_groups.name,
-        created_by: member.private_groups.created_by,
-        created_at: member.private_groups.created_at,
-        isOwner: false
-      }));
+      let memberGroups = [];
+      if (membershipData && membershipData.length > 0) {
+        const groupIds = membershipData.map(m => m.group_id);
+        console.log('Group IDs from memberships:', groupIds);
+        
+        const { data: memberGroupData, error: memberGroupError } = await supabase
+          .from('private_groups')
+          .select('*')
+          .in('id', groupIds);
 
-      console.log('Formatted member groups:', memberGroupsFormatted);
+        if (memberGroupError) {
+          console.error('Error loading member group details:', memberGroupError);
+          throw memberGroupError;
+        }
+
+        memberGroups = memberGroupData || [];
+        console.log('Member groups data:', memberGroups);
+      }
 
       // Combine and deduplicate groups (in case user is both creator and member)
       const allGroups = [
         ...(createdGroups || []).map(group => ({ ...group, isOwner: true })),
-        ...memberGroupsFormatted.filter(memberGroup => 
-          !createdGroups?.some(createdGroup => createdGroup.id === memberGroup.id)
-        )
+        ...memberGroups
+          .filter(memberGroup => 
+            !createdGroups?.some(createdGroup => createdGroup.id === memberGroup.id)
+          )
+          .map(group => ({ ...group, isOwner: false }))
       ];
 
       console.log('All groups combined:', allGroups);
 
-      // Add member counts for each group
+      // Add member counts for each group - only count group_members table
       const groupsWithCounts = await Promise.all(
         allGroups.map(async (group) => {
           try {
@@ -102,7 +104,7 @@ export const usePrivateGroups = () => {
 
             return {
               ...group,
-              memberCount: (count || 0) + (group.isOwner ? 1 : 0), // Add creator if they're not in members table
+              memberCount: count || 0,
               lastActive: group.created_at,
               unreadMessages: 0,
               newIssues: 0
@@ -111,7 +113,7 @@ export const usePrivateGroups = () => {
             console.error('Error processing group:', group.id, error);
             return {
               ...group,
-              memberCount: 1,
+              memberCount: 0,
               lastActive: group.created_at,
               unreadMessages: 0,
               newIssues: 0

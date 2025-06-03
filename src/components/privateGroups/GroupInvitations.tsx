@@ -17,7 +17,11 @@ interface Invitation {
   status: string;
 }
 
-const GroupInvitations = () => {
+interface GroupInvitationsProps {
+  onInvitationCountChange?: (count: number) => void;
+}
+
+const GroupInvitations = ({ onInvitationCountChange }: GroupInvitationsProps) => {
   const [invitations, setInvitations] = useState<Invitation[]>([]);
   const [loading, setLoading] = useState(true);
   const [responding, setResponding] = useState<string | null>(null);
@@ -40,10 +44,11 @@ const GroupInvitations = () => {
 
       if (!invitationsData || invitationsData.length === 0) {
         setInvitations([]);
+        onInvitationCountChange?.(0);
         return;
       }
 
-      // Get group names for all invitations
+      // Get group names for all invitations - simple separate query
       const groupIds = invitationsData.map(inv => inv.group_id);
       const { data: groupsData, error: groupsError } = await supabase
         .from('private_groups')
@@ -52,7 +57,7 @@ const GroupInvitations = () => {
 
       if (groupsError) throw groupsError;
 
-      // Get inviter profiles for all invitations
+      // Get inviter profiles for all invitations - remove email field
       const inviterIds = invitationsData.map(inv => inv.invited_by_user_id);
       const { data: profilesData, error: profilesError } = await supabase
         .from('profiles')
@@ -80,7 +85,9 @@ const GroupInvitations = () => {
         };
       });
 
+      console.log('Formatted invitations:', formattedInvitations);
       setInvitations(formattedInvitations);
+      onInvitationCountChange?.(formattedInvitations.length);
     } catch (error) {
       console.error('Error loading invitations:', error);
       toast({

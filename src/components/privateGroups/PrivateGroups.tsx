@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { UserPlus, Users, MessageCircle, FileText, Bell } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import GroupsList from "./GroupsList";
 import CreateGroup from "./CreateGroup";
 import GroupInvitations from "./GroupInvitations";
@@ -9,8 +10,12 @@ import GroupDetail from "./GroupDetail";
 
 const PrivateGroups = () => {
   const [activeTab, setActiveTab] = useState("my-groups");
-  // Active group when user selects a specific group
   const [activeGroupId, setActiveGroupId] = useState<string | null>(null);
+  const [pendingInvitationsCount, setPendingInvitationsCount] = useState(0);
+
+  const handleInvitationCountChange = (count: number) => {
+    setPendingInvitationsCount(count);
+  };
 
   return (
     <div className="space-y-6">
@@ -30,9 +35,14 @@ const PrivateGroups = () => {
               <UserPlus size={16} />
               Create Group
             </TabsTrigger>
-            <TabsTrigger value="invitations" className="flex items-center gap-2">
+            <TabsTrigger value="invitations" className="flex items-center gap-2 relative">
               <Bell size={16} />
               Invitations
+              {pendingInvitationsCount > 0 && (
+                <Badge variant="destructive" className="ml-1 h-5 w-5 p-0 text-xs flex items-center justify-center">
+                  {pendingInvitationsCount}
+                </Badge>
+              )}
             </TabsTrigger>
           </TabsList>
           
@@ -45,7 +55,7 @@ const PrivateGroups = () => {
           </TabsContent>
           
           <TabsContent value="invitations">
-            <GroupInvitations />
+            <GroupInvitations onInvitationCountChange={handleInvitationCountChange} />
           </TabsContent>
         </Tabs>
       ) : (

@@ -20,9 +20,10 @@ interface Member {
 interface GroupMembersProps {
   groupId: string;
   members: Member[];
+  onMembersChange?: () => void;
 }
 
-const GroupMembers = ({ groupId, members }: GroupMembersProps) => {
+const GroupMembers = ({ groupId, members, onMembersChange }: GroupMembersProps) => {
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviting, setInviting] = useState(false);
   const { inviteMember } = useGroupDetail(groupId);
@@ -47,8 +48,8 @@ const GroupMembers = ({ groupId, members }: GroupMembersProps) => {
   };
 
   const handleInviteSent = () => {
-    // Simple refresh for now - in a real app, you'd want to update the state more elegantly
-    window.location.reload();
+    // Call the refresh callback instead of page refresh
+    onMembersChange?.();
   };
 
   return (
