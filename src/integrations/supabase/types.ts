@@ -110,69 +110,34 @@ export type Database = {
         }
         Relationships: []
       }
-      group_invitations: {
-        Row: {
-          created_at: string
-          group_id: string
-          id: string
-          invited_by_id: string
-          invited_user_id: string
-          status: string
-          updated_at: string
-        }
-        Insert: {
-          created_at?: string
-          group_id: string
-          id?: string
-          invited_by_id: string
-          invited_user_id: string
-          status?: string
-          updated_at?: string
-        }
-        Update: {
-          created_at?: string
-          group_id?: string
-          id?: string
-          invited_by_id?: string
-          invited_user_id?: string
-          status?: string
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "group_invitations_group_id_fkey"
-            columns: ["group_id"]
-            isOneToOne: false
-            referencedRelation: "groups"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      group_memberships: {
+      group_members: {
         Row: {
           group_id: string
           id: string
           joined_at: string
+          role: string
           user_id: string
         }
         Insert: {
           group_id: string
           id?: string
           joined_at?: string
+          role?: string
           user_id: string
         }
         Update: {
           group_id?: string
           id?: string
           joined_at?: string
+          role?: string
           user_id?: string
         }
         Relationships: [
           {
-            foreignKeyName: "group_memberships_group_id_fkey"
+            foreignKeyName: "group_members_group_id_fkey"
             columns: ["group_id"]
             isOneToOne: false
-            referencedRelation: "groups"
+            referencedRelation: "private_groups"
             referencedColumns: ["id"]
           },
         ]
@@ -204,35 +169,29 @@ export type Database = {
             foreignKeyName: "group_messages_group_id_fkey"
             columns: ["group_id"]
             isOneToOne: false
-            referencedRelation: "groups"
+            referencedRelation: "private_groups"
             referencedColumns: ["id"]
           },
         ]
       }
-      groups: {
+      private_groups: {
         Row: {
-          admin_id: string
           created_at: string
-          description: string | null
+          created_by: string
           id: string
           name: string
-          updated_at: string
         }
         Insert: {
-          admin_id: string
           created_at?: string
-          description?: string | null
+          created_by: string
           id?: string
           name: string
-          updated_at?: string
         }
         Update: {
-          admin_id?: string
           created_at?: string
-          description?: string | null
+          created_by?: string
           id?: string
           name?: string
-          updated_at?: string
         }
         Relationships: []
       }

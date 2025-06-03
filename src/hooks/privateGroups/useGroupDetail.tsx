@@ -15,10 +15,8 @@ export interface GroupMember {
 export interface GroupDetail {
   id: string;
   name: string;
-  description: string;
-  admin_id: string;
+  created_by: string;
   created_at: string;
-  updated_at: string;
   members: GroupMember[];
 }
 
@@ -34,7 +32,7 @@ export const useGroupDetail = (groupId: string) => {
     try {
       // Fetch group details
       const { data: groupData, error: groupError } = await supabase
-        .from('groups')
+        .from('private_groups')
         .select('*')
         .eq('id', groupId)
         .single();
@@ -43,56 +41,54 @@ export const useGroupDetail = (groupId: string) => {
 
       // Fetch group memberships with user profiles
       const { data: memberships, error: memberError } = await supabase
-        .from('group_memberships')
+        .from('group_members')
         .select(`
           user_id,
-          profiles:user_id (
-            display_name,
-            first_name,
-            last_name
-          )
+          role
         `)
         .eq('group_id', groupId);
 
       if (memberError) throw memberError;
 
-      // Fetch admin profile
-      const { data: adminProfile, error: adminError } = await supabase
-        .rpc('get_user_profile', { user_uuid: groupData.admin_id });
-
-      if (adminError) throw adminError;
-
       // Build members list
       const members: GroupMember[] = [];
 
-      // Add admin
-      if (adminProfile && adminProfile.length > 0) {
-        const admin = adminProfile[0];
-        const { data: adminUser } = await supabase.auth.admin.getUserById(groupData.admin_id);
-        
-        members.push({
-          id: groupData.admin_id,
-          name: admin.display_name || `${admin.first_name} ${admin.last_name}`.trim() || 'Admin',
-          email: adminUser?.user?.email || '',
-          avatar: '',
-          role: 'admin'
-        });
+      // Add creator as admin if not already in memberships
+      const creatorInMembers = (memberships || []).find(m => m.user_id === groupData.created_by);
+      if (!creatorInMembers) {
+        const { data: creatorProfile } = await supabase
+          .rpc('get_user_profile', { user_uuid: groupData.created_by });
+
+        if (creatorProfile && creatorProfile.length > 0) {
+          const creator = creatorProfile[0];
+          members.push({
+            id: groupData.created_by,
+            name: creator.display_name || `${creator.first_name} ${creator.last_name}`.trim() || 'Admin',
+            email: '',
+            avatar: '',
+            role: 'admin'
+          });
+        }
       }
 
       // Add regular members
-      (memberships || []).forEach((membership: any) => {
-        if (membership.profiles) {
+      for (const membership of (memberships || [])) {
+        const { data: userProfile } = await supabase
+          .rpc('get_user_profile', { user_uuid: membership.user_id });
+
+        if (userProfile && userProfile.length > 0) {
+          const profile = userProfile[0];
           members.push({
             id: membership.user_id,
-            name: membership.profiles.display_name || 
-                  `${membership.profiles.first_name} ${membership.profiles.last_name}`.trim() || 
+            name: profile.display_name || 
+                  `${profile.first_name} ${profile.last_name}`.trim() || 
                   'Member',
-            email: '', // We'll need to fetch this separately if needed
+            email: '',
             avatar: '',
-            role: 'member'
+            role: membership.role as 'admin' | 'member'
           });
         }
-      });
+      }
 
       setGroup({
         ...groupData,
@@ -128,20 +124,12 @@ export const useGroupDetail = (groupId: string) => {
         return;
       }
 
-      // Check if user is already a member or has pending invitation
+      // Check if user is already a member
       const { data: existingMember } = await supabase
-        .from('group_memberships')
+        .from('group_members')
         .select('*')
         .eq('group_id', groupId)
         .eq('user_id', userId)
-        .single();
-
-      const { data: existingInvitation } = await supabase
-        .from('group_invitations')
-        .select('*')
-        .eq('group_id', groupId)
-        .eq('invited_user_id', userId)
-        .eq('status', 'pending')
         .single();
 
       if (existingMember) {
@@ -153,36 +141,28 @@ export const useGroupDetail = (groupId: string) => {
         return;
       }
 
-      if (existingInvitation) {
-        toast({
-          title: "Invitation already sent",
-          description: "An invitation has already been sent to this user.",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      // Send invitation
+      // Add user to group
       const { error } = await supabase
-        .from('group_invitations')
+        .from('group_members')
         .insert({
           group_id: groupId,
-          invited_by_id: user.id,
-          invited_user_id: userId,
-          status: 'pending'
+          user_id: userId,
+          role: 'member'
         });
 
       if (error) throw error;
 
       toast({
-        title: "Invitation sent",
-        description: `An invitation has been sent to ${email}.`,
+        title: "Member added",
+        description: `${email} has been added to the group.`,
       });
+
+      await loadGroup();
     } catch (error) {
       console.error('Error inviting member:', error);
       toast({
-        title: "Failed to send invitation",
-        description: "Could not send the invitation. Please try again.",
+        title: "Failed to add member",
+        description: "Could not add the member. Please try again.",
         variant: "destructive",
       });
     }
