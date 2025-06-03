@@ -77,7 +77,7 @@ export const useGroupDetail = (groupId: string) => {
             name: creator.display_name || 
                   `${creator.first_name || ''} ${creator.last_name || ''}`.trim() || 
                   'Admin',
-            email: '',
+            email: creator.email || '',
             avatar: '',
             role: 'admin'
           });
@@ -120,7 +120,7 @@ export const useGroupDetail = (groupId: string) => {
                 name: profile.display_name || 
                       `${profile.first_name || ''} ${profile.last_name || ''}`.trim() || 
                       'Member',
-                email: '',
+                email: profile.email || '',
                 avatar: '',
                 role: membership.role as 'admin' | 'member'
               });
