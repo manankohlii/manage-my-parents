@@ -41,7 +41,7 @@ const GroupDetail = ({ groupId, onBack }: GroupDetailProps) => {
                 {group.members.length} members
               </Badge>
             </h2>
-            <p className="text-muted-foreground text-sm">{group.description || "No description provided."}</p>
+            <p className="text-muted-foreground text-sm">Private group for collaboration</p>
           </div>
         </div>
         

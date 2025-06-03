@@ -103,13 +103,13 @@ const GroupsList = ({ onSelectGroup }: GroupsListProps) => {
                 </CardDescription>
               </div>
               <span className="text-xs text-muted-foreground">
-                Active {formatDate(group.lastActive || group.updated_at)}
+                Created {formatDate(group.created_at)}
               </span>
             </div>
           </CardHeader>
           <CardContent>
             <p className="text-sm text-muted-foreground line-clamp-2">
-              {group.description || "No description provided."}
+              Private group for collaboration and communication
             </p>
           </CardContent>
           <CardFooter>
@@ -117,7 +117,7 @@ const GroupsList = ({ onSelectGroup }: GroupsListProps) => {
               View Group
             </Button>
           </CardFooter>
-        </Card>
+        </CardContent>
       ))}
     </div>
   );
