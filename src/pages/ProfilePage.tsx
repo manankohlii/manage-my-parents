@@ -15,7 +15,6 @@ interface Profile {
   display_name: string;
   city: string;
   country: string;
-  age_category: string;
 }
 
 const ProfilePage = () => {
@@ -28,7 +27,6 @@ const ProfilePage = () => {
     display_name: "",
     city: "",
     country: "",
-    age_category: "",
   });
 
   useEffect(() => {
@@ -42,7 +40,7 @@ const ProfilePage = () => {
       setLoading(true);
       const { data, error } = await supabase
         .from("profiles")
-        .select("first_name, last_name, display_name, city, country, age_category")
+        .select("first_name, last_name, display_name, city, country")
         .eq("id", user?.id)
         .single();
 
@@ -75,7 +73,6 @@ const ProfilePage = () => {
           display_name: profile.display_name,
           city: profile.city,
           country: profile.country,
-          age_category: profile.age_category,
         })
         .eq("id", user?.id);
 
@@ -158,17 +155,6 @@ const ProfilePage = () => {
                   id="display_name"
                   name="display_name"
                   value={profile.display_name || ""}
-                  onChange={handleChange}
-                  disabled={!isEditing}
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="age_category">Age Category</Label>
-                <Input
-                  id="age_category"
-                  name="age_category"
-                  value={profile.age_category || ""}
                   onChange={handleChange}
                   disabled={!isEditing}
                 />

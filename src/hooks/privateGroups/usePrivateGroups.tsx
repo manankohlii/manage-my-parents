@@ -87,20 +87,54 @@ export const usePrivateGroups = () => {
     if (!user) return;
 
     try {
-      const { data, error } = await supabase
+      // First get the invitations
+      const { data: invitationsData, error: invitationsError } = await supabase
         .from('group_invitations')
         .select(`
-          *,
-          groups:group_id (name),
-          inviter:invited_by_id (display_name, first_name, last_name)
+          id,
+          group_id,
+          invited_by_id,
+          invited_user_id,
+          status,
+          created_at,
+          updated_at
         `)
         .eq('invited_user_id', user.id)
         .eq('status', 'pending')
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      if (invitationsError) throw invitationsError;
 
-      setInvitations(data || []);
+      // Then enhance each invitation with group and inviter data
+      const enhancedInvitations = await Promise.all(
+        (invitationsData || []).map(async (invitation) => {
+          // Get group name
+          const { data: groupData } = await supabase
+            .from('groups')
+            .select('name')
+            .eq('id', invitation.group_id)
+            .single();
+
+          // Get inviter profile
+          const { data: inviterProfile } = await supabase
+            .rpc('get_user_profile', { user_uuid: invitation.invited_by_id });
+
+          const enhancedInvitation: GroupInvitation = {
+            ...invitation,
+            status: invitation.status as 'pending' | 'accepted' | 'rejected',
+            group: groupData ? { name: groupData.name } : undefined,
+            inviter: inviterProfile && inviterProfile.length > 0 ? {
+              display_name: inviterProfile[0].display_name,
+              first_name: inviterProfile[0].first_name,
+              last_name: inviterProfile[0].last_name
+            } : undefined
+          };
+
+          return enhancedInvitation;
+        })
+      );
+
+      setInvitations(enhancedInvitations);
     } catch (error) {
       console.error('Error loading invitations:', error);
       toast({
