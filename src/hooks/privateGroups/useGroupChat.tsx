@@ -21,7 +21,10 @@ export const useGroupChat = (groupId: string) => {
   const { toast } = useToast();
 
   const loadMessages = useCallback(async () => {
-    if (!groupId) return;
+    if (!groupId) {
+      setLoading(false);
+      return;
+    }
 
     try {
       const { data, error } = await supabase
@@ -30,29 +33,43 @@ export const useGroupChat = (groupId: string) => {
         .eq('group_id', groupId)
         .order('created_at', { ascending: true });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error loading messages:', error);
+        throw error;
+      }
+
+      console.log('Raw messages:', data);
 
       // Enhance messages with user names
       const enhancedMessages = await Promise.all(
         (data || []).map(async (message) => {
-          const { data: userProfile } = await supabase
-            .rpc('get_user_profile', { user_uuid: message.user_id });
-          
-          let userName = 'Unknown User';
-          if (userProfile && userProfile.length > 0) {
-            const profile = userProfile[0];
-            userName = profile.display_name || 
-                     `${profile.first_name} ${profile.last_name}`.trim() || 
-                     'User';
-          }
+          try {
+            const { data: userProfile } = await supabase
+              .rpc('get_user_profile', { user_uuid: message.user_id });
+            
+            let userName = 'Unknown User';
+            if (userProfile && userProfile.length > 0) {
+              const profile = userProfile[0];
+              userName = profile.display_name || 
+                       `${profile.first_name || ''} ${profile.last_name || ''}`.trim() || 
+                       'User';
+            }
 
-          return {
-            ...message,
-            userName
-          };
+            return {
+              ...message,
+              userName
+            };
+          } catch (profileError) {
+            console.error('Error loading user profile for message:', profileError);
+            return {
+              ...message,
+              userName: 'Unknown User'
+            };
+          }
         })
       );
 
+      console.log('Enhanced messages:', enhancedMessages);
       setMessages(enhancedMessages);
     } catch (error) {
       console.error('Error loading messages:', error);
@@ -61,6 +78,7 @@ export const useGroupChat = (groupId: string) => {
         description: "Could not load chat messages. Please try again.",
         variant: "destructive",
       });
+      setMessages([]);
     } finally {
       setLoading(false);
     }
@@ -79,7 +97,10 @@ export const useGroupChat = (groupId: string) => {
           message: messageText.trim()
         });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error sending message:', error);
+        throw error;
+      }
 
       // Reload messages to get the new one
       await loadMessages();
@@ -110,13 +131,16 @@ export const useGroupChat = (groupId: string) => {
           filter: `group_id=eq.${groupId}`
         },
         () => {
-          // Reload messages when new message is inserted
+          console.log('New message received via real-time');
           loadMessages();
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        console.log('Real-time subscription status:', status);
+      });
 
     return () => {
+      console.log('Unsubscribing from real-time channel');
       supabase.removeChannel(channel);
     };
   }, [groupId, loadMessages]);

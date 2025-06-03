@@ -27,7 +27,10 @@ export const useGroupDetail = (groupId: string) => {
   const { toast } = useToast();
 
   const loadGroup = async () => {
-    if (!groupId) return;
+    if (!groupId) {
+      setLoading(false);
+      return;
+    }
 
     try {
       // Fetch group details
@@ -37,58 +40,115 @@ export const useGroupDetail = (groupId: string) => {
         .eq('id', groupId)
         .single();
 
-      if (groupError) throw groupError;
+      if (groupError) {
+        console.error('Error loading group:', groupError);
+        throw groupError;
+      }
 
-      // Fetch group memberships with user profiles
+      console.log('Group data loaded:', groupData);
+
+      // Fetch group memberships
       const { data: memberships, error: memberError } = await supabase
         .from('group_members')
-        .select(`
-          user_id,
-          role
-        `)
+        .select('user_id, role')
         .eq('group_id', groupId);
 
-      if (memberError) throw memberError;
+      if (memberError) {
+        console.error('Error loading memberships:', memberError);
+        // Continue without throwing - we can still show the group
+      }
+
+      console.log('Memberships loaded:', memberships);
 
       // Build members list
       const members: GroupMember[] = [];
 
-      // Add creator as admin if not already in memberships
-      const creatorInMembers = (memberships || []).find(m => m.user_id === groupData.created_by);
-      if (!creatorInMembers) {
+      // Add creator as admin
+      try {
         const { data: creatorProfile } = await supabase
           .rpc('get_user_profile', { user_uuid: groupData.created_by });
+
+        console.log('Creator profile:', creatorProfile);
 
         if (creatorProfile && creatorProfile.length > 0) {
           const creator = creatorProfile[0];
           members.push({
             id: groupData.created_by,
-            name: creator.display_name || `${creator.first_name} ${creator.last_name}`.trim() || 'Admin',
+            name: creator.display_name || 
+                  `${creator.first_name || ''} ${creator.last_name || ''}`.trim() || 
+                  'Admin',
+            email: '',
+            avatar: '',
+            role: 'admin'
+          });
+        } else {
+          // Fallback if profile not found
+          members.push({
+            id: groupData.created_by,
+            name: 'Admin',
             email: '',
             avatar: '',
             role: 'admin'
           });
         }
+      } catch (profileError) {
+        console.error('Error loading creator profile:', profileError);
+        // Add fallback member
+        members.push({
+          id: groupData.created_by,
+          name: 'Admin',
+          email: '',
+          avatar: '',
+          role: 'admin'
+        });
       }
 
       // Add regular members
-      for (const membership of (memberships || [])) {
-        const { data: userProfile } = await supabase
-          .rpc('get_user_profile', { user_uuid: membership.user_id });
+      if (memberships && memberships.length > 0) {
+        for (const membership of memberships) {
+          // Skip if it's the creator (already added)
+          if (membership.user_id === groupData.created_by) continue;
 
-        if (userProfile && userProfile.length > 0) {
-          const profile = userProfile[0];
-          members.push({
-            id: membership.user_id,
-            name: profile.display_name || 
-                  `${profile.first_name} ${profile.last_name}`.trim() || 
-                  'Member',
-            email: '',
-            avatar: '',
-            role: membership.role as 'admin' | 'member'
-          });
+          try {
+            const { data: userProfile } = await supabase
+              .rpc('get_user_profile', { user_uuid: membership.user_id });
+
+            if (userProfile && userProfile.length > 0) {
+              const profile = userProfile[0];
+              members.push({
+                id: membership.user_id,
+                name: profile.display_name || 
+                      `${profile.first_name || ''} ${profile.last_name || ''}`.trim() || 
+                      'Member',
+                email: '',
+                avatar: '',
+                role: membership.role as 'admin' | 'member'
+              });
+            } else {
+              // Fallback if profile not found
+              members.push({
+                id: membership.user_id,
+                name: 'Member',
+                email: '',
+                avatar: '',
+                role: membership.role as 'admin' | 'member'
+              });
+            }
+          } catch (memberProfileError) {
+            console.error('Error loading member profile:', memberProfileError);
+            // Add fallback member
+            members.push({
+              id: membership.user_id,
+              name: 'Member',
+              email: '',
+              avatar: '',
+              role: membership.role as 'admin' | 'member'
+            });
+          }
         }
       }
+
+      console.log('Final members list:', members);
 
       setGroup({
         ...groupData,
@@ -111,9 +171,14 @@ export const useGroupDetail = (groupId: string) => {
 
     try {
       // Find user by email
-      const { data: userId } = await supabase.rpc('find_user_by_email', {
+      const { data: userId, error: findError } = await supabase.rpc('find_user_by_email', {
         email_address: email
       });
+
+      if (findError) {
+        console.error('Error finding user:', findError);
+        throw findError;
+      }
 
       if (!userId) {
         toast({
@@ -130,7 +195,7 @@ export const useGroupDetail = (groupId: string) => {
         .select('*')
         .eq('group_id', groupId)
         .eq('user_id', userId)
-        .single();
+        .maybeSingle();
 
       if (existingMember) {
         toast({
@@ -150,7 +215,10 @@ export const useGroupDetail = (groupId: string) => {
           role: 'member'
         });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error adding member:', error);
+        throw error;
+      }
 
       toast({
         title: "Member added",
