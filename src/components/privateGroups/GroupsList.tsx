@@ -117,7 +117,7 @@ const GroupsList = ({ onSelectGroup }: GroupsListProps) => {
               View Group
             </Button>
           </CardFooter>
-        </CardContent>
+        </Card>
       ))}
     </div>
   );
