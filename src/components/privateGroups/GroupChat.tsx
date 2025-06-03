@@ -3,88 +3,23 @@ import { useState, useEffect, useRef } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { useToast } from "@/components/ui/use-toast";
 import { Send, ArrowDown } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useAuth } from "@/contexts/AuthContext";
 import { Skeleton } from "@/components/ui/skeleton";
-
-interface Message {
-  id: string;
-  text: string;
-  userId: string;
-  userName: string;
-  timestamp: string;
-}
+import { useGroupChat } from "@/hooks/privateGroups/useGroupChat";
 
 interface GroupChatProps {
   groupId: string;
 }
 
-// Mock chat messages
-const mockMessages: Message[] = [
-  {
-    id: "msg1",
-    text: "Hey everyone, welcome to our new group!",
-    userId: "user1",
-    userName: "Sarah Johnson",
-    timestamp: "2025-05-10T10:00:00"
-  },
-  {
-    id: "msg2",
-    text: "Thanks for creating this, Sarah! I'm excited to collaborate.",
-    userId: "user2",
-    userName: "Michael Chen",
-    timestamp: "2025-05-10T10:02:00"
-  },
-  {
-    id: "msg3",
-    text: "I've been thinking about some ideas for our next project. Would love to discuss them here.",
-    userId: "user3",
-    userName: "Emma Wilson",
-    timestamp: "2025-05-10T10:05:00"
-  },
-  {
-    id: "msg4",
-    text: "That sounds great, Emma! Let's set up a time to discuss those ideas.",
-    userId: "user1",
-    userName: "Sarah Johnson",
-    timestamp: "2025-05-10T10:10:00"
-  }
-];
-
 const GroupChat = ({ groupId }: GroupChatProps) => {
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { messages, loading, sending, sendMessage } = useGroupChat(groupId);
   const [newMessage, setNewMessage] = useState("");
-  const [sending, setSending] = useState(false);
-  
-  const { toast } = useToast();
   const { user } = useAuth();
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const chatContainerRef = useRef<HTMLDivElement>(null);
   const [showScrollButton, setShowScrollButton] = useState(false);
-
-  useEffect(() => {
-    // Simulate loading chat messages
-    const loadMessages = async () => {
-      try {
-        // Would fetch from Supabase in a real implementation
-        await new Promise(resolve => setTimeout(resolve, 800));
-        setMessages(mockMessages);
-      } catch (error) {
-        toast({
-          title: "Failed to load messages",
-          description: "Could not load chat messages. Please try again.",
-          variant: "destructive",
-        });
-      } finally {
-        setLoading(false);
-      }
-    };
-    
-    loadMessages();
-  }, [groupId, toast]);
 
   useEffect(() => {
     // Scroll to bottom when messages change
@@ -110,34 +45,8 @@ const GroupChat = ({ groupId }: GroupChatProps) => {
   const handleSendMessage = async () => {
     if (!newMessage.trim()) return;
     
-    setSending(true);
-    
-    try {
-      // Simulate sending a message - would use Supabase in a real implementation
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
-      // Create new message object
-      const newMsg: Message = {
-        id: `msg-${Date.now()}`,
-        text: newMessage.trim(),
-        userId: user?.id || 'current-user',
-        userName: user?.email?.split('@')[0] || 'You',
-        timestamp: new Date().toISOString()
-      };
-      
-      // Add message to chat
-      setMessages([...messages, newMsg]);
-      setNewMessage("");
-      
-    } catch (error) {
-      toast({
-        title: "Failed to send message",
-        description: "Your message could not be sent. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setSending(false);
-    }
+    await sendMessage(newMessage);
+    setNewMessage("");
   };
 
   const formatTime = (timestamp: string) => {
@@ -150,11 +59,11 @@ const GroupChat = ({ groupId }: GroupChatProps) => {
     return date.toLocaleDateString([], { month: 'short', day: 'numeric' });
   };
 
-  const isNewDay = (currentMsg: Message, prevMsg: Message | undefined) => {
+  const isNewDay = (currentMsg: any, prevMsg: any) => {
     if (!prevMsg) return true;
     
-    const currentDate = new Date(currentMsg.timestamp).toDateString();
-    const prevDate = new Date(prevMsg.timestamp).toDateString();
+    const currentDate = new Date(currentMsg.created_at).toDateString();
+    const prevDate = new Date(prevMsg.created_at).toDateString();
     
     return currentDate !== prevDate;
   };
@@ -182,7 +91,7 @@ const GroupChat = ({ groupId }: GroupChatProps) => {
             ) : (
               <>
                 {messages.map((msg, index) => {
-                  const isCurrentUser = msg.userId === user?.id || msg.userId === 'current-user';
+                  const isCurrentUser = msg.user_id === user?.id;
                   const showDateDivider = isNewDay(msg, messages[index - 1]);
                   
                   return (
@@ -190,7 +99,7 @@ const GroupChat = ({ groupId }: GroupChatProps) => {
                       {showDateDivider && (
                         <div className="flex justify-center my-4">
                           <span className="bg-muted px-2 py-1 rounded-full text-xs text-muted-foreground">
-                            {formatDate(msg.timestamp)}
+                            {formatDate(msg.created_at)}
                           </span>
                         </div>
                       )}
@@ -199,7 +108,7 @@ const GroupChat = ({ groupId }: GroupChatProps) => {
                         {!isCurrentUser && (
                           <Avatar className="h-8 w-8 mr-2">
                             <AvatarFallback className="text-xs">
-                              {msg.userName.split(' ').map(n => n[0]).join('')}
+                              {(msg.userName || 'U').split(' ').map(n => n[0]).join('')}
                             </AvatarFallback>
                           </Avatar>
                         )}
@@ -207,7 +116,7 @@ const GroupChat = ({ groupId }: GroupChatProps) => {
                         <div>
                           {!isCurrentUser && (
                             <div className="text-xs text-muted-foreground mb-1">
-                              {msg.userName}
+                              {msg.userName || 'Unknown User'}
                             </div>
                           )}
                           
@@ -217,9 +126,9 @@ const GroupChat = ({ groupId }: GroupChatProps) => {
                               ? 'bg-primary text-primary-foreground' 
                               : 'bg-muted text-foreground'}
                           `}>
-                            {msg.text}
+                            {msg.message}
                             <div className={`text-xs mt-1 ${isCurrentUser ? 'text-primary-foreground/70' : 'text-muted-foreground'}`}>
-                              {formatTime(msg.timestamp)}
+                              {formatTime(msg.created_at)}
                             </div>
                           </div>
                         </div>

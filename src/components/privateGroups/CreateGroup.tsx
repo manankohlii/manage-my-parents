@@ -5,10 +5,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { useToast } from "@/components/ui/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { UserPlus, X, User } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { usePrivateGroups } from "@/hooks/privateGroups/usePrivateGroups";
 
 interface CreateGroupProps {
   onGroupCreated: (groupId: string) => void;
@@ -21,27 +21,17 @@ const CreateGroup = ({ onGroupCreated }: CreateGroupProps) => {
   const [invitedMembers, setInvitedMembers] = useState<string[]>([]);
   const [submitting, setSubmitting] = useState(false);
   
-  const { toast } = useToast();
   const { user } = useAuth();
+  const { createGroup } = usePrivateGroups();
 
   const handleInviteMember = () => {
     if (!inviteEmail.trim()) return;
     
     if (!inviteEmail.includes('@')) {
-      toast({
-        title: "Invalid email",
-        description: "Please enter a valid email address.",
-        variant: "destructive",
-      });
       return;
     }
     
     if (invitedMembers.includes(inviteEmail)) {
-      toast({
-        title: "Already invited",
-        description: "This email has already been invited.",
-        variant: "destructive",
-      });
       return;
     }
     
@@ -57,35 +47,18 @@ const CreateGroup = ({ onGroupCreated }: CreateGroupProps) => {
     e.preventDefault();
     
     if (!groupName.trim()) {
-      toast({
-        title: "Group name required",
-        description: "Please enter a name for your group.",
-        variant: "destructive",
-      });
       return;
     }
     
     setSubmitting(true);
     
     try {
-      // Simulate API call - would save to Supabase in a real implementation
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Mock successful creation
-      const newGroupId = `group-${Date.now()}`;
-      
-      toast({
-        title: "Group created",
-        description: `Successfully created ${groupName}.`,
-      });
-      
-      onGroupCreated(newGroupId);
+      const groupId = await createGroup(groupName, description, invitedMembers);
+      if (groupId) {
+        onGroupCreated(groupId);
+      }
     } catch (error) {
-      toast({
-        title: "Failed to create group",
-        description: "Could not create the group. Please try again.",
-        variant: "destructive",
-      });
+      // Error handling is done in the hook
     } finally {
       setSubmitting(false);
     }

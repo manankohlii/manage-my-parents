@@ -1,73 +1,26 @@
 
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Users, MessageCircle, FileText } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
-import { useToast } from "@/components/ui/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
-
-// Mock data themed around parenting and family challenges
-const mockGroups = [
-  { 
-    id: "1", 
-    name: "Parenting Support Circle", 
-    memberCount: 8, 
-    lastActive: "2025-05-10T14:48:00", 
-    description: "A supportive group for parents to discuss challenges, share advice, and find solutions related to raising children of all ages.",
-    unreadMessages: 5,
-    newIssues: 2
-  },
-  { 
-    id: "2", 
-    name: "Teen Parenting Group", 
-    memberCount: 12, 
-    lastActive: "2025-05-09T10:23:00", 
-    description: "For parents of teenagers facing unique challenges and seeking advice on communication, boundaries, and development.",
-    unreadMessages: 0,
-    newIssues: 1
-  },
-  { 
-    id: "3", 
-    name: "New Parents' Corner", 
-    memberCount: 6, 
-    lastActive: "2025-05-08T16:05:00", 
-    description: "Support and guidance for first-time parents navigating the early years with infants and toddlers.",
-    unreadMessages: 3,
-    newIssues: 0
-  }
-];
+import { usePrivateGroups } from "@/hooks/privateGroups/usePrivateGroups";
 
 interface GroupsListProps {
   onSelectGroup: (groupId: string) => void;
 }
 
 const GroupsList = ({ onSelectGroup }: GroupsListProps) => {
-  const [groups, setGroups] = useState<typeof mockGroups>([]);
-  const [loading, setLoading] = useState(true);
+  const { groups, loading, refreshGroups } = usePrivateGroups();
   const { user } = useAuth();
-  const { toast } = useToast();
 
   useEffect(() => {
-    // Simulate loading data
-    const loadGroups = async () => {
-      try {
-        // Would fetch from Supabase in a real implementation
-        setGroups(mockGroups);
-      } catch (error) {
-        toast({
-          title: "Failed to load groups",
-          description: "Could not load your groups. Please try again.",
-          variant: "destructive",
-        });
-      } finally {
-        setLoading(false);
-      }
-    };
-    
-    loadGroups();
-  }, [toast, user]);
+    if (user) {
+      refreshGroups();
+    }
+  }, [user, refreshGroups]);
 
   // Function to format date display
   const formatDate = (dateString: string) => {
@@ -110,7 +63,7 @@ const GroupsList = ({ onSelectGroup }: GroupsListProps) => {
           <p className="mt-2 text-sm text-muted-foreground">
             You haven't joined any private groups yet.
           </p>
-          <Button className="mt-4">Create Your First Group</Button>
+          <Button className="mt-4" onClick={() => {}}>Create Your First Group</Button>
         </CardContent>
       </Card>
     );
@@ -125,15 +78,15 @@ const GroupsList = ({ onSelectGroup }: GroupsListProps) => {
               <div>
                 <CardTitle className="flex items-center gap-2">
                   {group.name}
-                  {(group.unreadMessages > 0 || group.newIssues > 0) && (
+                  {((group.unreadMessages || 0) > 0 || (group.newIssues || 0) > 0) && (
                     <div className="flex gap-2 items-center">
-                      {group.unreadMessages > 0 && (
+                      {(group.unreadMessages || 0) > 0 && (
                         <Badge variant="secondary" className="flex items-center gap-1">
                           <MessageCircle size={12} />
                           {group.unreadMessages}
                         </Badge>
                       )}
-                      {group.newIssues > 0 && (
+                      {(group.newIssues || 0) > 0 && (
                         <Badge variant="outline" className="flex items-center gap-1">
                           <FileText size={12} />
                           {group.newIssues}
@@ -150,13 +103,13 @@ const GroupsList = ({ onSelectGroup }: GroupsListProps) => {
                 </CardDescription>
               </div>
               <span className="text-xs text-muted-foreground">
-                Active {formatDate(group.lastActive)}
+                Active {formatDate(group.lastActive || group.updated_at)}
               </span>
             </div>
           </CardHeader>
           <CardContent>
             <p className="text-sm text-muted-foreground line-clamp-2">
-              {group.description}
+              {group.description || "No description provided."}
             </p>
           </CardContent>
           <CardFooter>

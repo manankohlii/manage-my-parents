@@ -3,10 +3,10 @@ import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useToast } from "@/components/ui/use-toast";
-import { User, UserPlus, Mail, X } from "lucide-react";
+import { UserPlus, Mail, X } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import { useGroupDetail } from "@/hooks/privateGroups/useGroupDetail";
 
 interface Member {
   id: string;
@@ -22,42 +22,24 @@ interface GroupMembersProps {
 }
 
 const GroupMembers = ({ groupId, members }: GroupMembersProps) => {
-  const [displayMembers, setDisplayMembers] = useState<Member[]>(members);
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviting, setInviting] = useState(false);
-  
-  const { toast } = useToast();
+  const { inviteMember } = useGroupDetail(groupId);
 
   const handleInviteMember = async () => {
     if (!inviteEmail.trim()) return;
     
     if (!inviteEmail.includes('@')) {
-      toast({
-        title: "Invalid email",
-        description: "Please enter a valid email address.",
-        variant: "destructive",
-      });
       return;
     }
     
     setInviting(true);
     
     try {
-      // Simulate API call - would use Supabase in a real implementation
-      await new Promise(resolve => setTimeout(resolve, 800));
-      
-      toast({
-        title: "Invitation sent",
-        description: `An invitation has been sent to ${inviteEmail}.`,
-      });
-      
+      await inviteMember(inviteEmail);
       setInviteEmail("");
     } catch (error) {
-      toast({
-        title: "Failed to send invitation",
-        description: "Could not send the invitation. Please try again.",
-        variant: "destructive",
-      });
+      // Error handling is done in the hook
     } finally {
       setInviting(false);
     }
@@ -66,7 +48,7 @@ const GroupMembers = ({ groupId, members }: GroupMembersProps) => {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h3 className="text-lg font-medium">Group Members ({displayMembers.length})</h3>
+        <h3 className="text-lg font-medium">Group Members ({members.length})</h3>
       </div>
       
       <div className="space-y-4">
@@ -99,7 +81,7 @@ const GroupMembers = ({ groupId, members }: GroupMembersProps) => {
         <Card className="p-4">
           <h4 className="text-sm font-medium mb-4">Member List</h4>
           <div className="space-y-4">
-            {displayMembers.map((member) => (
+            {members.map((member) => (
               <div key={member.id} className="flex justify-between items-center">
                 <div className="flex items-center gap-3">
                   <Avatar>

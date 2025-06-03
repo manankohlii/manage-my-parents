@@ -1,65 +1,23 @@
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { useToast } from "@/components/ui/use-toast";
-import { ArrowLeft, MessageCircle, FileText, User, UserPlus, Settings } from "lucide-react";
+import { ArrowLeft, MessageCircle, FileText, User } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import GroupChat from "./GroupChat";
 import GroupIssues from "./GroupIssues";
 import GroupMembers from "./GroupMembers";
+import { useGroupDetail } from "@/hooks/privateGroups/useGroupDetail";
 
 interface GroupDetailProps {
   groupId: string;
   onBack: () => void;
 }
 
-// Mock group data with parent-children theme
-const mockGroup = {
-  id: "1",
-  name: "Parenting Support Circle",
-  description: "A supportive group for parents to discuss challenges, share advice, and find solutions related to raising children of all ages.",
-  memberCount: 8,
-  createdAt: "2025-04-15T10:00:00",
-  members: [
-    { id: "user1", name: "Sarah Johnson", email: "sarah@example.com", avatar: "", role: "admin" as const },
-    { id: "user2", name: "Michael Chen", email: "michael@example.com", avatar: "", role: "member" as const },
-    { id: "user3", name: "Emma Wilson", email: "emma@example.com", avatar: "", role: "member" as const },
-    { id: "user4", name: "David Kim", email: "david@example.com", avatar: "", role: "member" as const },
-    { id: "user5", name: "Jessica Martinez", email: "jessica@example.com", avatar: "", role: "member" as const },
-    { id: "user6", name: "Robert Taylor", email: "robert@example.com", avatar: "", role: "member" as const }
-  ]
-};
-
 const GroupDetail = ({ groupId, onBack }: GroupDetailProps) => {
-  const [group, setGroup] = useState<typeof mockGroup | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { group, loading } = useGroupDetail(groupId);
   const [activeTab, setActiveTab] = useState("chat");
-  
-  const { toast } = useToast();
-
-  useEffect(() => {
-    // Simulate loading group data
-    const loadGroup = async () => {
-      try {
-        // Would fetch from Supabase in a real implementation
-        await new Promise(resolve => setTimeout(resolve, 800));
-        setGroup(mockGroup);
-      } catch (error) {
-        toast({
-          title: "Failed to load group",
-          description: "Could not load group details. Please try again.",
-          variant: "destructive",
-        });
-        onBack(); // Go back if loading fails
-      } finally {
-        setLoading(false);
-      }
-    };
-    
-    loadGroup();
-  }, [groupId, onBack, toast]);
 
   if (loading) {
     return <div className="flex justify-center items-center h-40">Loading group details...</div>;
@@ -80,10 +38,10 @@ const GroupDetail = ({ groupId, onBack }: GroupDetailProps) => {
             <h2 className="text-2xl font-bold flex items-center gap-2">
               {group.name}
               <Badge variant="outline" className="text-xs">
-                {group.memberCount} members
+                {group.members.length} members
               </Badge>
             </h2>
-            <p className="text-muted-foreground text-sm">{group.description}</p>
+            <p className="text-muted-foreground text-sm">{group.description || "No description provided."}</p>
           </div>
         </div>
         
@@ -95,9 +53,9 @@ const GroupDetail = ({ groupId, onBack }: GroupDetailProps) => {
               </AvatarFallback>
             </Avatar>
           ))}
-          {group.memberCount > 3 && (
+          {group.members.length > 3 && (
             <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center text-xs border-2 border-background">
-              +{group.memberCount - 3}
+              +{group.members.length - 3}
             </div>
           )}
         </div>
