@@ -25,18 +25,49 @@ export const usePrivateGroups = () => {
     if (!user) return;
     
     try {
-      // Fetch groups where user is member or creator
-      const { data: groupsData, error } = await supabase
+      console.log('Loading groups for user:', user.id);
+      
+      // Get groups where user is creator
+      const { data: createdGroups, error: createdError } = await supabase
         .from('private_groups')
         .select('*')
-        .or(`created_by.eq.${user.id},id.in.(${await getUserGroupIds()})`)
+        .eq('created_by', user.id)
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      if (createdError) {
+        console.error('Error loading created groups:', createdError);
+        throw createdError;
+      }
+
+      // Get groups where user is member
+      const { data: memberGroups, error: memberError } = await supabase
+        .from('group_members')
+        .select(`
+          group_id,
+          private_groups (*)
+        `)
+        .eq('user_id', user.id);
+
+      if (memberError) {
+        console.error('Error loading member groups:', memberError);
+        throw memberError;
+      }
+
+      // Combine both lists and remove duplicates
+      const allGroups = [...(createdGroups || [])];
+      
+      // Add member groups that aren't already in the created groups list
+      if (memberGroups) {
+        memberGroups.forEach((membership: any) => {
+          if (membership.private_groups && !allGroups.find(g => g.id === membership.private_groups.id)) {
+            allGroups.push(membership.private_groups);
+          }
+        });
+      }
 
       // For each group, get member count
       const groupsWithCounts = await Promise.all(
-        (groupsData || []).map(async (group) => {
+        allGroups.map(async (group) => {
           const { count } = await supabase
             .from('group_members')
             .select('*', { count: 'exact', head: true })
@@ -52,6 +83,7 @@ export const usePrivateGroups = () => {
         })
       );
 
+      console.log('Loaded groups:', groupsWithCounts);
       setGroups(groupsWithCounts);
     } catch (error) {
       console.error('Error loading groups:', error);
@@ -63,21 +95,15 @@ export const usePrivateGroups = () => {
     }
   };
 
-  const getUserGroupIds = async () => {
-    if (!user) return '';
-    
-    const { data } = await supabase
-      .from('group_members')
-      .select('group_id')
-      .eq('user_id', user.id);
-    
-    return (data || []).map(m => m.group_id).join(',') || 'none';
-  };
-
-  const createGroup = async (name: string, description: string = '', inviteEmails: string[] = []) => {
-    if (!user) throw new Error('User not authenticated');
+  const createGroup = async (name: string, description: string = '') => {
+    if (!user) {
+      console.error('User not authenticated');
+      throw new Error('User not authenticated');
+    }
 
     try {
+      console.log('Creating group:', { name, user_id: user.id });
+      
       // Create the group
       const { data: group, error: groupError } = await supabase
         .from('private_groups')
@@ -88,7 +114,12 @@ export const usePrivateGroups = () => {
         .select()
         .single();
 
-      if (groupError) throw groupError;
+      if (groupError) {
+        console.error('Error creating group:', groupError);
+        throw groupError;
+      }
+
+      console.log('Group created:', group);
 
       // Add creator as admin member
       const { error: memberError } = await supabase
@@ -99,7 +130,12 @@ export const usePrivateGroups = () => {
           role: 'admin'
         });
 
-      if (memberError) throw memberError;
+      if (memberError) {
+        console.error('Error adding creator as member:', memberError);
+        throw memberError;
+      }
+
+      console.log('Creator added as admin member');
 
       toast({
         title: "Group created",
