@@ -7,6 +7,7 @@ import { UserPlus, Mail, X } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { useGroupDetail } from "@/hooks/privateGroups/useGroupDetail";
+import UserSearch from "./UserSearch";
 
 interface Member {
   id: string;
@@ -45,6 +46,11 @@ const GroupMembers = ({ groupId, members }: GroupMembersProps) => {
     }
   };
 
+  const handleInviteSent = () => {
+    // Simple refresh for now - in a real app, you'd want to update the state more elegantly
+    window.location.reload();
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -52,9 +58,15 @@ const GroupMembers = ({ groupId, members }: GroupMembersProps) => {
       </div>
       
       <div className="space-y-4">
+        <UserSearch 
+          groupId={groupId} 
+          onInviteSent={handleInviteSent}
+          existingMemberIds={members.map(m => m.id)}
+        />
+        
         <Card className="p-4">
           <div className="space-y-2">
-            <h4 className="text-sm font-medium">Invite New Member</h4>
+            <h4 className="text-sm font-medium">Invite by Email</h4>
             <div className="flex gap-2">
               <div className="relative flex-1">
                 <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />

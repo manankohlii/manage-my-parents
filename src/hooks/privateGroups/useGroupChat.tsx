@@ -130,8 +130,9 @@ export const useGroupChat = (groupId: string) => {
           table: 'group_messages',
           filter: `group_id=eq.${groupId}`
         },
-        () => {
-          console.log('New message received via real-time');
+        (payload) => {
+          console.log('New message received via real-time:', payload);
+          // Reload messages to get the enhanced version with user names
           loadMessages();
         }
       )
