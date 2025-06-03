@@ -10,7 +10,6 @@ import { useToast } from "@/components/ui/use-toast";
 
 interface User {
   id: string;
-  email: string;
   display_name: string;
   first_name?: string;
   last_name?: string;
@@ -25,24 +24,23 @@ interface UserSearchProps {
 const UserSearch = ({ groupId, onInviteSent, existingMemberIds }: UserSearchProps) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [users, setUsers] = useState<User[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [inviting, setInviting] = useState<string | null>(null);
   const { toast } = useToast();
 
-  const searchUsers = async () => {
-    if (!searchTerm.trim()) {
-      setUsers([]);
-      return;
-    }
-
+  const loadUsers = async () => {
     setLoading(true);
     try {
-      // Search users by email or display name
-      const { data, error } = await supabase
-        .from('user_profiles')
-        .select('id, email, display_name, first_name, last_name')
-        .or(`email.ilike.%${searchTerm}%,display_name.ilike.%${searchTerm}%`)
-        .limit(10);
+      let query = supabase
+        .from('profiles')
+        .select('id, display_name, first_name, last_name');
+
+      // If there's a search term, filter by it
+      if (searchTerm.trim()) {
+        query = query.or(`display_name.ilike.%${searchTerm}%,first_name.ilike.%${searchTerm}%,last_name.ilike.%${searchTerm}%`);
+      }
+
+      const { data, error } = await query.limit(20);
 
       if (error) throw error;
 
@@ -53,10 +51,10 @@ const UserSearch = ({ groupId, onInviteSent, existingMemberIds }: UserSearchProp
 
       setUsers(filteredUsers);
     } catch (error) {
-      console.error('Error searching users:', error);
+      console.error('Error loading users:', error);
       toast({
-        title: "Search failed",
-        description: "Could not search users. Please try again.",
+        title: "Failed to load users",
+        description: "Could not load users. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -117,11 +115,11 @@ const UserSearch = ({ groupId, onInviteSent, existingMemberIds }: UserSearchProp
 
   useEffect(() => {
     const debounceTimer = setTimeout(() => {
-      searchUsers();
+      loadUsers();
     }, 300);
 
     return () => clearTimeout(debounceTimer);
-  }, [searchTerm]);
+  }, [searchTerm, existingMemberIds]);
 
   return (
     <Card>
@@ -132,27 +130,34 @@ const UserSearch = ({ groupId, onInviteSent, existingMemberIds }: UserSearchProp
         <div className="relative">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
           <Input 
-            placeholder="Search by email or name..."
+            placeholder="Search by name..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="pl-9"
           />
         </div>
 
-        <div className="space-y-2 max-h-64 overflow-y-auto">
-          {loading && <p className="text-sm text-muted-foreground">Searching...</p>}
+        <div className="space-y-2 max-h-48 overflow-y-auto">
+          {loading && <p className="text-sm text-muted-foreground">Loading users...</p>}
+          
+          {!loading && users.length === 0 && (
+            <p className="text-sm text-muted-foreground">
+              {searchTerm ? "No users found" : "No available users to invite"}
+            </p>
+          )}
           
           {users.map((user) => (
             <div key={user.id} className="flex items-center justify-between p-2 border rounded">
               <div className="flex items-center gap-2">
                 <Avatar className="h-8 w-8">
                   <AvatarFallback className="text-xs">
-                    {user.display_name?.charAt(0) || user.email?.charAt(0) || 'U'}
+                    {user.display_name?.charAt(0) || user.first_name?.charAt(0) || 'U'}
                   </AvatarFallback>
                 </Avatar>
                 <div>
-                  <p className="text-sm font-medium">{user.display_name || 'Unknown'}</p>
-                  <p className="text-xs text-muted-foreground">{user.email}</p>
+                  <p className="text-sm font-medium">
+                    {user.display_name || `${user.first_name || ''} ${user.last_name || ''}`.trim() || 'Unknown User'}
+                  </p>
                 </div>
               </div>
               <Button 
@@ -171,10 +176,6 @@ const UserSearch = ({ groupId, onInviteSent, existingMemberIds }: UserSearchProp
               </Button>
             </div>
           ))}
-          
-          {!loading && searchTerm && users.length === 0 && (
-            <p className="text-sm text-muted-foreground">No users found</p>
-          )}
         </div>
       </CardContent>
     </Card>

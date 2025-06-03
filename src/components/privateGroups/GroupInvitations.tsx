@@ -10,6 +10,7 @@ import { useToast } from "@/components/ui/use-toast";
 
 interface Invitation {
   id: string;
+  group_id: string;
   group_name: string;
   invited_by_name: string;
   created_at: string;
@@ -27,54 +28,72 @@ const GroupInvitations = () => {
     if (!user) return;
 
     try {
-      const { data, error } = await supabase
+      // Get pending invitations for current user
+      const { data: invitationsData, error: invitationsError } = await supabase
         .from('group_invitations')
-        .select(`
-          id,
-          status,
-          created_at,
-          group_id,
-          invited_by_user_id
-        `)
+        .select('id, status, created_at, group_id, invited_by_user_id')
         .eq('invited_user_id', user.id)
         .eq('status', 'pending')
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      if (invitationsError) throw invitationsError;
 
-      const formattedInvitations = await Promise.all(
-        (data || []).map(async (inv: any) => {
-          // Get group name
-          const { data: groupData } = await supabase
-            .from('private_groups')
-            .select('name')
-            .eq('id', inv.group_id)
-            .single();
+      if (!invitationsData || invitationsData.length === 0) {
+        setInvitations([]);
+        return;
+      }
 
-          // Get inviter profile
-          const { data: inviterProfile } = await supabase
-            .rpc('get_user_profile', { user_uuid: inv.invited_by_user_id });
+      // Get group names for all invitations
+      const groupIds = invitationsData.map(inv => inv.group_id);
+      const { data: groupsData, error: groupsError } = await supabase
+        .from('private_groups')
+        .select('id, name')
+        .in('id', groupIds);
 
-          return {
-            id: inv.id,
-            group_id: inv.group_id,
-            group_name: groupData?.name || 'Unknown Group',
-            invited_by_name: inviterProfile?.[0]?.display_name || 'Unknown User',
-            created_at: inv.created_at,
-            status: inv.status
-          };
-        })
-      );
+      if (groupsError) throw groupsError;
+
+      // Get inviter profiles for all invitations
+      const inviterIds = invitationsData.map(inv => inv.invited_by_user_id);
+      const { data: profilesData, error: profilesError } = await supabase
+        .from('profiles')
+        .select('id, display_name, first_name, last_name')
+        .in('id', inviterIds);
+
+      if (profilesError) throw profilesError;
+
+      // Combine the data
+      const formattedInvitations = invitationsData.map(inv => {
+        const group = groupsData?.find(g => g.id === inv.group_id);
+        const inviter = profilesData?.find(p => p.id === inv.invited_by_user_id);
+        
+        const inviterName = inviter?.display_name || 
+                           `${inviter?.first_name || ''} ${inviter?.last_name || ''}`.trim() || 
+                           'Unknown User';
+
+        return {
+          id: inv.id,
+          group_id: inv.group_id,
+          group_name: group?.name || 'Unknown Group',
+          invited_by_name: inviterName,
+          created_at: inv.created_at,
+          status: inv.status
+        };
+      });
 
       setInvitations(formattedInvitations);
     } catch (error) {
       console.error('Error loading invitations:', error);
+      toast({
+        title: "Failed to load invitations",
+        description: "Could not load invitations. Please try again.",
+        variant: "destructive",
+      });
     } finally {
       setLoading(false);
     }
   };
 
-  const respondToInvitation = async (invitationId: string, accept: boolean) => {
+  const respondToInvitation = async (invitationId: string, groupId: string, accept: boolean) => {
     setResponding(invitationId);
     try {
       // Update invitation status
@@ -89,25 +108,16 @@ const GroupInvitations = () => {
       if (updateError) throw updateError;
 
       if (accept) {
-        // Get invitation details to add user to group
-        const { data: invitation } = await supabase
-          .from('group_invitations')
-          .select('group_id')
-          .eq('id', invitationId)
-          .single();
+        // Add user to group members
+        const { error: memberError } = await supabase
+          .from('group_members')
+          .insert({
+            group_id: groupId,
+            user_id: user?.id,
+            role: 'member'
+          });
 
-        if (invitation) {
-          // Add user to group members
-          const { error: memberError } = await supabase
-            .from('group_members')
-            .insert({
-              group_id: invitation.group_id,
-              user_id: user?.id,
-              role: 'member'
-            });
-
-          if (memberError) throw memberError;
-        }
+        if (memberError) throw memberError;
       }
 
       toast({
@@ -172,7 +182,7 @@ const GroupInvitations = () => {
               </p>
               <div className="flex gap-2">
                 <Button 
-                  onClick={() => respondToInvitation(invitation.id, true)}
+                  onClick={() => respondToInvitation(invitation.id, invitation.group_id, true)}
                   disabled={responding === invitation.id}
                   size="sm"
                 >
@@ -181,7 +191,7 @@ const GroupInvitations = () => {
                 </Button>
                 <Button 
                   variant="outline"
-                  onClick={() => respondToInvitation(invitation.id, false)}
+                  onClick={() => respondToInvitation(invitation.id, invitation.group_id, false)}
                   disabled={responding === invitation.id}
                   size="sm"
                 >

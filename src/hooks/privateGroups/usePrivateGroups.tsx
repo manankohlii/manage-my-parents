@@ -13,6 +13,7 @@ export interface Group {
   lastActive?: string;
   unreadMessages?: number;
   newIssues?: number;
+  isOwner?: boolean;
 }
 
 export const usePrivateGroups = () => {
@@ -28,41 +29,96 @@ export const usePrivateGroups = () => {
     }
     
     try {
-      console.log('=== DEBUG INFO ===');
-      console.log('Current user object:', user);
-      console.log('User ID from auth:', user.id);
-      console.log('User email:', user.email);
+      console.log('=== Loading groups for user ===');
+      console.log('User ID:', user.id);
       
-      // Test if we can query the table at all
-      const { data: allGroups, error: allError } = await supabase
-        .from('private_groups')
-        .select('*');
-      
-      console.log('All groups in table (no filter):', allGroups);
-      console.log('All groups error:', allError);
-      
-      // Now try with the user filter
+      // Get groups created by user
       const { data: createdGroups, error: createdError } = await supabase
         .from('private_groups')
         .select('*')
         .eq('created_by', user.id);
 
-      console.log('Groups created by current user:', createdGroups);
-      console.log('Query error:', createdError);
-      
       if (createdError) {
         console.error('Error loading created groups:', createdError);
         throw createdError;
       }
 
-      // For now, just show created groups (we can add member groups later)
-      const groupsWithCounts = (createdGroups || []).map(group => ({
-        ...group,
-        memberCount: 1, // Just creator for now
-        lastActive: group.created_at,
-        unreadMessages: 0,
-        newIssues: 0
+      console.log('Created groups:', createdGroups);
+
+      // Get groups where user is a member
+      const { data: memberGroups, error: memberError } = await supabase
+        .from('group_members')
+        .select(`
+          group_id,
+          private_groups!inner(
+            id,
+            name,
+            created_by,
+            created_at
+          )
+        `)
+        .eq('user_id', user.id);
+
+      if (memberError) {
+        console.error('Error loading member groups:', memberError);
+        throw memberError;
+      }
+
+      console.log('Member groups data:', memberGroups);
+
+      // Transform member groups data
+      const memberGroupsFormatted = (memberGroups || []).map(member => ({
+        id: member.private_groups.id,
+        name: member.private_groups.name,
+        created_by: member.private_groups.created_by,
+        created_at: member.private_groups.created_at,
+        isOwner: false
       }));
+
+      console.log('Formatted member groups:', memberGroupsFormatted);
+
+      // Combine and deduplicate groups (in case user is both creator and member)
+      const allGroups = [
+        ...(createdGroups || []).map(group => ({ ...group, isOwner: true })),
+        ...memberGroupsFormatted.filter(memberGroup => 
+          !createdGroups?.some(createdGroup => createdGroup.id === memberGroup.id)
+        )
+      ];
+
+      console.log('All groups combined:', allGroups);
+
+      // Add member counts for each group
+      const groupsWithCounts = await Promise.all(
+        allGroups.map(async (group) => {
+          try {
+            const { count, error } = await supabase
+              .from('group_members')
+              .select('*', { count: 'exact', head: true })
+              .eq('group_id', group.id);
+
+            if (error) {
+              console.error('Error counting members for group:', group.id, error);
+            }
+
+            return {
+              ...group,
+              memberCount: (count || 0) + (group.isOwner ? 1 : 0), // Add creator if they're not in members table
+              lastActive: group.created_at,
+              unreadMessages: 0,
+              newIssues: 0
+            };
+          } catch (error) {
+            console.error('Error processing group:', group.id, error);
+            return {
+              ...group,
+              memberCount: 1,
+              lastActive: group.created_at,
+              unreadMessages: 0,
+              newIssues: 0
+            };
+          }
+        })
+      );
 
       console.log('Final groups with counts:', groupsWithCounts);
       setGroups(groupsWithCounts);
@@ -105,7 +161,7 @@ export const usePrivateGroups = () => {
 
       console.log('Group created:', group);
 
-      // Add creator as admin member (optional step)
+      // Add creator as admin member
       const { error: memberError } = await supabase
         .from('group_members')
         .insert({
@@ -144,7 +200,7 @@ export const usePrivateGroups = () => {
     } else {
       setLoading(false);
     }
-  }, [user?.id]); // Only depend on user.id, not the whole user object
+  }, [user?.id]);
 
   return {
     groups,
