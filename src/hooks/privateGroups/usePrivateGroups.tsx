@@ -30,7 +30,7 @@ export const usePrivateGroups = () => {
     try {
       console.log('Loading groups for user:', user.id);
       
-      // Method 1: Get groups created by user
+      // Just get groups created by user for now
       const { data: createdGroups, error: createdError } = await supabase
         .from('private_groups')
         .select('*')
@@ -41,80 +41,17 @@ export const usePrivateGroups = () => {
         throw createdError;
       }
 
-      // Method 2: Get group IDs where user is a member (simple query)
-      const { data: memberships, error: memberError } = await supabase
-        .from('group_members')
-        .select('group_id')
-        .eq('user_id', user.id);
+      console.log('Created groups:', createdGroups);
 
-      if (memberError) {
-        console.error('Error loading memberships:', memberError);
-        console.warn('Could not load member groups, showing only created groups');
-      }
+      // For now, just show created groups (we can add member groups later)
+      const groupsWithCounts = (createdGroups || []).map(group => ({
+        ...group,
+        memberCount: 1, // Just creator for now
+        lastActive: group.created_at,
+        unreadMessages: 0,
+        newIssues: 0
+      }));
 
-      // Method 3: Get the actual group data for member groups
-      let memberGroups = [];
-      if (memberships && memberships.length > 0) {
-        const groupIds = memberships.map(m => m.group_id);
-        
-        const { data: memberGroupData, error: groupDataError } = await supabase
-          .from('private_groups')
-          .select('*')
-          .in('id', groupIds);
-
-        if (groupDataError) {
-          console.error('Error loading member group data:', groupDataError);
-        } else {
-          memberGroups = memberGroupData || [];
-        }
-      }
-
-      // Combine groups from both sources
-      const allGroups = [...(createdGroups || []), ...memberGroups];
-
-      // Remove duplicates based on group id
-      const uniqueGroups = allGroups.filter((group, index, self) => 
-        index === self.findIndex(g => g?.id === group?.id)
-      );
-
-      console.log('All unique groups:', uniqueGroups);
-
-      if (!uniqueGroups || uniqueGroups.length === 0) {
-        console.log('No groups found for user');
-        setGroups([]);
-        return;
-      }
-
-      // For each group, get member count
-      const groupsWithCounts = await Promise.all(
-        uniqueGroups.map(async (group) => {
-          try {
-            const { count } = await supabase
-              .from('group_members')
-              .select('*', { count: 'exact', head: true })
-              .eq('group_id', group.id);
-
-            return {
-              ...group,
-              memberCount: (count || 0) + 1, // +1 for creator
-              lastActive: group.created_at,
-              unreadMessages: 0,
-              newIssues: 0
-            };
-          } catch (memberError) {
-            console.error('Error getting member count for group', group.id, memberError);
-            return {
-              ...group,
-              memberCount: 1,
-              lastActive: group.created_at,
-              unreadMessages: 0,
-              newIssues: 0
-            };
-          }
-        })
-      );
-
-      console.log('Groups with counts:', groupsWithCounts);
       setGroups(groupsWithCounts);
     } catch (error) {
       console.error('Error loading groups:', error);
