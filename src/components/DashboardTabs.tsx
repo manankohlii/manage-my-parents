@@ -2,10 +2,9 @@
 import { useState, createContext } from "react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import MyChallenges from "./MyChallenges";
-import AddChallenge from "./AddChallenge";
 import ExploreChallenges from "./ExploreChallenges";
 import PrivateGroups from "./privateGroups/PrivateGroups";
-import { Search, Plus, Filter, Users } from "lucide-react";
+import { Search, Filter, Users } from "lucide-react";
 
 // Create TabContext
 export const TabContext = createContext<{ 
@@ -19,7 +18,6 @@ const DashboardTabs = () => {
   const getTabTitle = () => {
     switch (activeTab) {
       case "my-challenges": return "My Challenges";
-      case "add-challenge": return "Add New Challenge";
       case "explore": return "Explore Challenges";
       case "private-groups": return "Private Groups";
       default: return "My Challenges";
@@ -34,10 +32,6 @@ const DashboardTabs = () => {
             <Search className="text-current" size={16} />
             My Challenges
           </TabsTrigger>
-          <TabsTrigger value="add-challenge" className="flex items-center gap-2">
-            <Plus className="text-current" size={16} />
-            Add New Challenge
-          </TabsTrigger>
           <TabsTrigger value="explore" className="flex items-center gap-2">
             <Filter className="text-current" size={16} />
             Explore Challenges
@@ -50,10 +44,6 @@ const DashboardTabs = () => {
         
         <TabsContent value="my-challenges" className="mt-6 bg-blue-500/10 rounded-lg p-6 border border-blue-200 dark:border-blue-900 dark:bg-blue-500/20">
           <MyChallenges />
-        </TabsContent>
-        
-        <TabsContent value="add-challenge" className="mt-6 bg-green-500/10 rounded-lg p-6 border border-green-200 dark:border-green-900 dark:bg-green-500/20">
-          <AddChallenge />
         </TabsContent>
         
         <TabsContent value="explore" className="mt-6 bg-purple-500/10 rounded-lg p-6 border border-purple-200 dark:border-purple-900 dark:bg-purple-500/20">

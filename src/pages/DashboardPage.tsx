@@ -8,10 +8,13 @@ import {
 import DashboardTabs from "@/components/DashboardTabs";
 import { useState, useEffect, useContext } from "react";
 import { TabContext } from "@/components/DashboardTabs";
+import { useDashboardStats } from "@/hooks/useDashboardStats";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const DashboardPage = () => {
   const [currentTabTitle, setCurrentTabTitle] = useState("My Challenges");
   const tabContext = useContext(TabContext);
+  const { stats, loading: statsLoading } = useDashboardStats();
   
   // Update page title based on active tab (now safely using hook at component level)
   useEffect(() => {
@@ -20,7 +23,6 @@ const DashboardPage = () => {
       const getTitle = () => {
         switch (tabContext.activeTab) {
           case "my-challenges": return "My Challenges";
-          case "add-challenge": return "Add New Challenge";
           case "explore": return "Explore Challenges";
           case "private-groups": return "Private Groups";
           default: return "My Challenges";
@@ -45,7 +47,11 @@ const DashboardPage = () => {
           </div>
           <div>
             <p className="text-sm font-medium text-muted-foreground">Total Challenges</p>
-            <h3 className="text-2xl font-bold">24</h3>
+            {statsLoading ? (
+              <Skeleton className="h-8 w-12" />
+            ) : (
+              <h3 className="text-2xl font-bold">{stats.totalChallenges}</h3>
+            )}
           </div>
         </Card>
         
@@ -55,7 +61,11 @@ const DashboardPage = () => {
           </div>
           <div>
             <p className="text-sm font-medium text-muted-foreground">Solutions Received</p>
-            <h3 className="text-2xl font-bold">87</h3>
+            {statsLoading ? (
+              <Skeleton className="h-8 w-12" />
+            ) : (
+              <h3 className="text-2xl font-bold">{stats.solutionsReceived}</h3>
+            )}
           </div>
         </Card>
         
@@ -65,7 +75,11 @@ const DashboardPage = () => {
           </div>
           <div>
             <p className="text-sm font-medium text-muted-foreground">Community Size</p>
-            <h3 className="text-2xl font-bold">1,234</h3>
+            {statsLoading ? (
+              <Skeleton className="h-8 w-12" />
+            ) : (
+              <h3 className="text-2xl font-bold">{stats.communitySize}</h3>
+            )}
           </div>
         </Card>
       </div>
