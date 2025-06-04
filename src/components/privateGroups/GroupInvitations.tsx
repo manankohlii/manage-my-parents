@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -7,6 +6,7 @@ import { Check, X, Users } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/components/ui/use-toast";
+import { useInvitationCount } from "@/hooks/privateGroups/useInvitationCount";
 
 interface Invitation {
   id: string;
@@ -18,70 +18,35 @@ interface Invitation {
 }
 
 interface GroupInvitationsProps {
-  onInvitationCountChange?: (count: number) => void;
   onGroupJoined?: () => void;
 }
 
-const GroupInvitations = ({ onInvitationCountChange, onGroupJoined }: GroupInvitationsProps) => {
+const GroupInvitations = ({ onGroupJoined }: GroupInvitationsProps) => {
   const [invitations, setInvitations] = useState<Invitation[]>([]);
   const [loading, setLoading] = useState(true);
   const [responding, setResponding] = useState<string | null>(null);
   const { user } = useAuth();
   const { toast } = useToast();
-
-  const cleanupOrphanedMemberships = async () => {
-    if (!user) return;
-    
-    console.log('🧹 Auto-cleanup: Checking for orphaned memberships...');
-    
-    try {
-      // Get all user's memberships
-      const { data: memberships } = await supabase
-        .from('group_members')
-        .select('group_id, id')
-        .eq('user_id', user.id);
-      
-      if (!memberships || memberships.length === 0) {
-        console.log('✅ No memberships to check');
-        return;
-      }
-      
-      // Check which groups actually exist
-      const groupIds = memberships.map(m => m.group_id);
-      const { data: existingGroups } = await supabase
-        .from('private_groups')
-        .select('id')
-        .in('id', groupIds);
-      
-      const existingGroupIds = existingGroups?.map(g => g.id) || [];
-      const orphanedMemberships = memberships.filter(m => !existingGroupIds.includes(m.group_id));
-      
-      if (orphanedMemberships.length > 0) {
-        console.log(`🗑️ Auto-cleanup: Removing ${orphanedMemberships.length} orphaned memberships`);
-        
-        const orphanedIds = orphanedMemberships.map(m => m.id);
-        await supabase
-          .from('group_members')
-          .delete()
-          .in('id', orphanedIds);
-          
-        console.log('✅ Auto-cleanup: Orphaned memberships cleaned up');
-      } else {
-        console.log('✅ Auto-cleanup: No orphaned memberships found');
-      }
-    } catch (error) {
-      console.error('❌ Auto-cleanup failed:', error);
-    }
-  };
+  const { refreshCount } = useInvitationCount();
 
   const loadInvitations = async () => {
     if (!user) return;
 
     try {
-      // Get pending invitations for current user
+      // Get pending invitations for current user with group details
       const { data: invitationsData, error: invitationsError } = await supabase
         .from('group_invitations')
-        .select('id, status, created_at, group_id, invited_by_user_id')
+        .select(`
+          id,
+          status,
+          created_at,
+          group_id,
+          invited_by_user_id,
+          private_groups (
+            id,
+            name
+          )
+        `)
         .eq('invited_user_id', user.id)
         .eq('status', 'pending')
         .order('created_at', { ascending: false });
@@ -90,23 +55,10 @@ const GroupInvitations = ({ onInvitationCountChange, onGroupJoined }: GroupInvit
 
       if (!invitationsData || invitationsData.length === 0) {
         setInvitations([]);
-        onInvitationCountChange?.(0);
         return;
       }
 
-      // Get group names for all invitations - simple separate query
-      const groupIds = invitationsData.map(inv => inv.group_id);
-      console.log('Group IDs to fetch:', groupIds);
-      
-      const { data: groupsData, error: groupsError } = await supabase
-        .from('private_groups')
-        .select('id, name')
-        .in('id', groupIds);
-
-      if (groupsError) throw groupsError;
-      console.log('Groups data received:', groupsData);
-
-      // Get inviter profiles for all invitations - remove email field
+      // Get inviter profiles for all invitations
       const inviterIds = invitationsData.map(inv => inv.invited_by_user_id);
       const { data: profilesData, error: profilesError } = await supabase
         .from('profiles')
@@ -117,10 +69,8 @@ const GroupInvitations = ({ onInvitationCountChange, onGroupJoined }: GroupInvit
 
       // Combine the data
       const formattedInvitations = invitationsData.map(inv => {
-        const group = groupsData?.find(g => g.id === inv.group_id);
+        const group = inv.private_groups;
         const inviter = profilesData?.find(p => p.id === inv.invited_by_user_id);
-        
-        console.log('Found group for invitation:', inv.group_id, ':', group);
         
         const inviterName = inviter?.display_name || 
                            `${inviter?.first_name || ''} ${inviter?.last_name || ''}`.trim() || 
@@ -136,9 +86,7 @@ const GroupInvitations = ({ onInvitationCountChange, onGroupJoined }: GroupInvit
         };
       });
 
-      console.log('Formatted invitations:', formattedInvitations);
       setInvitations(formattedInvitations);
-      onInvitationCountChange?.(formattedInvitations.length);
     } catch (error) {
       console.error('Error loading invitations:', error);
       toast({
@@ -154,6 +102,35 @@ const GroupInvitations = ({ onInvitationCountChange, onGroupJoined }: GroupInvit
   const respondToInvitation = async (invitationId: string, groupId: string, accept: boolean) => {
     setResponding(invitationId);
     try {
+      if (accept) {
+        // First verify the group exists
+        const { data: group, error: groupError } = await supabase
+          .from('private_groups')
+          .select('id, name')
+          .eq('id', groupId)
+          .maybeSingle();
+
+        if (groupError) {
+          console.error('❌ Error checking group:', groupError);
+          toast({
+            title: "Error",
+            description: "Could not verify group. Please try again.",
+            variant: "destructive",
+          });
+          return;
+        }
+
+        if (!group) {
+          console.error('❌ Group not found:', groupId);
+          toast({
+            title: "Error",
+            description: "This group no longer exists.",
+            variant: "destructive",
+          });
+          return;
+        }
+      }
+      
       // Update invitation status
       const { error: updateError } = await supabase
         .from('group_invitations')
@@ -176,33 +153,56 @@ const GroupInvitations = ({ onInvitationCountChange, onGroupJoined }: GroupInvit
           });
 
         if (memberError) throw memberError;
-
-        console.log('✅ Successfully joined group:', groupId);
         
-        // Run cleanup before triggering refresh
-        await cleanupOrphanedMemberships();
+        // Wait a moment to ensure database operations are complete
+        await new Promise(resolve => setTimeout(resolve, 2000));
         
-        // Trigger groups refresh with multiple attempts
-        setTimeout(() => {
-          console.log('🔄 First refresh trigger after invitation acceptance');
-          onGroupJoined?.();
-        }, 2000); // Increased delay
+        // Verify the membership was added
+        let verified = false;
+        for (let i = 0; i < 3; i++) {
+          try {
+            const { data: verifyMembership, error: verifyError } = await supabase
+              .from('group_members')
+              .select('*')
+              .eq('group_id', groupId)
+              .eq('user_id', user?.id)
+              .maybeSingle();
 
-        setTimeout(() => {
-          console.log('🔄 Second refresh trigger after invitation acceptance');
-          onGroupJoined?.();
-        }, 4000);
+            if (verifyError) continue;
+
+            if (verifyMembership) {
+              verified = true;
+              break;
+            }
+
+            await new Promise(resolve => setTimeout(resolve, 1000));
+          } catch (verifyError) {
+            continue;
+          }
+        }
+
+        if (!verified) {
+          console.warn('⚠️ Could not verify membership after multiple attempts, but continuing...');
+        }
+        
+        onGroupJoined?.();
+
+        toast({
+          title: "Invitation accepted",
+          description: "You have joined the group!",
+        });
+      } else {
+        toast({
+          title: "Invitation declined",
+          description: "Invitation declined.",
+        });
       }
 
-      toast({
-        title: accept ? "Invitation accepted" : "Invitation declined",
-        description: accept ? "You have joined the group!" : "Invitation declined.",
-      });
-
-      // Refresh invitations
-      loadInvitations();
+      // Refresh invitations and count
+      await loadInvitations();
+      await refreshCount();
     } catch (error) {
-      console.error('Error responding to invitation:', error);
+      console.error('❌ Error responding to invitation:', error);
       toast({
         title: "Error",
         description: "Could not respond to invitation. Please try again.",

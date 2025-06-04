@@ -1,4 +1,3 @@
-
 import { useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -66,13 +65,6 @@ const GroupsList = ({ onSelectGroup, refreshTrigger }: GroupsListProps) => {
           </p>
           <div className="flex gap-2 justify-center mt-4">
             <Button onClick={() => {}}>Create Your First Group</Button>
-            <Button variant="outline" onClick={() => refreshGroups()}>
-              <RefreshCw size={16} className="mr-1" />
-              🔄 Refresh Groups
-            </Button>
-            <Button variant="outline" onClick={() => debugGroups?.()}>
-              🐛 Debug Groups
-            </Button>
           </div>
         </CardContent>
       </Card>
@@ -83,15 +75,6 @@ const GroupsList = ({ onSelectGroup, refreshTrigger }: GroupsListProps) => {
     <div className="space-y-4">
       <div className="flex justify-between items-center">
         <h3 className="text-lg font-medium">Your Groups ({groups.length})</h3>
-        <div className="flex gap-2">
-          <Button variant="outline" size="sm" onClick={() => refreshGroups()}>
-            <RefreshCw size={16} className="mr-1" />
-            🔄 Refresh Groups
-          </Button>
-          <Button variant="outline" size="sm" onClick={() => debugGroups?.()}>
-            🐛 Debug Groups
-          </Button>
-        </div>
       </div>
       
       {groups.map((group) => (

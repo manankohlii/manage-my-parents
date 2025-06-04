@@ -6,24 +6,23 @@ import GroupsList from "./GroupsList";
 import CreateGroup from "./CreateGroup";
 import GroupInvitations from "./GroupInvitations";
 import GroupDetail from "./GroupDetail";
+import { useInvitationCount } from "@/hooks/privateGroups/useInvitationCount";
 
 const PrivateGroups = () => {
   const [activeTab, setActiveTab] = useState("my-groups");
   const [activeGroupId, setActiveGroupId] = useState<string | null>(null);
-  const [pendingInvitationsCount, setPendingInvitationsCount] = useState(0);
   const [groupsRefreshTrigger, setGroupsRefreshTrigger] = useState(0);
-
-  const handleInvitationCountChange = (count: number) => {
-    setPendingInvitationsCount(count);
-  };
+  const { count: pendingInvitationsCount } = useInvitationCount();
 
   const handleGroupJoined = () => {
     console.log('🎉 Group joined - triggering refresh and switching to My Groups');
+    // First trigger the refresh
     setGroupsRefreshTrigger(prev => prev + 1);
-    // Auto-switch to My Groups tab after accepting invitation
+    
+    // Wait for refresh to complete before switching tabs
     setTimeout(() => {
       setActiveTab("my-groups");
-    }, 1000);
+    }, 1500); // Increased delay to ensure refresh completes
   };
 
   return (
@@ -68,7 +67,6 @@ const PrivateGroups = () => {
           
           <TabsContent value="invitations">
             <GroupInvitations 
-              onInvitationCountChange={handleInvitationCountChange}
               onGroupJoined={handleGroupJoined}
             />
           </TabsContent>

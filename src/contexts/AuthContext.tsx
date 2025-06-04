@@ -90,7 +90,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   ) => {
     try {
-      const { error } = await supabase.auth.signUp({
+      const { data: authData, error: signUpError } = await supabase.auth.signUp({
         email,
         password,
         options: {
@@ -105,7 +105,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
       });
 
-      if (error) throw error;
+      if (signUpError) throw signUpError;
+
+      // Create profile in profiles table
+      if (authData.user) {
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .insert({
+            id: authData.user.id,
+            first_name: userData.firstName,
+            last_name: userData.lastName || "",
+            display_name: userData.displayName,
+            city: userData.city || "",
+            country: userData.country || "",
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          });
+
+        if (profileError) {
+          console.error("Error creating profile:", profileError);
+          throw profileError;
+        }
+      }
+
       return { error: null, success: true };
     } catch (error) {
       console.error("Error signing up:", error);

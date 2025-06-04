@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -99,8 +98,9 @@ const UserSearch = ({ groupId, onInviteSent, existingMemberIds }: UserSearchProp
         description: "The user has been invited to join the group.",
       });
 
-      // Remove user from list immediately after successful invite
+      // Remove user from list and reload users
       setUsers(prev => prev.filter(u => u.id !== userId));
+      await loadUsers(); // Reload the user list to ensure it's up to date
 
       onInviteSent();
     } catch (error) {

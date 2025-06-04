@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -23,28 +22,15 @@ export const useDashboardStats = () => {
       if (!user?.id) return;
 
       try {
-        // Get user's total challenges count
+        // Get total challenges count across all users
         const { count: challengesCount } = await supabase
           .from("challenges")
-          .select("*", { count: 'exact', head: true })
-          .eq("user_id", user.id);
+          .select("*", { count: 'exact', head: true });
 
-        // Get total solutions received on user's challenges
-        const { data: userChallenges } = await supabase
-          .from("challenges")
-          .select("id")
-          .eq("user_id", user.id);
-
-        let solutionsCount = 0;
-        if (userChallenges && userChallenges.length > 0) {
-          const challengeIds = userChallenges.map(c => c.id);
-          const { count: solutions } = await supabase
-            .from("solutions")
-            .select("*", { count: 'exact', head: true })
-            .in("challenge_id", challengeIds);
-          
-          solutionsCount = solutions || 0;
-        }
+        // Get total solutions count across all challenges
+        const { count: solutionsCount } = await supabase
+          .from("solutions")
+          .select("*", { count: 'exact', head: true });
 
         // Get total community size (number of registered users)
         const { count: usersCount } = await supabase
@@ -53,7 +39,7 @@ export const useDashboardStats = () => {
 
         setStats({
           totalChallenges: challengesCount || 0,
-          solutionsReceived: solutionsCount,
+          solutionsReceived: solutionsCount || 0,
           communitySize: usersCount || 0
         });
       } catch (error) {

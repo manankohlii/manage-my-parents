@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -40,34 +39,35 @@ export const useGroupChat = (groupId: string) => {
 
       console.log('Raw messages:', data);
 
-      // Enhance messages with user names
-      const enhancedMessages = await Promise.all(
-        (data || []).map(async (message) => {
-          try {
-            const { data: userProfile } = await supabase
-              .rpc('get_user_profile', { user_uuid: message.user_id });
-            
-            let userName = 'Unknown User';
-            if (userProfile && userProfile.length > 0) {
-              const profile = userProfile[0];
-              userName = profile.display_name || 
-                       `${profile.first_name || ''} ${profile.last_name || ''}`.trim() || 
-                       'User';
-            }
+      // Get unique user IDs from messages
+      const userIds = [...new Set((data || []).map(msg => msg.user_id))];
+      console.log('Unique user IDs:', userIds);
 
-            return {
-              ...message,
-              userName
-            };
-          } catch (profileError) {
-            console.error('Error loading user profile for message:', profileError);
-            return {
-              ...message,
-              userName: 'Unknown User'
-            };
-          }
-        })
-      );
+      // Fetch all user profiles at once
+      const { data: profiles, error: profilesError } = await supabase
+        .from('profiles')
+        .select('id, display_name, first_name, last_name')
+        .in('id', userIds);
+
+      if (profilesError) {
+        console.error('Error loading profiles:', profilesError);
+        throw profilesError;
+      }
+
+      console.log('User profiles:', profiles);
+
+      // Enhance messages with user names
+      const enhancedMessages = (data || []).map(message => {
+        const profile = profiles?.find(p => p.id === message.user_id);
+        const userName = profile?.display_name || 
+                        `${profile?.first_name || ''} ${profile?.last_name || ''}`.trim() || 
+                        'Unknown User';
+
+        return {
+          ...message,
+          userName
+        };
+      });
 
       console.log('Enhanced messages:', enhancedMessages);
       setMessages(enhancedMessages);
