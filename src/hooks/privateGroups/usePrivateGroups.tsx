@@ -22,25 +22,65 @@ export const usePrivateGroups = () => {
   const { user } = useAuth();
   const { toast } = useToast();
 
-  const loadGroups = useCallback(async () => {
-    // Prevent re-entry during loading
-    if (loading) {
-      console.log('⏹️ Already loading, skipping...');
-      return;
+  const cleanupOrphanedMemberships = async () => {
+    if (!user) return;
+    
+    console.log('🧹 Auto-cleanup: Checking for orphaned memberships...');
+    
+    try {
+      // Get all user's memberships
+      const { data: memberships } = await supabase
+        .from('group_members')
+        .select('group_id, id')
+        .eq('user_id', user.id);
+      
+      if (!memberships || memberships.length === 0) {
+        console.log('✅ No memberships to check');
+        return;
+      }
+      
+      // Check which groups actually exist
+      const groupIds = memberships.map(m => m.group_id);
+      const { data: existingGroups } = await supabase
+        .from('private_groups')
+        .select('id')
+        .in('id', groupIds);
+      
+      const existingGroupIds = existingGroups?.map(g => g.id) || [];
+      const orphanedMemberships = memberships.filter(m => !existingGroupIds.includes(m.group_id));
+      
+      if (orphanedMemberships.length > 0) {
+        console.log(`🗑️ Auto-cleanup: Removing ${orphanedMemberships.length} orphaned memberships`);
+        
+        const orphanedIds = orphanedMemberships.map(m => m.id);
+        await supabase
+          .from('group_members')
+          .delete()
+          .in('id', orphanedIds);
+          
+        console.log('✅ Auto-cleanup: Orphaned memberships cleaned up');
+      } else {
+        console.log('✅ Auto-cleanup: No orphaned memberships found');
+      }
+    } catch (error) {
+      console.error('❌ Auto-cleanup failed:', error);
     }
+  };
 
+  const loadGroups = useCallback(async () => {
     if (!user) {
       setLoading(false);
       return;
     }
     
+    console.log('🔄 Starting to load groups for user:', user.id);
     setLoading(true);
+    
     let createdGroups = null;
     
     try {
-      console.log('🔄 Starting to load groups for user:', user.id);
-      console.log('=== Loading groups for user ===');
-      console.log('User ID:', user.id);
+      // Run cleanup first
+      await cleanupOrphanedMemberships();
       
       // Get groups created by user
       const { data: createdGroupsData, error: createdError } = await supabase
@@ -56,7 +96,7 @@ export const usePrivateGroups = () => {
       createdGroups = createdGroupsData;
       console.log('✅ Created groups:', createdGroups);
 
-      // Get groups where user is a member - simple separate queries
+      // Get groups where user is a member
       const { data: membershipData, error: memberError } = await supabase
         .from('group_members')
         .select('group_id')
@@ -86,9 +126,16 @@ export const usePrivateGroups = () => {
 
         memberGroups = memberGroupData || [];
         console.log('✅ Member groups data:', memberGroups);
+        
+        // Log missing groups (orphaned memberships)
+        const foundGroupIds = memberGroups.map(g => g.id);
+        const missingGroupIds = groupIds.filter(id => !foundGroupIds.includes(id));
+        if (missingGroupIds.length > 0) {
+          console.warn('⚠️ Found orphaned memberships for deleted groups:', missingGroupIds);
+        }
       }
 
-      // Combine and deduplicate groups (in case user is both creator and member)
+      // Combine and deduplicate groups
       const allGroups = [
         ...(createdGroups || []).map(group => ({ ...group, isOwner: true })),
         ...memberGroups
@@ -98,10 +145,9 @@ export const usePrivateGroups = () => {
           .map(group => ({ ...group, isOwner: false }))
       ];
 
-      console.log('📊 Final combined groups before processing:', allGroups);
-      console.log('All groups combined:', allGroups);
+      console.log('📊 Final combined groups:', allGroups);
 
-      // Add member counts for each group - only count group_members table
+      // Add member counts for each group
       const groupsWithCounts = await Promise.all(
         allGroups.map(async (group) => {
           try {
@@ -137,15 +183,10 @@ export const usePrivateGroups = () => {
       );
 
       console.log('✅ Setting groups state with:', groupsWithCounts);
-      console.log('Final groups with counts:', groupsWithCounts);
       setGroups(groupsWithCounts);
+      
     } catch (error) {
-      console.error('❌ DETAILED ERROR in loadGroups:', {
-        error,
-        errorMessage: error.message,
-        userId: user.id,
-        timestamp: new Date().toISOString()
-      });
+      console.error('❌ Error loading groups:', error);
       
       // Try to show partial data if possible
       if (createdGroups) {
@@ -155,21 +196,24 @@ export const usePrivateGroups = () => {
           isOwner: true, 
           memberCount: 1 
         })));
-      }
-      
-      toast({
-        title: "Partial failure loading groups",
-        description: `Loaded ${createdGroups?.length || 0} created groups, but failed to load member groups. Check console for details.`,
-        variant: "destructive",
-      });
-      
-      if (!createdGroups) {
+        
+        toast({
+          title: "Partial failure loading groups",
+          description: `Loaded ${createdGroups.length} created groups, but failed to load member groups.`,
+          variant: "destructive",
+        });
+      } else {
         setGroups([]);
+        toast({
+          title: "Failed to load groups",
+          description: "Could not load your groups. Please try again.",
+          variant: "destructive",
+        });
       }
     } finally {
       setLoading(false);
     }
-  }, [user, toast]); // Fixed dependencies - removed loading
+  }, [user, toast]);
 
   const debugGroups = async () => {
     if (!user) return;
@@ -333,14 +377,17 @@ export const usePrivateGroups = () => {
     }
   };
 
-  // Fix the useEffect to only depend on user.id
+  // Simple useEffect that only runs when user changes
   useEffect(() => {
-    if (user?.id && !loading) {
+    if (user?.id) {
+      console.log('🚀 User detected, loading groups...');
       loadGroups();
-    } else if (!user) {
+    } else {
+      console.log('❌ No user, setting loading false');
       setLoading(false);
+      setGroups([]);
     }
-  }, [user?.id]); // Only depend on user.id, not the loadGroups function
+  }, [user?.id, loadGroups]);
 
   return {
     groups,
