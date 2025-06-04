@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -28,13 +27,15 @@ export const usePrivateGroups = () => {
       return;
     }
     
+    let createdGroups = null;
+    
     try {
       console.log('🔄 Starting to load groups for user:', user.id);
       console.log('=== Loading groups for user ===');
       console.log('User ID:', user.id);
       
       // Get groups created by user
-      const { data: createdGroups, error: createdError } = await supabase
+      const { data: createdGroupsData, error: createdError } = await supabase
         .from('private_groups')
         .select('*')
         .eq('created_by', user.id);
@@ -44,6 +45,7 @@ export const usePrivateGroups = () => {
         throw createdError;
       }
 
+      createdGroups = createdGroupsData;
       console.log('✅ Created groups:', createdGroups);
 
       // Get groups where user is a member - simple separate queries
@@ -130,16 +132,69 @@ export const usePrivateGroups = () => {
       console.log('Final groups with counts:', groupsWithCounts);
       setGroups(groupsWithCounts);
     } catch (error) {
-      console.error('❌ Error loading groups:', error);
+      console.error('❌ DETAILED ERROR in loadGroups:', {
+        error,
+        errorMessage: error.message,
+        userId: user.id,
+        timestamp: new Date().toISOString()
+      });
+      
+      // Try to show partial data if possible
+      if (createdGroups) {
+        console.log('⚠️ Showing only created groups due to error');
+        setGroups((createdGroups || []).map(group => ({ 
+          ...group, 
+          isOwner: true, 
+          memberCount: 1 
+        })));
+      }
+      
       toast({
-        title: "Failed to load groups",
-        description: "Could not load your groups. Please try again.",
+        title: "Partial failure loading groups",
+        description: `Loaded ${createdGroups?.length || 0} created groups, but failed to load member groups. Check console for details.`,
         variant: "destructive",
       });
-      setGroups([]);
+      
+      if (!createdGroups) {
+        setGroups([]);
+      }
     } finally {
       setLoading(false);
     }
+  };
+
+  const debugGroups = async () => {
+    if (!user) return;
+    
+    console.log('🐛 DEBUG: Checking groups for user:', user.id);
+    
+    // Check memberships
+    const { data: memberships } = await supabase
+      .from('group_members')
+      .select('*')
+      .eq('user_id', user.id);
+    
+    console.log('🐛 DEBUG: Raw memberships:', memberships);
+    
+    // Check created groups
+    const { data: created } = await supabase
+      .from('private_groups')
+      .select('*')
+      .eq('created_by', user.id);
+      
+    console.log('🐛 DEBUG: Created groups:', created);
+    
+    // Check accepted invitations
+    const { data: invitations } = await supabase
+      .from('group_invitations')
+      .select('*')
+      .eq('invited_user_id', user.id)
+      .eq('status', 'accepted');
+      
+    console.log('🐛 DEBUG: Accepted invitations:', invitations);
+    
+    // Force reload
+    await loadGroups();
   };
 
   const createGroup = async (name: string, description: string = '') => {
@@ -213,6 +268,7 @@ export const usePrivateGroups = () => {
     groups,
     loading,
     createGroup,
-    refreshGroups: loadGroups
+    refreshGroups: loadGroups,
+    debugGroups
   };
 };

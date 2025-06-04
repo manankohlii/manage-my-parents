@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { UserPlus, Users, MessageCircle, FileText, Bell } from "lucide-react";
@@ -19,7 +18,12 @@ const PrivateGroups = () => {
   };
 
   const handleGroupJoined = () => {
+    console.log('🎉 Group joined - triggering refresh and switching to My Groups');
     setGroupsRefreshTrigger(prev => prev + 1);
+    // Auto-switch to My Groups tab after accepting invitation
+    setTimeout(() => {
+      setActiveTab("my-groups");
+    }, 1000);
   };
 
   return (

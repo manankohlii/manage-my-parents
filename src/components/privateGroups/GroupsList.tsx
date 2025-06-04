@@ -14,7 +14,7 @@ interface GroupsListProps {
 }
 
 const GroupsList = ({ onSelectGroup, refreshTrigger }: GroupsListProps) => {
-  const { groups, loading, refreshGroups } = usePrivateGroups();
+  const { groups, loading, refreshGroups, debugGroups } = usePrivateGroups();
   const { user } = useAuth();
 
   useEffect(() => {
@@ -70,6 +70,9 @@ const GroupsList = ({ onSelectGroup, refreshTrigger }: GroupsListProps) => {
               <RefreshCw size={16} className="mr-1" />
               🔄 Refresh Groups
             </Button>
+            <Button variant="outline" onClick={() => debugGroups?.()}>
+              🐛 Debug Groups
+            </Button>
           </div>
         </CardContent>
       </Card>
@@ -80,10 +83,15 @@ const GroupsList = ({ onSelectGroup, refreshTrigger }: GroupsListProps) => {
     <div className="space-y-4">
       <div className="flex justify-between items-center">
         <h3 className="text-lg font-medium">Your Groups ({groups.length})</h3>
-        <Button variant="outline" size="sm" onClick={() => refreshGroups()}>
-          <RefreshCw size={16} className="mr-1" />
-          🔄 Refresh Groups
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" size="sm" onClick={() => refreshGroups()}>
+            <RefreshCw size={16} className="mr-1" />
+            🔄 Refresh Groups
+          </Button>
+          <Button variant="outline" size="sm" onClick={() => debugGroups?.()}>
+            🐛 Debug Groups
+          </Button>
+        </div>
       </div>
       
       {groups.map((group) => (
