@@ -29,6 +29,51 @@ const GroupInvitations = ({ onInvitationCountChange, onGroupJoined }: GroupInvit
   const { user } = useAuth();
   const { toast } = useToast();
 
+  const cleanupOrphanedMemberships = async () => {
+    if (!user) return;
+    
+    console.log('🧹 Auto-cleanup: Checking for orphaned memberships...');
+    
+    try {
+      // Get all user's memberships
+      const { data: memberships } = await supabase
+        .from('group_members')
+        .select('group_id, id')
+        .eq('user_id', user.id);
+      
+      if (!memberships || memberships.length === 0) {
+        console.log('✅ No memberships to check');
+        return;
+      }
+      
+      // Check which groups actually exist
+      const groupIds = memberships.map(m => m.group_id);
+      const { data: existingGroups } = await supabase
+        .from('private_groups')
+        .select('id')
+        .in('id', groupIds);
+      
+      const existingGroupIds = existingGroups?.map(g => g.id) || [];
+      const orphanedMemberships = memberships.filter(m => !existingGroupIds.includes(m.group_id));
+      
+      if (orphanedMemberships.length > 0) {
+        console.log(`🗑️ Auto-cleanup: Removing ${orphanedMemberships.length} orphaned memberships`);
+        
+        const orphanedIds = orphanedMemberships.map(m => m.id);
+        await supabase
+          .from('group_members')
+          .delete()
+          .in('id', orphanedIds);
+          
+        console.log('✅ Auto-cleanup: Orphaned memberships cleaned up');
+      } else {
+        console.log('✅ Auto-cleanup: No orphaned memberships found');
+      }
+    } catch (error) {
+      console.error('❌ Auto-cleanup failed:', error);
+    }
+  };
+
   const loadInvitations = async () => {
     if (!user) return;
 
@@ -132,17 +177,21 @@ const GroupInvitations = ({ onInvitationCountChange, onGroupJoined }: GroupInvit
 
         if (memberError) throw memberError;
 
-        // Add longer delay and force multiple refreshes
+        console.log('✅ Successfully joined group:', groupId);
+        
+        // Run cleanup before triggering refresh
+        await cleanupOrphanedMemberships();
+        
+        // Trigger groups refresh with multiple attempts
         setTimeout(() => {
           console.log('🔄 First refresh trigger after invitation acceptance');
           onGroupJoined?.();
-        }, 1500); // Increased to 1.5 seconds
+        }, 2000); // Increased delay
 
-        // Add second refresh as backup
         setTimeout(() => {
           console.log('🔄 Second refresh trigger after invitation acceptance');
           onGroupJoined?.();
-        }, 3000); // Additional refresh after 3 seconds
+        }, 4000);
       }
 
       toast({

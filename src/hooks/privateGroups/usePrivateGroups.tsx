@@ -1,4 +1,5 @@
-import { useState, useEffect } from "react";
+
+import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
@@ -21,12 +22,19 @@ export const usePrivateGroups = () => {
   const { user } = useAuth();
   const { toast } = useToast();
 
-  const loadGroups = async () => {
+  const loadGroups = useCallback(async () => {
+    // Prevent re-entry during loading
+    if (loading) {
+      console.log('⏹️ Already loading, skipping...');
+      return;
+    }
+
     if (!user) {
       setLoading(false);
       return;
     }
     
+    setLoading(true);
     let createdGroups = null;
     
     try {
@@ -161,7 +169,7 @@ export const usePrivateGroups = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user, toast]); // Fixed dependencies - removed loading
 
   const debugGroups = async () => {
     if (!user) return;
@@ -195,6 +203,75 @@ export const usePrivateGroups = () => {
     
     // Force reload
     await loadGroups();
+  };
+
+  const deleteGroup = async (groupId: string) => {
+    if (!user) {
+      throw new Error('User not authenticated');
+    }
+
+    try {
+      console.log('🗑️ Attempting to delete group:', groupId);
+      
+      // Check if user is admin of this group
+      const { data: group, error: groupError } = await supabase
+        .from('private_groups')
+        .select('created_by')
+        .eq('id', groupId)
+        .single();
+
+      if (groupError) throw groupError;
+
+      if (group.created_by !== user.id) {
+        throw new Error('Only group admins can delete groups');
+      }
+
+      // Delete in correct order to avoid foreign key constraints
+      console.log('🗑️ Deleting group messages...');
+      await supabase
+        .from('group_messages')
+        .delete()
+        .eq('group_id', groupId);
+
+      console.log('🗑️ Deleting group invitations...');
+      await supabase
+        .from('group_invitations')
+        .delete()
+        .eq('group_id', groupId);
+
+      console.log('🗑️ Deleting group members...');
+      await supabase
+        .from('group_members')
+        .delete()
+        .eq('group_id', groupId);
+
+      console.log('🗑️ Deleting group...');
+      const { error: deleteError } = await supabase
+        .from('private_groups')
+        .delete()
+        .eq('id', groupId);
+
+      if (deleteError) throw deleteError;
+
+      toast({
+        title: "Group deleted",
+        description: "The group has been permanently deleted.",
+      });
+
+      console.log('✅ Group successfully deleted:', groupId);
+      
+      // Refresh groups list
+      await loadGroups();
+      
+    } catch (error) {
+      console.error('❌ Error deleting group:', error);
+      toast({
+        title: "Failed to delete group",
+        description: error.message || "Could not delete the group. Please try again.",
+        variant: "destructive",
+      });
+      throw error;
+    }
   };
 
   const createGroup = async (name: string, description: string = '') => {
@@ -256,19 +333,21 @@ export const usePrivateGroups = () => {
     }
   };
 
+  // Fix the useEffect to only depend on user.id
   useEffect(() => {
-    if (user?.id) {
+    if (user?.id && !loading) {
       loadGroups();
-    } else {
+    } else if (!user) {
       setLoading(false);
     }
-  }, [user?.id]);
+  }, [user?.id]); // Only depend on user.id, not the loadGroups function
 
   return {
     groups,
     loading,
     createGroup,
     refreshGroups: loadGroups,
+    deleteGroup,
     debugGroups
   };
 };
