@@ -132,8 +132,10 @@ const GroupInvitations = ({ onInvitationCountChange, onGroupJoined }: GroupInvit
 
         if (memberError) throw memberError;
 
-        // Trigger groups refresh
-        onGroupJoined?.();
+        // Add delay before triggering groups refresh to ensure DB has time to update
+        setTimeout(() => {
+          onGroupJoined?.();
+        }, 1000); // Wait 1 second for DB to update
       }
 
       toast({

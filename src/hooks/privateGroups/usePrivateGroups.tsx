@@ -29,6 +29,7 @@ export const usePrivateGroups = () => {
     }
     
     try {
+      console.log('🔄 Starting to load groups for user:', user.id);
       console.log('=== Loading groups for user ===');
       console.log('User ID:', user.id);
       
@@ -39,11 +40,11 @@ export const usePrivateGroups = () => {
         .eq('created_by', user.id);
 
       if (createdError) {
-        console.error('Error loading created groups:', createdError);
+        console.error('❌ Error loading created groups:', createdError);
         throw createdError;
       }
 
-      console.log('Created groups:', createdGroups);
+      console.log('✅ Created groups:', createdGroups);
 
       // Get groups where user is a member - simple separate queries
       const { data: membershipData, error: memberError } = await supabase
@@ -52,16 +53,16 @@ export const usePrivateGroups = () => {
         .eq('user_id', user.id);
 
       if (memberError) {
-        console.error('Error loading memberships:', memberError);
+        console.error('❌ Error loading memberships:', memberError);
         throw memberError;
       }
 
-      console.log('Memberships data:', membershipData);
+      console.log('✅ Memberships data:', membershipData);
 
       let memberGroups = [];
       if (membershipData && membershipData.length > 0) {
         const groupIds = membershipData.map(m => m.group_id);
-        console.log('Group IDs from memberships:', groupIds);
+        console.log('📋 Group IDs from memberships:', groupIds);
         
         const { data: memberGroupData, error: memberGroupError } = await supabase
           .from('private_groups')
@@ -69,12 +70,12 @@ export const usePrivateGroups = () => {
           .in('id', groupIds);
 
         if (memberGroupError) {
-          console.error('Error loading member group details:', memberGroupError);
+          console.error('❌ Error loading member group details:', memberGroupError);
           throw memberGroupError;
         }
 
         memberGroups = memberGroupData || [];
-        console.log('Member groups data:', memberGroups);
+        console.log('✅ Member groups data:', memberGroups);
       }
 
       // Combine and deduplicate groups (in case user is both creator and member)
@@ -87,6 +88,7 @@ export const usePrivateGroups = () => {
           .map(group => ({ ...group, isOwner: false }))
       ];
 
+      console.log('📊 Final combined groups before processing:', allGroups);
       console.log('All groups combined:', allGroups);
 
       // Add member counts for each group - only count group_members table
@@ -99,8 +101,10 @@ export const usePrivateGroups = () => {
               .eq('group_id', group.id);
 
             if (error) {
-              console.error('Error counting members for group:', group.id, error);
+              console.error('⚠️ Error counting members for group:', group.id, error);
             }
+
+            console.log(`👥 Group ${group.name} has ${count || 0} members`);
 
             return {
               ...group,
@@ -110,7 +114,7 @@ export const usePrivateGroups = () => {
               newIssues: 0
             };
           } catch (error) {
-            console.error('Error processing group:', group.id, error);
+            console.error('❌ Error processing group:', group.id, error);
             return {
               ...group,
               memberCount: 0,
@@ -122,10 +126,11 @@ export const usePrivateGroups = () => {
         })
       );
 
+      console.log('✅ Setting groups state with:', groupsWithCounts);
       console.log('Final groups with counts:', groupsWithCounts);
       setGroups(groupsWithCounts);
     } catch (error) {
-      console.error('Error loading groups:', error);
+      console.error('❌ Error loading groups:', error);
       toast({
         title: "Failed to load groups",
         description: "Could not load your groups. Please try again.",

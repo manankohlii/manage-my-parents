@@ -63,21 +63,23 @@ export const useGroupDetail = (groupId: string) => {
       // Build members list
       const members: GroupMember[] = [];
 
-      // Add creator as admin
+      // Add creator as admin - use profiles table directly
       try {
         const { data: creatorProfile } = await supabase
-          .rpc('get_user_profile', { user_uuid: groupData.created_by });
+          .from('profiles')
+          .select('display_name, first_name, last_name')
+          .eq('id', groupData.created_by)
+          .single();
 
         console.log('Creator profile:', creatorProfile);
 
-        if (creatorProfile && creatorProfile.length > 0) {
-          const creator = creatorProfile[0];
+        if (creatorProfile) {
           members.push({
             id: groupData.created_by,
-            name: creator.display_name || 
-                  `${creator.first_name || ''} ${creator.last_name || ''}`.trim() || 
+            name: creatorProfile.display_name || 
+                  `${creatorProfile.first_name || ''} ${creatorProfile.last_name || ''}`.trim() || 
                   'Admin',
-            email: creator.email || '',
+            email: '',
             avatar: '',
             role: 'admin'
           });
@@ -103,24 +105,26 @@ export const useGroupDetail = (groupId: string) => {
         });
       }
 
-      // Add regular members
+      // Add regular members - use profiles table directly
       if (memberships && memberships.length > 0) {
         for (const membership of memberships) {
           // Skip if it's the creator (already added)
           if (membership.user_id === groupData.created_by) continue;
 
           try {
-            const { data: userProfile } = await supabase
-              .rpc('get_user_profile', { user_uuid: membership.user_id });
+            const { data: memberProfile } = await supabase
+              .from('profiles')
+              .select('display_name, first_name, last_name')
+              .eq('id', membership.user_id)
+              .single();
 
-            if (userProfile && userProfile.length > 0) {
-              const profile = userProfile[0];
+            if (memberProfile) {
               members.push({
                 id: membership.user_id,
-                name: profile.display_name || 
-                      `${profile.first_name || ''} ${profile.last_name || ''}`.trim() || 
+                name: memberProfile.display_name || 
+                      `${memberProfile.first_name || ''} ${memberProfile.last_name || ''}`.trim() || 
                       'Member',
-                email: profile.email || '',
+                email: '',
                 avatar: '',
                 role: membership.role as 'admin' | 'member'
               });

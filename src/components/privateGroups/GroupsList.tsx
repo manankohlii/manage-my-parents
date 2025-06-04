@@ -2,7 +2,7 @@
 import { useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Users, MessageCircle, FileText } from "lucide-react";
+import { Users, MessageCircle, FileText, RefreshCw } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
@@ -64,7 +64,13 @@ const GroupsList = ({ onSelectGroup, refreshTrigger }: GroupsListProps) => {
           <p className="mt-2 text-sm text-muted-foreground">
             You haven't joined any private groups yet.
           </p>
-          <Button className="mt-4" onClick={() => {}}>Create Your First Group</Button>
+          <div className="flex gap-2 justify-center mt-4">
+            <Button onClick={() => {}}>Create Your First Group</Button>
+            <Button variant="outline" onClick={() => refreshGroups()}>
+              <RefreshCw size={16} className="mr-1" />
+              🔄 Refresh Groups
+            </Button>
+          </div>
         </CardContent>
       </Card>
     );
@@ -72,6 +78,14 @@ const GroupsList = ({ onSelectGroup, refreshTrigger }: GroupsListProps) => {
 
   return (
     <div className="space-y-4">
+      <div className="flex justify-between items-center">
+        <h3 className="text-lg font-medium">Your Groups ({groups.length})</h3>
+        <Button variant="outline" size="sm" onClick={() => refreshGroups()}>
+          <RefreshCw size={16} className="mr-1" />
+          🔄 Refresh Groups
+        </Button>
+      </div>
+      
       {groups.map((group) => (
         <Card key={group.id} className="w-full hover:bg-muted/50 transition-colors">
           <CardHeader>
