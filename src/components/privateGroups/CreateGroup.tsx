@@ -12,9 +12,10 @@ import { usePrivateGroups } from "@/hooks/privateGroups/usePrivateGroups";
 
 interface CreateGroupProps {
   onGroupCreated: (groupId: string) => void;
+  onCancel?: () => void;
 }
 
-const CreateGroup = ({ onGroupCreated }: CreateGroupProps) => {
+const CreateGroup = ({ onGroupCreated, onCancel }: CreateGroupProps) => {
   const [groupName, setGroupName] = useState("");
   const [description, setDescription] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -34,6 +35,9 @@ const CreateGroup = ({ onGroupCreated }: CreateGroupProps) => {
     try {
       const groupId = await createGroup(groupName, description);
       if (groupId) {
+        // Reset form
+        setGroupName("");
+        setDescription("");
         onGroupCreated(groupId);
       }
     } catch (error) {
@@ -41,6 +45,14 @@ const CreateGroup = ({ onGroupCreated }: CreateGroupProps) => {
     } finally {
       setSubmitting(false);
     }
+  };
+
+  const handleCancel = () => {
+    // Reset form
+    setGroupName("");
+    setDescription("");
+    // Call onCancel if provided, otherwise do nothing
+    onCancel?.();
   };
 
   return (
@@ -61,6 +73,7 @@ const CreateGroup = ({ onGroupCreated }: CreateGroupProps) => {
               onChange={(e) => setGroupName(e.target.value)}
               placeholder="Enter group name"
               required
+              disabled={submitting}
             />
           </div>
           
@@ -72,6 +85,7 @@ const CreateGroup = ({ onGroupCreated }: CreateGroupProps) => {
               onChange={(e) => setDescription(e.target.value)}
               placeholder="What is this group about?"
               rows={3}
+              disabled={submitting}
             />
           </div>
           
@@ -87,8 +101,15 @@ const CreateGroup = ({ onGroupCreated }: CreateGroupProps) => {
           </div>
         </CardContent>
         <CardFooter className="flex justify-between">
-          <Button variant="outline" type="button">Cancel</Button>
-          <Button type="submit" disabled={submitting}>
+          <Button 
+            variant="outline" 
+            type="button" 
+            onClick={handleCancel}
+            disabled={submitting}
+          >
+            Cancel
+          </Button>
+          <Button type="submit" disabled={submitting || !groupName.trim()}>
             {submitting ? "Creating..." : "Create Group"}
           </Button>
         </CardFooter>
