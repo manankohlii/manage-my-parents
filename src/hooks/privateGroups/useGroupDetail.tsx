@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -240,6 +239,63 @@ export const useGroupDetail = (groupId: string) => {
     }
   };
 
+  const removeMember = async (memberId: string) => {
+    if (!user || !groupId) return;
+
+    try {
+      // Check if current user is admin
+      const { data: groupData, error: groupError } = await supabase
+        .from('private_groups')
+        .select('created_by')
+        .eq('id', groupId)
+        .single();
+
+      if (groupError) throw groupError;
+
+      if (groupData.created_by !== user.id) {
+        toast({
+          title: "Permission denied",
+          description: "Only group admins can remove members.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Check if trying to remove the admin
+      if (memberId === groupData.created_by) {
+        toast({
+          title: "Cannot remove admin",
+          description: "You cannot remove the group admin.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Remove member from group
+      const { error } = await supabase
+        .from('group_members')
+        .delete()
+        .eq('group_id', groupId)
+        .eq('user_id', memberId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Member removed",
+        description: "The member has been removed from the group.",
+      });
+
+      await loadGroup();
+    } catch (error) {
+      console.error('Error removing member:', error);
+      toast({
+        title: "Failed to remove member",
+        description: "Could not remove the member. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
   useEffect(() => {
     loadGroup();
   }, [groupId]);
@@ -248,6 +304,7 @@ export const useGroupDetail = (groupId: string) => {
     group,
     loading,
     inviteMember,
+    removeMember,
     refreshGroup: loadGroup
   };
 };

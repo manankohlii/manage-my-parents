@@ -198,8 +198,10 @@ const GroupInvitations = ({ onGroupJoined }: GroupInvitationsProps) => {
         });
       }
 
-      // Refresh invitations and count
-      await loadInvitations();
+      // Remove the invitation from the local state immediately
+      setInvitations(prev => prev.filter(inv => inv.id !== invitationId));
+      
+      // Refresh the invitation count
       await refreshCount();
     } catch (error) {
       console.error('❌ Error responding to invitation:', error);
