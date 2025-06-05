@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { getAllChallenges, Challenge } from "@/services/challenges";
 import { getAllTags } from "@/services/challenges/tagService";
@@ -33,7 +32,11 @@ export const useChallenges = () => {
     loadData();
   }, []);
 
-  const updateChallengeStats = (challengeId: string, field: 'solutions_count' | 'votes_count', value: number) => {
+  const updateChallengeStats = (
+    challengeId: string, 
+    field: 'solutions_count' | 'votes_count' | 'likes_count' | 'dislikes_count', 
+    value: number
+  ) => {
     setChallenges(prev => 
       prev.map(challenge => 
         challenge.id === challengeId 

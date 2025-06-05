@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { 
   Command, 
@@ -75,7 +74,7 @@ const ChallengeFilters = ({
               <SelectValue placeholder="Sort by" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="popular">Most Popular</SelectItem>
+              <SelectItem value="most_upvotes">Most Upvotes</SelectItem>
               <SelectItem value="newest">Newest First</SelectItem>
               <SelectItem value="oldest">Oldest First</SelectItem>
               <SelectItem value="most_solutions">Most Solutions</SelectItem>

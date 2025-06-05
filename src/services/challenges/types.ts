@@ -1,4 +1,3 @@
-
 export interface Challenge {
   id: string;
   title: string;
@@ -12,6 +11,8 @@ export interface Challenge {
   tags?: string[];
   solutions_count?: number;
   votes_count?: number;
+  likes_count?: number;
+  dislikes_count?: number;
 }
 
 export interface ChallengeInput {

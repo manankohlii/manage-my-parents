@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { Challenge } from "./types";
 
@@ -42,14 +41,18 @@ export const enrichChallengeWithMetadata = async (challenge: any): Promise<Chall
 
     if (votesError) throw votesError;
 
-    const votesCount = votes.reduce((acc, vote) => 
-      vote.is_upvote ? acc + 1 : acc - 1, 0);
+    // Calculate separate like and dislike counts
+    const likesCount = votes.filter(vote => vote.is_upvote).length;
+    const dislikesCount = votes.filter(vote => !vote.is_upvote).length;
+    const votesCount = likesCount - dislikesCount;
 
     return {
       ...challenge,
       tags,
       solutions_count: solutionsCount || 0,
-      votes_count: votesCount
+      votes_count: votesCount,
+      likes_count: likesCount,
+      dislikes_count: dislikesCount
     };
   } catch (error) {
     console.error("Error enriching challenge:", error);

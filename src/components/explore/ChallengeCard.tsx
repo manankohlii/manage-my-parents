@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { formatDistanceToNow } from "date-fns";
 import TagBadge from "../TagBadge";
@@ -81,16 +80,8 @@ const ChallengeCard = ({
               disabled={!user}
               className="flex items-center"
             >
-              <ThumbsUp className={`h-4 w-4 mr-1 ${userVotes[challenge.id] === true ? "text-green-500 fill-green-500" : ""}`} />
-              <span>{challenge.votes_count || 0}</span>
-            </Button>
-            <Button 
-              variant="ghost" 
-              size="sm"
-              onClick={() => handleDownvote(challenge.id)}
-              disabled={!user}
-            >
-              <ThumbsDown className={`h-4 w-4 ${userVotes[challenge.id] === false ? "text-red-500 fill-red-500" : ""}`} />
+              <ThumbsUp className={`h-4 w-4 mr-1 ${userVotes[challenge.id] === true ? "text-primary fill-primary" : ""}`} />
+              <span>{challenge.likes_count || 0}</span>
             </Button>
           </div>
         </div>
