@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { getUserChallenges, deleteChallenge, Challenge } from "@/services/challenges";
 import { useAuth } from "@/contexts/AuthContext";
@@ -8,7 +7,6 @@ export const useChallenges = () => {
   const [challenges, setChallenges] = useState<Challenge[]>([]);
   const [loading, setLoading] = useState(true);
   const [sortBy, setSortBy] = useState("newest");
-  const [filterCountry, setFilterCountry] = useState("all");
   const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
@@ -33,7 +31,6 @@ export const useChallenges = () => {
 
   const getFilteredChallenges = () => {
     return challenges
-      .filter(challenge => filterCountry === "all" || challenge.location === filterCountry)
       .filter(challenge => 
         !searchTerm || 
         challenge.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -57,8 +54,6 @@ export const useChallenges = () => {
     loading,
     sortBy,
     setSortBy,
-    filterCountry,
-    setFilterCountry,
     searchTerm,
     setSearchTerm,
     handleDeleteChallenge,

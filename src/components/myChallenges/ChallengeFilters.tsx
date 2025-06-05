@@ -13,17 +13,13 @@ interface ChallengeFiltersProps {
   setSearchTerm: (value: string) => void;
   sortBy: string;
   setSortBy: (value: string) => void;
-  filterCountry: string;
-  setFilterCountry: (value: string) => void;
 }
 
 const ChallengeFilters = ({
   searchTerm,
   setSearchTerm,
   sortBy,
-  setSortBy,
-  filterCountry,
-  setFilterCountry
+  setSortBy
 }: ChallengeFiltersProps) => {
   return (
     <div className="space-y-4">
@@ -48,26 +44,6 @@ const ChallengeFilters = ({
               <SelectItem value="newest">Newest first</SelectItem>
               <SelectItem value="oldest">Oldest first</SelectItem>
               <SelectItem value="most_solutions">Most solutions</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        
-        <div className="space-y-1.5 min-w-[180px]">
-          <Label htmlFor="filterCountry">Location</Label>
-          <Select
-            value={filterCountry}
-            onValueChange={setFilterCountry}
-          >
-            <SelectTrigger id="filterCountry">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All locations</SelectItem>
-              <SelectItem value="United States">United States</SelectItem>
-              <SelectItem value="Canada">Canada</SelectItem>
-              <SelectItem value="United Kingdom">United Kingdom</SelectItem>
-              <SelectItem value="Australia">Australia</SelectItem>
-              {/* More countries can be added here */}
             </SelectContent>
           </Select>
         </div>

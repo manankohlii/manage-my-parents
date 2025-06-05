@@ -1,4 +1,3 @@
-
 import { useContext, useState } from "react";
 import { TabContext } from "./DashboardTabs";
 import ChallengeFilters from "./myChallenges/ChallengeFilters";
@@ -7,8 +6,8 @@ import EmptyChallenges from "./myChallenges/EmptyChallenges";
 import LoadingState from "./myChallenges/LoadingState";
 import { useChallenges } from "./myChallenges/useChallenges";
 import { Button } from "@/components/ui/button";
-import { Plus, X } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Plus } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
 import ChallengeForm from "./challenges/ChallengeForm";
 
 const MyChallenges = () => {
@@ -20,8 +19,6 @@ const MyChallenges = () => {
     challenges,
     sortBy,
     setSortBy,
-    filterCountry,
-    setFilterCountry,
     searchTerm,
     setSearchTerm,
     handleDeleteChallenge
@@ -31,37 +28,6 @@ const MyChallenges = () => {
     // Navigate to edit challenge page or open a modal
     console.log(`Edit challenge ${id}`);
   };
-
-  if (showAddForm) {
-    return (
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <h3 className="text-lg font-semibold">Add New Challenge</h3>
-          <Button 
-            variant="outline" 
-            onClick={() => setShowAddForm(false)}
-            className="flex items-center gap-2"
-          >
-            <X size={16} />
-            Back to My Challenges
-          </Button>
-        </div>
-        
-        <Card className="w-full">
-          <CardHeader>
-            <CardTitle>Share Your Challenge</CardTitle>
-            <CardDescription>
-              Describe a challenge you're facing with caring for your parents.
-              The community will share solutions and advice.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <ChallengeForm />
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
 
   return (
     <div className="space-y-6">
@@ -81,8 +47,6 @@ const MyChallenges = () => {
         setSearchTerm={setSearchTerm}
         sortBy={sortBy}
         setSortBy={setSortBy}
-        filterCountry={filterCountry}
-        setFilterCountry={setFilterCountry}
       />
 
       {loading ? (
@@ -103,6 +67,14 @@ const MyChallenges = () => {
             />
           ))}
         </div>
+      )}
+
+      {showAddForm && (
+        <Card>
+          <CardContent className="pt-6">
+            <ChallengeForm />
+          </CardContent>
+        </Card>
       )}
     </div>
   );
