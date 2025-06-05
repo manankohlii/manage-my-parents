@@ -55,6 +55,7 @@ const GroupInvitations = ({ onGroupJoined }: GroupInvitationsProps) => {
 
       if (!invitationsData || invitationsData.length === 0) {
         setInvitations([]);
+        await refreshCount(); // Ensure count is refreshed when no invitations
         return;
       }
 
@@ -87,6 +88,7 @@ const GroupInvitations = ({ onGroupJoined }: GroupInvitationsProps) => {
       });
 
       setInvitations(formattedInvitations);
+      await refreshCount(); // Ensure count matches the actual number of invitations
     } catch (error) {
       console.error('Error loading invitations:', error);
       toast({
@@ -94,6 +96,8 @@ const GroupInvitations = ({ onGroupJoined }: GroupInvitationsProps) => {
         description: "Could not load invitations. Please try again.",
         variant: "destructive",
       });
+      setInvitations([]); // Clear invitations on error
+      await refreshCount(); // Reset count on error
     } finally {
       setLoading(false);
     }
@@ -201,8 +205,9 @@ const GroupInvitations = ({ onGroupJoined }: GroupInvitationsProps) => {
       // Remove the invitation from the local state immediately
       setInvitations(prev => prev.filter(inv => inv.id !== invitationId));
       
-      // Refresh the invitation count
+      // Refresh the invitation count and reload invitations
       await refreshCount();
+      await loadInvitations();
     } catch (error) {
       console.error('❌ Error responding to invitation:', error);
       toast({
@@ -214,6 +219,31 @@ const GroupInvitations = ({ onGroupJoined }: GroupInvitationsProps) => {
       setResponding(null);
     }
   };
+
+  // Subscribe to real-time changes
+  useEffect(() => {
+    if (!user) return;
+
+    const channel = supabase
+      .channel('group_invitations_changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'group_invitations',
+          filter: `invited_user_id=eq.${user.id}`
+        },
+        () => {
+          loadInvitations();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user]);
 
   useEffect(() => {
     loadInvitations();

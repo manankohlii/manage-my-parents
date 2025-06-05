@@ -25,6 +25,7 @@ export const useInvitationCount = () => {
       setCount(pendingCount || 0);
     } catch (error) {
       console.error('Error fetching invitation count:', error);
+      setCount(0); // Reset count on error
     } finally {
       setLoading(false);
     }
@@ -49,8 +50,9 @@ export const useInvitationCount = () => {
           table: 'group_invitations',
           filter: `invited_user_id=eq.${user.id}`
         },
-        () => {
-          fetchCount();
+        (payload) => {
+          console.log('Invitation change detected:', payload);
+          fetchCount(); // Refresh count on any change
         }
       )
       .subscribe();

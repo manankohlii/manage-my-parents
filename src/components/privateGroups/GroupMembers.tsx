@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { X } from "lucide-react";
+import { X, Users, UserPlus } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import UserSearch from "./UserSearch";
@@ -54,11 +54,25 @@ const GroupMembers = ({ groupId, members, onMembersChange }: GroupMembersProps) 
         <h3 className="text-lg font-medium">Group Members ({members.length})</h3>
       </div>
       
-      <UserSearch 
-        groupId={groupId} 
-        onInviteSent={handleInviteSent}
-        existingMemberIds={members.map(m => m.id)}
-      />
+      {isAdmin ? (
+        <UserSearch 
+          groupId={groupId} 
+          onInviteSent={handleInviteSent}
+          existingMemberIds={members.map(m => m.id)}
+        />
+      ) : (
+        <Card className="p-6">
+          <div className="flex flex-col items-center text-center space-y-3">
+            <UserPlus className="h-8 w-8 text-muted-foreground" />
+            <div>
+              <h4 className="font-medium">Only admins can manage members</h4>
+              <p className="text-sm text-muted-foreground mt-1">
+                Please contact a group admin if you need to add or remove members.
+              </p>
+            </div>
+          </div>
+        </Card>
+      )}
       
       <Card className="p-4">
         <h4 className="text-sm font-medium mb-4">Member List</h4>
