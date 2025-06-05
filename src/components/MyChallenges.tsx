@@ -29,6 +29,14 @@ const MyChallenges = () => {
     console.log(`Edit challenge ${id}`);
   };
 
+  const handleFormSubmit = () => {
+    setShowAddForm(false);
+  };
+
+  const handleFormClose = () => {
+    setShowAddForm(false);
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -41,6 +49,17 @@ const MyChallenges = () => {
           Add New Challenge
         </Button>
       </div>
+
+      {showAddForm && (
+        <Card>
+          <CardContent className="pt-6">
+            <ChallengeForm 
+              onSubmit={handleFormSubmit} 
+              onClose={handleFormClose}
+            />
+          </CardContent>
+        </Card>
+      )}
 
       <ChallengeFilters
         searchTerm={searchTerm}
@@ -67,14 +86,6 @@ const MyChallenges = () => {
             />
           ))}
         </div>
-      )}
-
-      {showAddForm && (
-        <Card>
-          <CardContent className="pt-6">
-            <ChallengeForm />
-          </CardContent>
-        </Card>
       )}
     </div>
   );
