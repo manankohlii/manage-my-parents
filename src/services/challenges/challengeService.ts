@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Challenge, ChallengeInput } from "./types";
@@ -106,5 +105,50 @@ export const deleteChallenge = async (challengeId: string) => {
     console.error("Error deleting challenge:", error);
     toast.error("Failed to delete challenge");
     return false;
+  }
+};
+
+// Update an existing challenge
+export const updateChallenge = async (challengeId: string, challengeData: ChallengeInput) => {
+  try {
+    // First update the challenge
+    const { data: challenge, error } = await supabase
+      .from("challenges")
+      .update({
+        title: challengeData.title,
+        description: challengeData.description,
+        mood: challengeData.mood,
+        age_group: challengeData.age_group,
+        location: challengeData.location,
+        updated_at: new Date().toISOString()
+      })
+      .eq("id", challengeId)
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    // Delete existing tag associations
+    const { error: deleteError } = await supabase
+      .from("challenge_tags")
+      .delete()
+      .eq("challenge_id", challengeId);
+
+    if (deleteError) throw deleteError;
+
+    // Process tags and create new associations
+    const tagIds = await processTagsForChallenge(challengeData.tags);
+    await linkTagsToChallenge(challengeId, tagIds);
+
+    toast.success("Challenge updated successfully!", {
+      duration: 2000 // Show for 2 seconds
+    });
+    return challenge;
+  } catch (error) {
+    console.error("Error updating challenge:", error);
+    toast.error("Failed to update challenge", {
+      duration: 2000 // Show for 2 seconds
+    });
+    return null;
   }
 };

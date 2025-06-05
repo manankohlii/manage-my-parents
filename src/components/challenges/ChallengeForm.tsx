@@ -18,15 +18,18 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { Tag, X } from "lucide-react";
 import { Database } from "@/integrations/supabase/types";
+import { Challenge } from "@/services/challenges";
 
 type Profile = Database["public"]["Tables"]["profiles"]["Row"];
 
 interface ChallengeFormProps {
   onSubmit?: () => void;
   onClose?: () => void;
+  challenge?: Challenge | null;
+  onUpdate?: (id: string, data: any) => Promise<void>;
 }
 
-const ChallengeForm = ({ onSubmit, onClose }: ChallengeFormProps) => {
+const ChallengeForm = ({ onSubmit, onClose, challenge, onUpdate }: ChallengeFormProps) => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { toast } = useToast();
@@ -75,6 +78,19 @@ const ChallengeForm = ({ onSubmit, onClose }: ChallengeFormProps) => {
     loadData();
   }, [user?.id]);
 
+  // Load challenge data if editing
+  useEffect(() => {
+    if (challenge) {
+      setFormData({
+        title: challenge.title,
+        description: challenge.description,
+        location: challenge.location,
+        age_group: challenge.age_group
+      });
+      setSelectedTags(challenge.tags || []);
+    }
+  }, [challenge]);
+
   const handleAddTag = (tag: string) => {
     if (!selectedTags.includes(tag)) {
       setSelectedTags([...selectedTags, tag]);
@@ -91,18 +107,31 @@ const ChallengeForm = ({ onSubmit, onClose }: ChallengeFormProps) => {
 
     setLoading(true);
     try {
-      const challenge = await createChallenge({
-        title: formData.title,
-        description: formData.description,
-        location: formData.location,
-        tags: selectedTags,
-        mood: "neutral",
-        age_group: formData.age_group
-      }, user.id);
+      if (challenge && onUpdate) {
+        await onUpdate(challenge.id, {
+          title: formData.title,
+          description: formData.description,
+          location: formData.location,
+          tags: selectedTags,
+          mood: "neutral",
+          age_group: formData.age_group
+        });
+      } else {
+        await createChallenge({
+          title: formData.title,
+          description: formData.description,
+          location: formData.location,
+          tags: selectedTags,
+          mood: "neutral",
+          age_group: formData.age_group
+        }, user.id);
+      }
 
       toast({
-        title: "Challenge created!",
-        description: "Your challenge has been shared with the community.",
+        title: challenge ? "Challenge updated!" : "Challenge created!",
+        description: challenge 
+          ? "Your challenge has been updated successfully."
+          : "Your challenge has been shared with the community.",
       });
 
       setFormData({
@@ -117,10 +146,10 @@ const ChallengeForm = ({ onSubmit, onClose }: ChallengeFormProps) => {
         onSubmit();
       }
     } catch (error) {
-      console.error("Error creating challenge:", error);
+      console.error("Error saving challenge:", error);
       toast({
         title: "Error",
-        description: "Failed to create challenge. Please try again.",
+        description: `Failed to ${challenge ? 'update' : 'create'} challenge. Please try again.`,
         variant: "destructive",
       });
     } finally {
@@ -233,7 +262,7 @@ const ChallengeForm = ({ onSubmit, onClose }: ChallengeFormProps) => {
         </div>
 
         <Button type="submit" disabled={loading}>
-          {loading ? "Creating..." : "Share Challenge"}
+          {loading ? (challenge ? "Updating..." : "Creating...") : (challenge ? "Update Challenge" : "Share Challenge")}
         </Button>
       </form>
     </div>

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { getUserChallenges, deleteChallenge, Challenge } from "@/services/challenges";
+import { getUserChallenges, deleteChallenge, updateChallenge, Challenge } from "@/services/challenges";
 import { useAuth } from "@/contexts/AuthContext";
 
 export const useChallenges = () => {
@@ -26,6 +26,15 @@ export const useChallenges = () => {
     const success = await deleteChallenge(id);
     if (success) {
       setChallenges(challenges.filter(challenge => challenge.id !== id));
+    }
+  };
+
+  const handleUpdateChallenge = async (id: string, challengeData: any) => {
+    const updatedChallenge = await updateChallenge(id, challengeData);
+    if (updatedChallenge) {
+      setChallenges(challenges.map(challenge => 
+        challenge.id === id ? { ...challenge, ...updatedChallenge } : challenge
+      ));
     }
   };
 
@@ -57,6 +66,7 @@ export const useChallenges = () => {
     searchTerm,
     setSearchTerm,
     handleDeleteChallenge,
+    handleUpdateChallenge,
     filteredChallenges: getFilteredChallenges()
   };
 };

@@ -1,4 +1,4 @@
-import { useContext, useState } from "react";
+import { useContext, useState, useRef, useEffect } from "react";
 import { TabContext } from "./DashboardTabs";
 import ChallengeFilters from "./myChallenges/ChallengeFilters";
 import ChallengeCard from "./myChallenges/ChallengeCard";
@@ -9,10 +9,13 @@ import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import ChallengeForm from "./challenges/ChallengeForm";
+import { Challenge } from "@/services/challenges";
 
 const MyChallenges = () => {
   const tabContext = useContext(TabContext);
   const [showAddForm, setShowAddForm] = useState(false);
+  const [editingChallenge, setEditingChallenge] = useState<Challenge | null>(null);
+  const formRef = useRef<HTMLDivElement>(null);
   const {
     loading,
     filteredChallenges,
@@ -21,20 +24,38 @@ const MyChallenges = () => {
     setSortBy,
     searchTerm,
     setSearchTerm,
-    handleDeleteChallenge
+    handleDeleteChallenge,
+    handleUpdateChallenge
   } = useChallenges();
 
+  // Scroll to form when editing or adding
+  useEffect(() => {
+    if ((showAddForm || editingChallenge) && formRef.current) {
+      formRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }, [showAddForm, editingChallenge]);
+
   const handleEditChallenge = (id: string) => {
-    // Navigate to edit challenge page or open a modal
-    console.log(`Edit challenge ${id}`);
+    const challenge = challenges.find(c => c.id === id);
+    if (challenge) {
+      setEditingChallenge(challenge);
+      setShowAddForm(false);
+    }
   };
 
   const handleFormSubmit = () => {
     setShowAddForm(false);
+    setEditingChallenge(null);
   };
 
   const handleFormClose = () => {
     setShowAddForm(false);
+    setEditingChallenge(null);
+  };
+
+  const handleAddNew = () => {
+    setShowAddForm(true);
+    setEditingChallenge(null);
   };
 
   return (
@@ -42,7 +63,7 @@ const MyChallenges = () => {
       <div className="flex items-center justify-between">
         <h3 className="text-lg font-semibold">My Challenges</h3>
         <Button 
-          onClick={() => setShowAddForm(true)}
+          onClick={handleAddNew}
           className="flex items-center gap-2"
         >
           <Plus size={16} />
@@ -50,12 +71,14 @@ const MyChallenges = () => {
         </Button>
       </div>
 
-      {showAddForm && (
-        <Card>
+      {(showAddForm || editingChallenge) && (
+        <Card ref={formRef}>
           <CardContent className="pt-6">
             <ChallengeForm 
               onSubmit={handleFormSubmit} 
               onClose={handleFormClose}
+              challenge={editingChallenge}
+              onUpdate={handleUpdateChallenge}
             />
           </CardContent>
         </Card>
@@ -73,7 +96,7 @@ const MyChallenges = () => {
       ) : filteredChallenges.length === 0 ? (
         <EmptyChallenges 
           hasChallenges={challenges.length > 0}
-          onCreateChallenge={() => setShowAddForm(true)}
+          onCreateChallenge={handleAddNew}
         />
       ) : (
         <div className="space-y-4">
