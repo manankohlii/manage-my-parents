@@ -1,6 +1,5 @@
-
 import { Button } from "@/components/ui/button";
-import { ThumbsUp, ThumbsDown } from "lucide-react";
+import { ThumbsUp } from "lucide-react";
 import { Solution } from "@/services/solutionsService";
 
 interface SolutionsListProps {
@@ -35,7 +34,7 @@ const SolutionsList = ({
       {solutions.map((solution) => (
         <div 
           key={solution.id} 
-          className="bg-muted p-3 rounded-md flex justify-between items-start"
+          className="bg-muted/90 dark:bg-muted/60 p-3 rounded-md flex justify-between items-start"
         >
           <div className="flex-1">
             <p className="text-sm">{solution.text}</p>
@@ -43,7 +42,8 @@ const SolutionsList = ({
               By {solution.author_name || "Anonymous User"} • {new Date(solution.created_at).toLocaleDateString()}
             </p>
           </div>
-          <div className="flex items-center space-x-1 ml-4">
+          
+          <div className="flex items-center gap-2">
             <Button 
               variant="ghost" 
               size="icon" 
@@ -57,18 +57,6 @@ const SolutionsList = ({
               />
             </Button>
             <span className="text-sm font-medium min-w-[24px] text-center">{solution.votes || 0}</span>
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              className="h-8 w-8"
-              onClick={() => handleVote(challengeId, solution.id, 'down')}
-              disabled={!user}
-            >
-              <ThumbsDown 
-                size={16} 
-                className={userVotes[solution.id] === false ? "text-red-500 fill-red-500" : ""} 
-              />
-            </Button>
           </div>
         </div>
       ))}

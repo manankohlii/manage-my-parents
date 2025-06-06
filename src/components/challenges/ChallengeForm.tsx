@@ -43,22 +43,45 @@ const ChallengeForm = ({ onSubmit, onClose, challenge, onUpdate }: ChallengeForm
     age_group: "20-34"
   });
   
-  // Load user profile data and tags
+  // Load challenge data if editing
+  useEffect(() => {
+    if (challenge) {
+      console.log('Loading challenge data:', challenge); // Debug log
+      setFormData({
+        title: challenge.title || "",
+        description: challenge.description || "",
+        location: challenge.location || "",
+        age_group: challenge.age_group || "20-34"
+      });
+      setSelectedTags(challenge.tags || []);
+    } else {
+      // Reset form when not editing
+      setFormData({
+        title: "",
+        description: "",
+        location: "",
+        age_group: "20-34"
+      });
+      setSelectedTags([]);
+    }
+  }, [challenge]);
+
+  // Prevent form from being cleared by profile data load
   useEffect(() => {
     const loadData = async () => {
-      if (!user?.id) return;
+      if (!user?.id || challenge) return; // Skip if editing or no user
 
-        try {
+      try {
         // Load user profile
         const { data: profile, error } = await supabase
-            .from("profiles")
-            .select("city, country")
-            .eq("id", user.id)
-            .single();
-          
-          if (error) {
+          .from("profiles")
+          .select("city, country")
+          .eq("id", user.id)
+          .single();
+        
+        if (error) {
           console.error("Error loading profile:", error);
-        } else if (profile) {
+        } else if (profile && !challenge) { // Only set location if not editing
           setFormData(prev => ({
             ...prev,
             location: profile.city && profile.country 
@@ -76,20 +99,7 @@ const ChallengeForm = ({ onSubmit, onClose, challenge, onUpdate }: ChallengeForm
     };
 
     loadData();
-  }, [user?.id]);
-
-  // Load challenge data if editing
-  useEffect(() => {
-    if (challenge) {
-      setFormData({
-        title: challenge.title,
-        description: challenge.description,
-        location: challenge.location,
-        age_group: challenge.age_group
-      });
-      setSelectedTags(challenge.tags || []);
-    }
-  }, [challenge]);
+  }, [user?.id, challenge]);
 
   const handleAddTag = (tag: string) => {
     if (!selectedTags.includes(tag)) {
@@ -113,7 +123,7 @@ const ChallengeForm = ({ onSubmit, onClose, challenge, onUpdate }: ChallengeForm
           description: formData.description,
           location: formData.location,
           tags: selectedTags,
-          mood: "neutral",
+          mood: challenge.mood || "neutral",
           age_group: formData.age_group
         });
       } else {
@@ -124,7 +134,7 @@ const ChallengeForm = ({ onSubmit, onClose, challenge, onUpdate }: ChallengeForm
           tags: selectedTags,
           mood: "neutral",
           age_group: formData.age_group
-      }, user.id);
+        }, user.id);
       }
 
       toast({
@@ -134,6 +144,7 @@ const ChallengeForm = ({ onSubmit, onClose, challenge, onUpdate }: ChallengeForm
           : "Your challenge has been shared with the community.",
       });
 
+      // Reset form
       setFormData({
         title: "",
         description: "",

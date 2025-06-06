@@ -1,11 +1,10 @@
-
 import { CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Edit, Trash2 } from "lucide-react";
 
 interface ChallengeCardHeaderProps {
   title: string;
-  onEdit: () => void;
+  onEdit: (e: React.MouseEvent) => void;
   onDelete: () => void;
 }
 

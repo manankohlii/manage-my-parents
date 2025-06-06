@@ -32,6 +32,7 @@ interface ChallengeFiltersProps {
   selectedTags: string[];
   setSelectedTags: (tags: string[]) => void;
   allTags: string[];
+  challenges: any[];
 }
 
 const ChallengeFilters = ({
@@ -45,7 +46,8 @@ const ChallengeFilters = ({
   setFilterLocation,
   selectedTags,
   setSelectedTags,
-  allTags
+  allTags,
+  challenges
 }: ChallengeFiltersProps) => {
   
   const handleSelectTag = (tag: string) => {
@@ -55,6 +57,9 @@ const ChallengeFilters = ({
       setSelectedTags([...selectedTags, tag]);
     }
   };
+
+  // Get unique locations from challenges
+  const uniqueLocations = Array.from(new Set(challenges.map(challenge => challenge.location))).filter(Boolean);
   
   return (
     <>
@@ -68,39 +73,36 @@ const ChallengeFilters = ({
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
-        <div className="flex flex-col md:flex-row gap-2">
-          <Select value={sortBy} onValueChange={setSortBy}>
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Sort by" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="most_upvotes">Most Upvotes</SelectItem>
-              <SelectItem value="newest">Newest First</SelectItem>
-              <SelectItem value="oldest">Oldest First</SelectItem>
-              <SelectItem value="most_solutions">Most Solutions</SelectItem>
-            </SelectContent>
-          </Select>
-          
-          {/* Age Group filter removed */}
-          
-          <Select value={filterLocation} onValueChange={setFilterLocation}>
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Location" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Locations</SelectItem>
-              <SelectItem value="United States">United States</SelectItem>
-              <SelectItem value="Canada">Canada</SelectItem>
-              <SelectItem value="United Kingdom">United Kingdom</SelectItem>
-              <SelectItem value="Australia">Australia</SelectItem>
-              <SelectItem value="Other">Other</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
+        
+        <Select value={sortBy} onValueChange={setSortBy}>
+          <SelectTrigger className="w-[180px]">
+            <SelectValue placeholder="Sort by" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="most_upvotes">Most Upvotes</SelectItem>
+            <SelectItem value="newest">Newest First</SelectItem>
+            <SelectItem value="oldest">Oldest First</SelectItem>
+            <SelectItem value="most_solutions">Most Solutions</SelectItem>
+          </SelectContent>
+        </Select>
+        
+        <Select value={filterLocation} onValueChange={setFilterLocation}>
+          <SelectTrigger className="w-[180px]">
+            <SelectValue placeholder="Location" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Locations</SelectItem>
+            {uniqueLocations.map(location => (
+              <SelectItem key={location} value={location}>
+                {location}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
       
       {/* Tag filtering */}
-      <div>
+      <div className="mt-4">
         <h3 className="text-sm font-medium mb-2">Filter by tags:</h3>
         <Popover>
           <PopoverTrigger asChild>

@@ -1,4 +1,3 @@
-
 import { Card, CardContent } from "@/components/ui/card";
 import ChallengeFilters from "./explore/ChallengeFilters";
 import ChallengeCard from "./explore/ChallengeCard";
@@ -46,6 +45,7 @@ const ExploreChallenges = () => {
         selectedTags={selectedTags}
         setSelectedTags={setSelectedTags}
         allTags={allTags}
+        challenges={filteredChallenges}
       />
 
       {loading ? (

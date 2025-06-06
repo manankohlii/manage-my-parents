@@ -40,6 +40,12 @@ const MyChallenges = () => {
     if (challenge) {
       setEditingChallenge(challenge);
       setShowAddForm(false);
+      // Scroll to form after a short delay to ensure state is updated
+      setTimeout(() => {
+        if (formRef.current) {
+          formRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      }, 100);
     }
   };
 
@@ -72,7 +78,7 @@ const MyChallenges = () => {
       </div>
 
       {(showAddForm || editingChallenge) && (
-        <Card ref={formRef}>
+        <Card ref={formRef} className="border-2 border-primary/20">
           <CardContent className="pt-6">
             <ChallengeForm 
               onSubmit={handleFormSubmit} 
@@ -100,14 +106,16 @@ const MyChallenges = () => {
         />
       ) : (
         <div className="space-y-4">
-          {filteredChallenges.map((challenge) => (
-            <ChallengeCard 
-              key={challenge.id}
-              challenge={challenge}
-              onDelete={handleDeleteChallenge}
-              onEdit={handleEditChallenge}
-            />
-          ))}
+          {filteredChallenges
+            .filter(challenge => !editingChallenge || challenge.id !== editingChallenge.id)
+            .map((challenge) => (
+              <ChallengeCard 
+                key={challenge.id}
+                challenge={challenge}
+                onDelete={handleDeleteChallenge}
+                onEdit={handleEditChallenge}
+              />
+            ))}
         </div>
       )}
     </div>

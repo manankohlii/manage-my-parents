@@ -1,4 +1,3 @@
-
 import { CardContent } from "@/components/ui/card";
 import TagBadge from "../TagBadge";
 
@@ -6,10 +5,9 @@ interface ChallengeCardContentProps {
   description: string;
   tags?: string[];
   location: string;
-  mood: string;
 }
 
-const ChallengeCardContent = ({ description, tags, location, mood }: ChallengeCardContentProps) => {
+const ChallengeCardContent = ({ description, tags, location }: ChallengeCardContentProps) => {
   return (
     <CardContent>
       <p className="text-muted-foreground mb-3">{description}</p>
@@ -23,7 +21,6 @@ const ChallengeCardContent = ({ description, tags, location, mood }: ChallengeCa
       <div className="text-sm text-muted-foreground">
         <div className="flex items-center justify-between">
           <span>Location: {location}</span>
-          <span>Mood: {mood}</span>
         </div>
       </div>
     </CardContent>

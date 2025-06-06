@@ -1,4 +1,3 @@
-
 import { Card } from "@/components/ui/card";
 import { Challenge } from "@/services/challenges";
 import { useAuth } from "@/contexts/AuthContext";
@@ -25,11 +24,17 @@ const ChallengeCard = ({ challenge, onDelete, onEdit }: ChallengeCardProps) => {
     handleVote
   } = useChallengeCardSolutions(challenge.id, user?.id);
 
+  const handleEdit = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    onEdit(challenge.id);
+  };
+
   return (
     <Card key={challenge.id} className="w-full">
       <ChallengeCardHeader 
         title={challenge.title}
-        onEdit={() => onEdit(challenge.id)}
+        onEdit={handleEdit}
         onDelete={() => onDelete(challenge.id)}
       />
       
@@ -37,7 +42,6 @@ const ChallengeCard = ({ challenge, onDelete, onEdit }: ChallengeCardProps) => {
         description={challenge.description}
         tags={challenge.tags}
         location={challenge.location}
-        mood={challenge.mood}
       />
       
       {showSolutions && (

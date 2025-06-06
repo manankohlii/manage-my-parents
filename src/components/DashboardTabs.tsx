@@ -28,18 +28,21 @@ const DashboardTabs = () => {
       <Tabs value={activeTab} className="w-full" onValueChange={setActiveTab}>
         <div className="relative">
           <div className="overflow-x-auto pb-2 -mx-4 px-4 sm:mx-0 sm:px-0">
-            <TabsList className="w-full mb-6 md:mb-8 bg-transparent inline-flex min-w-full sm:min-w-0 sm:w-auto gap-2 sm:gap-4">
-              <TabsTrigger value="my-challenges" className="flex items-center gap-2 whitespace-nowrap">
+            <TabsList className="w-full mb-6 md:mb-8 bg-transparent grid grid-cols-3 gap-2 sm:gap-4">
+              <TabsTrigger value="my-challenges" className="flex items-center justify-center gap-2 whitespace-nowrap">
                 <Search className="text-current shrink-0" size={16} />
-                <span>My Challenges</span>
+                <span className="hidden sm:inline">My Challenges</span>
+                <span className="sm:hidden">My</span>
               </TabsTrigger>
-              <TabsTrigger value="explore" className="flex items-center gap-2 whitespace-nowrap">
+              <TabsTrigger value="explore" className="flex items-center justify-center gap-2 whitespace-nowrap">
                 <Filter className="text-current shrink-0" size={16} />
-                <span>Explore</span>
+                <span className="hidden sm:inline">Explore</span>
+                <span className="sm:hidden">Explore</span>
               </TabsTrigger>
-              <TabsTrigger value="private-groups" className="flex items-center gap-2 whitespace-nowrap">
+              <TabsTrigger value="private-groups" className="flex items-center justify-center gap-2 whitespace-nowrap">
                 <Users className="text-current shrink-0" size={16} />
-                <span>Groups</span>
+                <span className="hidden sm:inline">Groups</span>
+                <span className="sm:hidden">Groups</span>
               </TabsTrigger>
             </TabsList>
           </div>
@@ -49,11 +52,11 @@ const DashboardTabs = () => {
           <MyChallenges />
         </TabsContent>
         
-        <TabsContent value="explore" className="mt-4 md:mt-6 bg-purple-500/10 rounded-lg p-4 md:p-6 border border-purple-200 dark:border-purple-900 dark:bg-purple-500/20">
+        <TabsContent value="explore" className="mt-4 md:mt-6 bg-blue-500/10 rounded-lg p-4 md:p-6 border border-blue-200 dark:border-blue-900 dark:bg-blue-500/20">
           <ExploreChallenges />
         </TabsContent>
         
-        <TabsContent value="private-groups" className="mt-4 md:mt-6 bg-indigo-500/10 rounded-lg p-4 md:p-6 border border-indigo-200 dark:border-indigo-900 dark:bg-indigo-500/20">
+        <TabsContent value="private-groups" className="mt-4 md:mt-6 bg-blue-500/10 rounded-lg p-4 md:p-6 border border-blue-200 dark:border-blue-900 dark:bg-blue-500/20">
           <PrivateGroups />
         </TabsContent>
       </Tabs>
