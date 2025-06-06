@@ -45,10 +45,10 @@ const IssuesList = ({
       <div className="text-center py-8">
         <p className="text-muted-foreground mb-4">
           No challenges posted yet. Be the first to share a challenge!
-        </p>
+          </p>
         <Button onClick={onOpenAddDialog}>
           Share Your First Challenge
-        </Button>
+          </Button>
       </div>
     );
   }
@@ -92,10 +92,10 @@ const IssuesList = ({
                     <MessageSquare className="h-3 w-3" />
                     {issue.solutionCount}
                   </Badge>
-                </div>
+            </div>
                 <div className="flex items-center gap-2">
-                  <Button
-                    variant="ghost"
+                  <Button 
+                    variant="ghost" 
                     size="icon"
                     className={cn(
                       "h-8 w-8",

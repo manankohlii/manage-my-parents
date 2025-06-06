@@ -1,16 +1,13 @@
-
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { 
-  Search, 
   Home, 
   User,
-  Bell,
   Menu,
   X,
   LogOut
 } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { 
   DropdownMenu,
@@ -20,10 +17,32 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { user, signOut } = useAuth();
+  const [displayName, setDisplayName] = useState<string>("");
+
+  useEffect(() => {
+    const fetchDisplayName = async () => {
+      if (user) {
+        const { data, error } = await supabase
+          .from("profiles")
+          .select("display_name")
+          .eq("id", user.id)
+          .single();
+
+        if (error) {
+          console.error("Error fetching display name:", error);
+        } else if (data) {
+          setDisplayName(data.display_name);
+        }
+      }
+    };
+
+    fetchDisplayName();
+  }, [user]);
 
   const handleSignOut = async () => {
     await signOut();
@@ -46,51 +65,37 @@ const Navbar = () => {
               <Home className="h-4 w-4 mr-1" />
               <span>Dashboard</span>
             </Link>
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-              <input 
-                type="text" 
-                placeholder="Search..." 
-                className="pl-10 pr-4 py-2 border rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
-              />
-            </div>
-            <div className="flex items-center space-x-2">
-              <Link to="/notifications">
-                <Button variant="ghost" size="icon" className="rounded-full">
-                  <Bell className="h-5 w-5 text-gray-600" />
-                </Button>
+            
+            {user ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" className="rounded-full flex items-center gap-2">
+                    <User className="h-5 w-5 text-gray-600" />
+                    <span className="text-sm font-medium text-gray-700">{displayName || user.email}</span>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem>
+                    <Link to="/profile" className="w-full">Profile</Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem>
+                    <Link to="/settings" className="w-full">Settings</Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={handleSignOut}>
+                    <LogOut className="mr-2 h-4 w-4" /> Sign out
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              <Link to="/login">
+                <Button variant="outline">Sign In</Button>
               </Link>
-              
-              {user ? (
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon" className="rounded-full">
-                      <User className="h-5 w-5 text-gray-600" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem>
-                      <Link to="/profile" className="w-full">Profile</Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem>
-                      <Link to="/settings" className="w-full">Settings</Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={handleSignOut}>
-                      <LogOut className="mr-2 h-4 w-4" /> Sign out
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              ) : (
-                <Link to="/login">
-                  <Button variant="outline">Sign In</Button>
-                </Link>
-              )}
-            </div>
+            )}
           </div>
           
           {/* Mobile menu button */}
-          <div className="md:hidden flex items-center">
+          <div className="flex items-center md:hidden">
             <button
               onClick={() => setIsMenuOpen(!isMenuOpen)}
               className="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-primary"
@@ -117,26 +122,11 @@ const Navbar = () => {
             >
               Dashboard
             </Link>
-            <div className="px-3 py-2">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-                <input 
-                  type="text" 
-                  placeholder="Search..." 
-                  className="w-full pl-10 pr-4 py-2 border rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
-                />
-              </div>
-            </div>
-            <Link 
-              to="/notifications" 
-              className="text-gray-600 hover:text-primary block px-3 py-2 rounded-md text-base font-medium"
-              onClick={() => setIsMenuOpen(false)}
-            >
-              Notifications
-            </Link>
-            
             {user ? (
               <>
+                <div className="px-3 py-2 text-sm text-gray-700">
+                  {displayName || user.email}
+                </div>
                 <Link 
                   to="/profile" 
                   className="text-gray-600 hover:text-primary block px-3 py-2 rounded-md text-base font-medium"
@@ -151,20 +141,20 @@ const Navbar = () => {
                 >
                   Settings
                 </Link>
-                <button 
+                <button
                   onClick={() => {
                     handleSignOut();
                     setIsMenuOpen(false);
-                  }} 
-                  className="text-red-600 hover:text-red-500 flex items-center px-3 py-2 rounded-md text-base font-medium w-full"
+                  }}
+                  className="text-gray-600 hover:text-primary block w-full text-left px-3 py-2 rounded-md text-base font-medium"
                 >
-                  <LogOut className="mr-2 h-4 w-4" /> Sign out
+                  Sign out
                 </button>
               </>
             ) : (
               <Link 
                 to="/login" 
-                className="text-primary hover:text-primary-dark block px-3 py-2 rounded-md text-base font-medium"
+                className="text-gray-600 hover:text-primary block px-3 py-2 rounded-md text-base font-medium"
                 onClick={() => setIsMenuOpen(false)}
               >
                 Sign In

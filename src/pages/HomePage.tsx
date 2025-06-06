@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { MessageSquare, Users, Lightbulb } from "lucide-react";
@@ -12,7 +11,7 @@ const HomePage = () => {
           <div className="md:grid md:grid-cols-2 md:gap-8 items-center">
             <div>
               <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight mb-6">
-                Manage your parents with ideas from your friends!
+                Manage your parents with ideas from your community!
               </h1>
               <p className="text-lg md:text-xl mb-10 opacity-90">
                 Share challenges, find solutions, and connect with others facing similar
@@ -23,7 +22,7 @@ const HomePage = () => {
                   <Link to="/register">Join Our Community</Link>
                 </Button>
                 <Button asChild size="lg" variant="outline" className="bg-transparent border-white text-white hover:bg-white/20">
-                  <Link to="/about">Learn More</Link>
+                  <Link to="/dashboard">Explore Challenges</Link>
                 </Button>
               </div>
             </div>
@@ -76,29 +75,6 @@ const HomePage = () => {
               <p className="text-muted-foreground">
                 Learn from others' experiences and find approaches that might work for you.
               </p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Testimonials */}
-      <div className="bg-muted py-24">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-3xl font-bold text-center mb-16">Community Stories</h2>
-          <div className="grid md:grid-cols-2 gap-8">
-            <div className="bg-card p-6 rounded-lg shadow-sm">
-              <p className="italic mb-4">
-                "Finding this community helped me understand my parents' perspective 
-                while also validating my own feelings. The advice I received changed our relationship."
-              </p>
-              <p className="font-medium">Jamie, 22</p>
-            </div>
-            <div className="bg-card p-6 rounded-lg shadow-sm">
-              <p className="italic mb-4">
-                "I never realized how many others were dealing with similar generational 
-                differences. The strategies shared here actually worked with my traditional parents."
-              </p>
-              <p className="font-medium">Alex, 19</p>
             </div>
           </div>
         </div>

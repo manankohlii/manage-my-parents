@@ -28,10 +28,10 @@ interface IssueDetailProps {
   onSolutionAdd: (solution: IssueSolution) => void;
 }
 
-const IssueDetail = ({
-  issue,
-  solutions,
-  formatDate,
+const IssueDetail = ({ 
+  issue, 
+  solutions, 
+  formatDate, 
   onBack,
   userVotes,
   onVote,
@@ -92,7 +92,7 @@ const IssueDetail = ({
       setIsSubmitting(false);
     }
   };
-
+  
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-4">
@@ -129,41 +129,41 @@ const IssueDetail = ({
                 </Badge>
               </div>
               <div className="flex items-center gap-2">
-                <Button
-                  variant="ghost"
+              <Button 
+                variant="ghost" 
                   size="icon"
                   className={cn(
                     "h-8 w-8",
                     userVotes[issue.id] === true && "text-primary"
                   )}
-                  onClick={() => onVote(issue.id, true)}
-                >
+                onClick={() => onVote(issue.id, true)}
+              >
                   <ThumbsUp size={16} />
-                </Button>
+              </Button>
                 <span className="text-sm font-medium min-w-[1.5rem] text-center">
                   {issue.votes}
-                </span>
-              </div>
-            </div>
+          </span>
+        </div>
+      </div>
           </div>
         </CardHeader>
         <CardContent>
           <p className="text-muted-foreground mb-4">{issue.description}</p>
           {issue.tags.length > 0 && (
             <div className="flex flex-wrap gap-2 mb-6">
-              {issue.tags.map((tag) => (
+          {issue.tags.map((tag) => (
                 <Badge key={tag} variant="outline">
                   {tag}
                 </Badge>
-              ))}
-            </div>
+          ))}
+        </div>
           )}
-
+      
           <div className="space-y-6">
             <div className="flex items-center justify-between">
               <h3 className="text-lg font-semibold">Solutions</h3>
-            </div>
-
+      </div>
+      
             <form onSubmit={handleSubmitSolution} className="space-y-4">
               <Textarea
                 placeholder="Share your solution..."
@@ -175,8 +175,8 @@ const IssueDetail = ({
                 {isSubmitting ? "Posting..." : "Post Solution"}
               </Button>
             </form>
-
-            <div className="space-y-4">
+      
+      <div className="space-y-4">
               {solutions.map((solution) => (
                 <Card key={solution.id}>
                   <CardContent className="p-4">
@@ -185,11 +185,11 @@ const IssueDetail = ({
                         <p className="text-sm">{solution.text}</p>
                         <div className="mt-2 text-xs text-muted-foreground">
                           Posted by {solution.userName} • {formatDate(solution.createdAt)}
-                        </div>
-                      </div>
+        </div>
+          </div>
                       <div className="flex items-center gap-2">
-                        <Button
-                          variant="ghost"
+                        <Button 
+                          variant="ghost" 
                           size="icon"
                           className={cn(
                             "h-8 w-8",
@@ -202,12 +202,12 @@ const IssueDetail = ({
                         <span className="text-sm font-medium min-w-[1.5rem] text-center">
                           {solution.votes}
                         </span>
-                      </div>
-                    </div>
+                  </div>
+                </div>
                   </CardContent>
                 </Card>
               ))}
-            </div>
+              </div>
           </div>
         </CardContent>
       </Card>

@@ -49,7 +49,7 @@ export const useIssues = (groupId: string) => {
         // Start with empty list
         setIssues([]);
         setSolutions({});
-        
+
         // Initialize empty user votes
         setUserVotes({});
         
@@ -64,7 +64,7 @@ export const useIssues = (groupId: string) => {
         setLoading(false);
       }
     };
-
+    
     loadIssues();
   }, [groupId, uiToast]);
 
@@ -82,7 +82,7 @@ export const useIssues = (groupId: string) => {
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return date.toLocaleDateString('en-US', {
-      month: 'short',
+      month: 'short', 
       day: 'numeric',
       year: 'numeric'
     });

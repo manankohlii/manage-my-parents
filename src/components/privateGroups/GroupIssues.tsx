@@ -62,19 +62,19 @@ const GroupIssues = ({ groupId }: GroupIssuesProps) => {
         }
       }}>
         {selectedIssue && (
-          <TabsList className="mb-4">
+        <TabsList className="mb-4">
             <TabsTrigger value="detail">Challenge Details</TabsTrigger>
           </TabsList>
-        )}
+          )}
 
         <TabsContent value="list" className="space-y-4">
-          <IssueFilter 
-            searchTerm={searchTerm}
-            setSearchTerm={setSearchTerm}
-            filterTag={filterTag}
-            setFilterTag={setFilterTag}
-            allTags={allTags}
-          />
+            <IssueFilter 
+              searchTerm={searchTerm}
+              setSearchTerm={setSearchTerm}
+              filterTag={filterTag}
+              setFilterTag={setFilterTag}
+              allTags={allTags}
+            />
           
           <IssuesList 
             issues={issues}
