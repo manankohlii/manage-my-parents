@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { createSolution, getSolutions, Solution } from "@/services/solutionsService";
 import { toast } from "sonner";
@@ -6,17 +5,11 @@ import { toast } from "sonner";
 export const useSolutions = (user: any, updateUserVotesForSolutions: (solutionIds: string[]) => void) => {
   const [solutions, setSolutions] = useState<Record<string, Solution[]>>({});
   const [openPopover, setOpenPopover] = useState<string | null>(null);
-  const [newSolution, setNewSolution] = useState("");
   const [loadingSolution, setLoadingSolution] = useState(false);
 
   // Load solutions for a challenge when expanded
   const loadSolutions = async (challengeId: string) => {
     try {
-      // Check if we already have solutions for this challenge to avoid duplicate loads
-      if (solutions[challengeId] && solutions[challengeId].length > 0) {
-        return;
-      }
-
       const fetchedSolutions = await getSolutions(challengeId);
       
       setSolutions(prev => ({
@@ -31,7 +24,6 @@ export const useSolutions = (user: any, updateUserVotesForSolutions: (solutionId
       }
     } catch (error) {
       console.error("Error loading solutions:", error);
-      // Make sure we still set an empty array to prevent repeated loading attempts
       setSolutions(prev => ({
         ...prev,
         [challengeId]: []
@@ -40,13 +32,13 @@ export const useSolutions = (user: any, updateUserVotesForSolutions: (solutionId
     }
   };
 
-  const handleSubmitSolution = async (challengeId: string) => {
+  const handleSubmitSolution = async (challengeId: string, solutionText: string) => {
     if (!user?.id) {
       toast.error("You must be logged in to submit a solution");
       return;
     }
     
-    if (!newSolution.trim()) {
+    if (!solutionText.trim()) {
       toast.error("Solution cannot be empty");
       return;
     }
@@ -54,22 +46,24 @@ export const useSolutions = (user: any, updateUserVotesForSolutions: (solutionId
     setLoadingSolution(true);
     
     try {
-      const solution = await createSolution(challengeId, newSolution, user.id);
+      const solution = await createSolution(challengeId, solutionText.trim(), user.id);
       
       if (solution) {
         // Update the solutions list
         setSolutions(prev => {
           const currentSolutions = prev[challengeId] || [];
-          const updatedSolutions = [solution, ...currentSolutions];
-          
           return {
             ...prev,
-            [challengeId]: updatedSolutions
+            [challengeId]: [solution, ...currentSolutions]
           };
         });
         
-        setNewSolution("");
+        // Close popover
         setOpenPopover(null);
+        
+        // Reload solutions to ensure we have the latest data
+        await loadSolutions(challengeId);
+        
         toast.success("Solution submitted successfully!");
       }
     } catch (error) {
@@ -85,8 +79,6 @@ export const useSolutions = (user: any, updateUserVotesForSolutions: (solutionId
     setSolutions,
     openPopover,
     setOpenPopover,
-    newSolution,
-    setNewSolution,
     loadingSolution,
     loadSolutions,
     handleSubmitSolution

@@ -1,4 +1,3 @@
-
 import { useAuth } from "@/contexts/AuthContext";
 import { useChallenges } from "@/hooks/explore/useChallenges";
 import { useFiltering } from "@/hooks/explore/useFiltering";
@@ -7,6 +6,7 @@ import { useVoting } from "@/hooks/explore/useVoting";
 import { useDataLoading } from "@/hooks/explore/useDataLoading";
 import { useChallengeSolutions } from "@/hooks/explore/useChallengeSolutions";
 import { useChallengeVoting } from "@/hooks/explore/useChallengeVoting";
+import { useEffect } from "react";
 
 // Add debugging console log
 console.log("Loading useChallengeListing hook");
@@ -52,8 +52,6 @@ export const useChallengeListing = () => {
     setSolutions,
     openPopover,
     setOpenPopover,
-    newSolution,
-    setNewSolution,
     loadingSolution,
     loadSolutions,
     handleSubmitSolution
@@ -87,6 +85,24 @@ export const useChallengeListing = () => {
   const filteredChallenges = getFilteredChallenges(challenges);
   console.log("Filtered challenges:", filteredChallenges);
 
+  // Load user votes when challenges change and user is available
+  useEffect(() => {
+    if (challenges.length > 0 && user?.id) {
+      loadUserVotesForChallenges(challenges);
+    }
+  }, [challenges, user?.id]);
+  
+  // Load solutions for challenges with solutions_count > 0
+  useEffect(() => {
+    if (challenges.length > 0) {
+      challenges.forEach(challenge => {
+        if ((challenge.solutions_count || 0) > 0) {
+          loadSolutions(challenge.id);
+        }
+      });
+    }
+  }, [challenges]);
+
   return {
     loading,
     filteredChallenges,
@@ -108,8 +124,6 @@ export const useChallengeListing = () => {
     openPopover,
     setOpenPopover,
     handleSubmitSolution: handleSubmitSolutionWithStats,
-    newSolution,
-    setNewSolution,
     loadingSolution,
     user
   };

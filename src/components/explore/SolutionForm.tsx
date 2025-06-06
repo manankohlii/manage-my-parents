@@ -1,12 +1,12 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Solution } from "@/services/solutionsService";
+import { toast } from "sonner";
 
 interface SolutionFormProps {
   challengeId: string;
-  onSubmit: (solution: string) => Promise<void>;
+  onSubmit: (solutionText: string) => Promise<void>;
   loading: boolean;
   user: any;
   solutions: Solution[];
@@ -24,10 +24,18 @@ const SolutionForm = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!text.trim()) return;
+    if (!text.trim()) {
+      toast.error("Solution cannot be empty");
+      return;
+    }
     
-    await onSubmit(text);
-    setText("");
+    try {
+      await onSubmit(text.trim());
+      setText("");
+    } catch (error) {
+      console.error("Error submitting solution:", error);
+      toast.error("Failed to submit solution");
+    }
   };
 
   if (!user) {

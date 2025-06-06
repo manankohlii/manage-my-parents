@@ -1,15 +1,14 @@
-
 import { Challenge } from "@/services/challenges/types";
 
 export const useChallengeSolutions = (
   user: any,
   challenges: Challenge[],
-  handleSubmitSolution: (challengeId: string) => Promise<void>,
+  handleSubmitSolution: (challengeId: string, solutionText: string) => Promise<void>,
   updateChallengeStats: (challengeId: string, field: 'solutions_count' | 'votes_count', value: number) => void
 ) => {
   // Modified handleSubmitSolution to also update challenge stats
-  const handleSubmitSolutionWithStats = async (challengeId: string) => {
-    await handleSubmitSolution(challengeId);
+  const handleSubmitSolutionWithStats = async (challengeId: string, solutionText: string) => {
+    await handleSubmitSolution(challengeId, solutionText);
     
     // Update the challenge solutions count
     const challenge = challenges.find(c => c.id === challengeId);

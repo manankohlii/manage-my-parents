@@ -25,8 +25,6 @@ const ExploreChallenges = () => {
     openPopover,
     setOpenPopover,
     handleSubmitSolution,
-    newSolution,
-    setNewSolution,
     loadingSolution,
     user
   } = useChallengeListing();
@@ -69,8 +67,6 @@ const ExploreChallenges = () => {
               handleUpvote={(challengeId) => handleVote(challengeId, null, 'up')}
               handleDownvote={(challengeId) => handleVote(challengeId, null, 'down')}
               handleSubmitSolution={handleSubmitSolution}
-              newSolution={newSolution}
-              setNewSolution={setNewSolution}
               loadingSolution={loadingSolution}
               userVotes={userVotes}
               openSolutionForm={openPopover === challenge.id}

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { formatDistanceToNow } from "date-fns";
 import TagBadge from "../TagBadge";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
-import { MessageCircle, ThumbsUp, ThumbsDown } from "lucide-react";
+import { MessageCircle, ThumbsUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Challenge } from "@/services/challenges/types";
 import SolutionsList from "./SolutionsList";
@@ -13,9 +13,7 @@ interface ChallengeCardProps {
   challenge: Challenge;
   handleUpvote: (challengeId: string) => void;
   handleDownvote: (challengeId: string) => void;
-  handleSubmitSolution: (challengeId: string) => Promise<void>;
-  newSolution: string;
-  setNewSolution: (value: string) => void;
+  handleSubmitSolution: (challengeId: string, solutionText: string) => Promise<void>;
   loadingSolution: boolean;
   userVotes: Record<string, boolean | null>;
   openSolutionForm: boolean;
@@ -30,8 +28,6 @@ const ChallengeCard = ({
   handleUpvote,
   handleDownvote,
   handleSubmitSolution,
-  newSolution,
-  setNewSolution,
   loadingSolution,
   userVotes,
   openSolutionForm,
@@ -42,9 +38,11 @@ const ChallengeCard = ({
 }: ChallengeCardProps) => {
   const [showSolutions, setShowSolutions] = useState(false);
   
-  const handleSolutionSubmit = async (solution: string) => {
-    setNewSolution(solution);
-    await handleSubmitSolution(challenge.id);
+  const handleSolutionSubmit = async (solutionText: string) => {
+    if (!solutionText.trim()) {
+      return;
+    }
+    await handleSubmitSolution(challenge.id, solutionText);
   };
 
   const toggleSolutions = () => {
@@ -89,7 +87,7 @@ const ChallengeCard = ({
         {/* Add the Solution Form */}
         <SolutionForm
           challengeId={challenge.id}
-          onSubmit={(solution) => handleSolutionSubmit(solution)}
+          onSubmit={handleSolutionSubmit}
           loading={loadingSolution}
           user={user}
           solutions={solutions || []}
