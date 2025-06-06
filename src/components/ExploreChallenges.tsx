@@ -26,7 +26,8 @@ const ExploreChallenges = () => {
     setOpenPopover,
     handleSubmitSolution,
     loadingSolution,
-    user
+    user,
+    handleSolutionDeleted
   } = useChallengeListing();
 
   return (
@@ -74,6 +75,7 @@ const ExploreChallenges = () => {
               user={user}
               solutions={solutions[challenge.id] || []}
               handleVote={handleVote}
+              onSolutionDeleted={() => handleSolutionDeleted(challenge.id)}
             />
           ))}
         </div>

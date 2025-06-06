@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -100,6 +99,23 @@ export const createSolution = async (
     console.error("Error creating solution:", error);
     toast.error("Failed to submit solution");
     return null;
+  }
+};
+
+// Delete a solution
+export const deleteSolution = async (solutionId: string) => {
+  try {
+    const { error } = await supabase
+      .from("solutions")
+      .delete()
+      .eq("id", solutionId);
+
+    if (error) throw error;
+    
+    return true;
+  } catch (error) {
+    console.error("Error deleting solution:", error);
+    throw error;
   }
 };
 

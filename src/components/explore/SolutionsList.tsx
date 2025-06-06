@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
-import { ThumbsUp } from "lucide-react";
-import { Solution } from "@/services/solutionsService";
+import { ThumbsUp, Trash2 } from "lucide-react";
+import { Solution, deleteSolution } from "@/services/solutionsService";
+import { toast } from "sonner";
 
 interface SolutionsListProps {
   solutions: Solution[];
@@ -8,6 +9,7 @@ interface SolutionsListProps {
   handleVote: (challengeId: string, solutionId: string, voteType: 'up' | 'down') => Promise<void>;
   userVotes: Record<string, boolean | null>;
   user: any;
+  onSolutionDeleted?: () => void;
 }
 
 const SolutionsList = ({ 
@@ -15,10 +17,24 @@ const SolutionsList = ({
   challengeId, 
   handleVote, 
   userVotes,
-  user
+  user,
+  onSolutionDeleted
 }: SolutionsListProps) => {
   // Check if solutions exists and has items
   const hasSolutions = Array.isArray(solutions) && solutions.length > 0;
+
+  const handleDeleteSolution = async (solutionId: string) => {
+    try {
+      await deleteSolution(solutionId);
+      toast.success("Solution deleted successfully");
+      if (onSolutionDeleted) {
+        onSolutionDeleted();
+      }
+    } catch (error) {
+      console.error("Error deleting solution:", error);
+      toast.error("Failed to delete solution");
+    }
+  };
 
   if (!hasSolutions) {
     return (
@@ -43,7 +59,7 @@ const SolutionsList = ({
             </p>
           </div>
           
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 min-w-[120px] justify-end">
             <Button 
               variant="ghost" 
               size="icon" 
@@ -57,6 +73,21 @@ const SolutionsList = ({
               />
             </Button>
             <span className="text-sm font-medium min-w-[24px] text-center">{solution.votes || 0}</span>
+            {/* Always render a delete button, but invisible if not owned by user */}
+            {user && solution.user_id === user.id ? (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950"
+                onClick={() => handleDeleteSolution(solution.id)}
+              >
+                <Trash2 size={16} />
+              </Button>
+            ) : (
+              <span className="h-8 w-8 inline-block" style={{ visibility: 'hidden' }}>
+                <Trash2 size={16} />
+              </span>
+            )}
           </div>
         </div>
       ))}

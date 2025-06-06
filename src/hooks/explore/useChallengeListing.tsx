@@ -82,6 +82,21 @@ export const useChallengeListing = () => {
     updateChallengeStats
   );
 
+  const handleSolutionDeleted = async (challengeId: string) => {
+    // Reload solutions for the challenge
+    await loadSolutions(challengeId);
+    
+    // Update the challenge solutions count
+    const challenge = challenges.find(c => c.id === challengeId);
+    if (challenge) {
+      updateChallengeStats(
+        challengeId, 
+        'solutions_count', 
+        Math.max(0, (challenge.solutions_count || 0) - 1)
+      );
+    }
+  };
+
   const filteredChallenges = getFilteredChallenges(challenges);
   console.log("Filtered challenges:", filteredChallenges);
 
@@ -125,6 +140,7 @@ export const useChallengeListing = () => {
     setOpenPopover,
     handleSubmitSolution: handleSubmitSolutionWithStats,
     loadingSolution,
-    user
+    user,
+    handleSolutionDeleted
   };
 };

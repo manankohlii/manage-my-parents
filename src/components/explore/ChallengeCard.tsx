@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { formatDistanceToNow } from "date-fns";
 import TagBadge from "../TagBadge";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
@@ -21,6 +21,7 @@ interface ChallengeCardProps {
   user: any;
   solutions?: Solution[];
   handleVote: (challengeId: string, solutionId: string | null, voteType: 'up' | 'down') => Promise<void>;
+  onSolutionDeleted?: () => void;
 }
 
 const ChallengeCard = ({
@@ -34,7 +35,8 @@ const ChallengeCard = ({
   setOpenSolutionForm,
   user,
   solutions = [],
-  handleVote
+  handleVote,
+  onSolutionDeleted
 }: ChallengeCardProps) => {
   const [showSolutions, setShowSolutions] = useState(false);
   
@@ -102,6 +104,7 @@ const ChallengeCard = ({
           handleVote={handleVote}
           userVotes={userVotes}
           user={user}
+          onSolutionDeleted={onSolutionDeleted}
         />
       )}
       
