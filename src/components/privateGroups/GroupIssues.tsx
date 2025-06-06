@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Plus, ThumbsUp, ThumbsDown } from "lucide-react";
@@ -45,9 +44,9 @@ const GroupIssues = ({ groupId }: GroupIssuesProps) => {
         }
       }}>
         <TabsList className="mb-4">
-          <TabsTrigger value="list">All Issues</TabsTrigger>
+          <TabsTrigger value="list">All Challenges</TabsTrigger>
           {selectedIssue && (
-            <TabsTrigger value="detail">Issue Details</TabsTrigger>
+            <TabsTrigger value="detail">Challenge Details</TabsTrigger>
           )}
         </TabsList>
 
@@ -63,7 +62,7 @@ const GroupIssues = ({ groupId }: GroupIssuesProps) => {
             
             <Button onClick={() => setIsAddDialogOpen(true)}>
               <Plus size={16} className="mr-2" />
-              New Issue
+              New Challenge
             </Button>
           </div>
           

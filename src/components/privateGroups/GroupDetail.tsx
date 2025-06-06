@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, MessageCircle, FileText, User } from "lucide-react";
@@ -103,7 +102,7 @@ const GroupDetail = ({ groupId, onBack }: GroupDetailProps) => {
           </TabsTrigger>
           <TabsTrigger value="issues" className="flex items-center gap-2">
             <FileText size={16} />
-            Issues & Solutions
+            Challenges & Solutions
           </TabsTrigger>
           <TabsTrigger value="members" className="flex items-center gap-2">
             <User size={16} />

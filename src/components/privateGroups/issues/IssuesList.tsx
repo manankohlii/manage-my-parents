@@ -1,88 +1,51 @@
-
-import { CircleX, MessageCircle, ThumbsUp, ThumbsDown } from "lucide-react";
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { useState } from "react";
+import { useToast } from "@/components/ui/use-toast";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Issue } from "./mockIssueData";
-import { useAuth } from "@/contexts/AuthContext";
+import { MessageSquare, ThumbsUp, Clock } from "lucide-react";
+
+interface Issue {
+  id: string;
+  title: string;
+  description: string;
+  userId: string;
+  userName: string;
+  createdAt: string;
+  tags: string[];
+  solutionCount: number;
+}
 
 interface IssuesListProps {
   issues: Issue[];
-  filteredIssues: Issue[];
-  loading: boolean;
-  formatDate: (dateString: string) => string;
-  onOpenAddDialog: () => void;
-  onSelectIssue: (issueId: string) => void;
-  userVotes: Record<string, boolean | null>;
-  onVote: (itemId: string, isUpvote: boolean) => void;
+  onIssueSelect: (issue: Issue) => void;
 }
 
-const IssuesList = ({
-  issues,
-  filteredIssues,
-  loading,
-  formatDate,
-  onOpenAddDialog,
-  onSelectIssue,
-  userVotes,
-  onVote
-}: IssuesListProps) => {
-  const { user } = useAuth();
+const IssuesList = ({ issues, onIssueSelect }: IssuesListProps) => {
+  const { toast } = useToast();
+  const [selectedIssue, setSelectedIssue] = useState<Issue | null>(null);
 
-  if (loading) {
-    return (
-      <div className="space-y-4">
-        {[1, 2, 3].map((i) => (
-          <Card key={i} className="w-full">
-            <CardHeader>
-              <Skeleton className="h-6 w-3/4" />
-              <div className="flex flex-wrap gap-2 mt-2">
-                <Skeleton className="h-5 w-16" />
-                <Skeleton className="h-5 w-20" />
-              </div>
-            </CardHeader>
-            <CardContent>
-              <Skeleton className="h-16 w-full" />
-            </CardContent>
-            <CardFooter>
-              <Skeleton className="h-9 w-24" />
-            </CardFooter>
-          </Card>
-        ))}
-      </div>
-    );
-  }
+  const handleIssueClick = (issue: Issue) => {
+    setSelectedIssue(issue);
+    onIssueSelect(issue);
+  };
+
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric'
+    });
+  };
 
   if (issues.length === 0) {
     return (
-      <Card className="w-full text-center p-6">
-        <CardContent className="pt-4">
-          <CircleX className="mx-auto h-12 w-12 text-muted-foreground" />
-          <h3 className="mt-4 text-lg font-medium">No Issues Yet</h3>
-          <p className="mt-2 text-sm text-muted-foreground">
-            There are no issues in this group yet.
-          </p>
-          <Button className="mt-4" onClick={onOpenAddDialog}>
-            Create First Issue
-          </Button>
-        </CardContent>
-      </Card>
-    );
-  }
-
-  if (filteredIssues.length === 0) {
-    return (
-      <Card className="w-full text-center p-6">
-        <CardContent className="pt-4">
-          <CircleX className="mx-auto h-12 w-12 text-muted-foreground" />
-          <h3 className="mt-4 text-lg font-medium">No Matching Issues</h3>
-          <p className="mt-2 text-sm text-muted-foreground">
-            No issues match your current filters.
-          </p>
-          <Button className="mt-4" variant="outline" onClick={() => window.location.reload()}>
-            Clear Filters
-          </Button>
+      <Card>
+        <CardContent className="p-6">
+          <div className="text-center text-muted-foreground">
+            No challenges posted yet. Be the first to share a challenge!
+          </div>
         </CardContent>
       </Card>
     );
@@ -90,73 +53,49 @@ const IssuesList = ({
 
   return (
     <div className="space-y-4">
-      {filteredIssues.map((issue) => (
-        <Card key={issue.id} className="w-full hover:bg-muted/50 transition-colors">
-          <CardHeader>
-            <div className="flex justify-between items-start">
-              <div>
-                <CardTitle className="text-lg hover:text-primary cursor-pointer" onClick={() => onSelectIssue(issue.id)}>
-                  {issue.title}
-                </CardTitle>
-                <div className="flex flex-wrap gap-2 mt-2">
-                  {issue.tags.map((tag) => (
-                    <Badge key={tag} variant="outline">{tag}</Badge>
-                  ))}
+      {issues.map((issue) => (
+        <Card 
+          key={issue.id}
+          className={`cursor-pointer transition-colors hover:bg-accent/50 ${
+            selectedIssue?.id === issue.id ? 'bg-accent' : ''
+          }`}
+          onClick={() => handleIssueClick(issue)}
+        >
+          <CardHeader className="p-4">
+            <div className="flex items-start justify-between">
+              <div className="space-y-1">
+                <CardTitle className="text-lg">{issue.title}</CardTitle>
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <span>Posted by {issue.userName}</span>
+                  <span>•</span>
+                  <span className="flex items-center gap-1">
+                    <Clock className="h-3 w-3" />
+                    {formatDate(issue.createdAt)}
+                  </span>
                 </div>
               </div>
-              <span className="text-xs text-muted-foreground">
-                {formatDate(issue.createdAt)}
-              </span>
+              <div className="flex items-center gap-2">
+                <Badge variant="secondary" className="flex items-center gap-1">
+                  <MessageSquare className="h-3 w-3" />
+                  {issue.solutionCount}
+                </Badge>
+              </div>
             </div>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-4 pt-0">
             <p className="text-sm text-muted-foreground line-clamp-2">
               {issue.description}
             </p>
-            <p className="mt-2 text-xs">
-              Posted by <span className="font-medium">{issue.userName}</span>
-            </p>
+            {issue.tags.length > 0 && (
+              <div className="mt-3 flex flex-wrap gap-2">
+                {issue.tags.map((tag) => (
+                  <Badge key={tag} variant="outline">
+                    {tag}
+                  </Badge>
+                ))}
+              </div>
+            )}
           </CardContent>
-          <CardFooter className="justify-between">
-            <div className="flex items-center space-x-1">
-              <MessageCircle size={16} />
-              <span className="text-sm">{issue.solutionCount} solutions</span>
-            </div>
-            
-            <div className="flex items-center space-x-2">
-              {user && (
-                <>
-                  <Button 
-                    variant="ghost" 
-                    size="sm"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onVote(issue.id, true);
-                    }}
-                  >
-                    <ThumbsUp className={`h-4 w-4 ${userVotes[issue.id] === true ? "text-green-500 fill-green-500" : ""}`} />
-                  </Button>
-                  <Button 
-                    variant="ghost" 
-                    size="sm"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onVote(issue.id, false);
-                    }}
-                  >
-                    <ThumbsDown className={`h-4 w-4 ${userVotes[issue.id] === false ? "text-red-500 fill-red-500" : ""}`} />
-                  </Button>
-                </>
-              )}
-              <Button 
-                variant="default" 
-                size="sm"
-                onClick={() => onSelectIssue(issue.id)}
-              >
-                View Details
-              </Button>
-            </div>
-          </CardFooter>
         </Card>
       ))}
     </div>

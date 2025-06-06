@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
@@ -37,7 +36,7 @@ const IssueForm = ({ isOpen, onOpenChange, onIssueCreate }: IssueFormProps) => {
     if (!newIssueTitle.trim()) {
       toast({
         title: "Title required",
-        description: "Please provide a title for your issue.",
+        description: "Please provide a title for your challenge.",
         variant: "destructive",
       });
       return;
@@ -70,8 +69,8 @@ const IssueForm = ({ isOpen, onOpenChange, onIssueCreate }: IssueFormProps) => {
       onOpenChange(false);
       
       toast({
-        title: "Issue created",
-        description: "Your issue has been posted to the group.",
+        title: "Challenge created",
+        description: "Your challenge has been posted to the group.",
       });
       
       // Reset form
@@ -81,8 +80,8 @@ const IssueForm = ({ isOpen, onOpenChange, onIssueCreate }: IssueFormProps) => {
       
     } catch (error) {
       toast({
-        title: "Failed to create issue",
-        description: "Could not create your issue. Please try again.",
+        title: "Failed to create challenge",
+        description: "Could not create your challenge. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -94,7 +93,7 @@ const IssueForm = ({ isOpen, onOpenChange, onIssueCreate }: IssueFormProps) => {
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Post a New Issue</DialogTitle>
+          <DialogTitle>Post a New Challenge</DialogTitle>
         </DialogHeader>
         
         <div className="space-y-4 py-4">
@@ -104,7 +103,7 @@ const IssueForm = ({ isOpen, onOpenChange, onIssueCreate }: IssueFormProps) => {
               id="issueTitle"
               value={newIssueTitle}
               onChange={(e) => setNewIssueTitle(e.target.value)}
-              placeholder="What's your issue about?"
+              placeholder="What's your challenge about?"
               disabled={submitting}
             />
           </div>
@@ -115,7 +114,7 @@ const IssueForm = ({ isOpen, onOpenChange, onIssueCreate }: IssueFormProps) => {
               id="issueDescription"
               value={newIssueDescription}
               onChange={(e) => setNewIssueDescription(e.target.value)}
-              placeholder="Provide details about your issue..."
+              placeholder="Provide details about your challenge..."
               rows={5}
               disabled={submitting}
             />
@@ -141,7 +140,7 @@ const IssueForm = ({ isOpen, onOpenChange, onIssueCreate }: IssueFormProps) => {
             Cancel
           </Button>
           <Button onClick={handleCreateIssue} disabled={submitting}>
-            {submitting ? "Posting..." : "Post Issue"}
+            {submitting ? "Posting..." : "Post Challenge"}
           </Button>
         </DialogFooter>
       </DialogContent>
