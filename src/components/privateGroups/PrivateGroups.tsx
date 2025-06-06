@@ -34,38 +34,42 @@ const PrivateGroups = () => {
       {!activeGroupId ? (
         // Show tabs when not in a specific group
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="mb-6">
-            <TabsTrigger value="my-groups" className="flex items-center gap-2">
-              <Users size={16} />
-              My Groups
-            </TabsTrigger>
-            <TabsTrigger value="create-group" className="flex items-center gap-2">
-              <UserPlus size={16} />
-              Create Group
-            </TabsTrigger>
-            <TabsTrigger value="invitations" className="flex items-center gap-2 relative">
-              <Bell size={16} />
-              Invitations
-              {pendingInvitationsCount > 0 && (
-                <Badge variant="destructive" className="ml-1 h-5 w-5 p-0 text-xs flex items-center justify-center">
-                  {pendingInvitationsCount}
-                </Badge>
-              )}
-            </TabsTrigger>
-          </TabsList>
+          <div className="relative">
+            <div className="overflow-x-auto pb-2 -mx-4 px-4 sm:mx-0 sm:px-0">
+              <TabsList className="mb-6 inline-flex min-w-full sm:min-w-0 sm:w-auto gap-2 sm:gap-4">
+                <TabsTrigger value="my-groups" className="flex items-center gap-2 whitespace-nowrap">
+                  <Users size={16} className="shrink-0" />
+                  <span>My Groups</span>
+                </TabsTrigger>
+                <TabsTrigger value="create-group" className="flex items-center gap-2 whitespace-nowrap">
+                  <UserPlus size={16} className="shrink-0" />
+                  <span>Create Group</span>
+                </TabsTrigger>
+                <TabsTrigger value="invitations" className="flex items-center gap-2 whitespace-nowrap relative">
+                  <Bell size={16} className="shrink-0" />
+                  <span>Invitations</span>
+                  {pendingInvitationsCount > 0 && (
+                    <Badge variant="destructive" className="ml-1 h-5 w-5 p-0 text-xs flex items-center justify-center">
+                      {pendingInvitationsCount}
+                    </Badge>
+                  )}
+                </TabsTrigger>
+              </TabsList>
+            </div>
+          </div>
           
-          <TabsContent value="my-groups">
+          <TabsContent value="my-groups" className="mt-4">
             <GroupsList 
               onSelectGroup={(groupId) => setActiveGroupId(groupId)}
               refreshTrigger={groupsRefreshTrigger}
             />
           </TabsContent>
           
-          <TabsContent value="create-group">
+          <TabsContent value="create-group" className="mt-4">
             <CreateGroup onGroupCreated={(groupId) => setActiveGroupId(groupId)} />
           </TabsContent>
           
-          <TabsContent value="invitations">
+          <TabsContent value="invitations" className="mt-4">
             <GroupInvitations 
               onGroupJoined={handleGroupJoined}
             />

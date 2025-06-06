@@ -1,4 +1,3 @@
-
 import { Card } from "@/components/ui/card";
 import { 
   TrendingUp, 
@@ -35,50 +34,50 @@ const DashboardPage = () => {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div className="mb-6">
-        <h1 className="text-3xl font-bold">Dashboard</h1>
-        <p className="text-muted-foreground">Manage your challenges and explore the community</p>
+        <h1 className="text-2xl md:text-3xl font-bold">Dashboard</h1>
+        <p className="text-sm md:text-base text-muted-foreground">Manage your challenges and explore the community</p>
       </div>
 
       {/* Stats Section */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 md:gap-6 mb-8">
-        <Card className="p-4 flex items-center space-x-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
+        <Card className="p-4 flex items-center space-x-4 hover:shadow-md transition-shadow">
           <div className="bg-primary/10 p-3 rounded-full">
-            <MessageSquare className="h-6 w-6 text-primary" />
+            <MessageSquare className="h-5 w-5 md:h-6 md:w-6 text-primary" />
           </div>
           <div>
             <p className="text-sm font-medium text-muted-foreground">Total Challenges</p>
             {statsLoading ? (
-              <Skeleton className="h-8 w-12" />
+              <Skeleton className="h-6 md:h-8 w-12" />
             ) : (
-              <h3 className="text-2xl font-bold">{stats.totalChallenges}</h3>
+              <h3 className="text-xl md:text-2xl font-bold">{stats.totalChallenges}</h3>
             )}
           </div>
         </Card>
         
-        <Card className="p-4 flex items-center space-x-4">
+        <Card className="p-4 flex items-center space-x-4 hover:shadow-md transition-shadow">
           <div className="bg-primary/10 p-3 rounded-full">
-            <TrendingUp className="h-6 w-6 text-primary" />
+            <TrendingUp className="h-5 w-5 md:h-6 md:w-6 text-primary" />
           </div>
           <div>
             <p className="text-sm font-medium text-muted-foreground">Solutions Received</p>
             {statsLoading ? (
-              <Skeleton className="h-8 w-12" />
+              <Skeleton className="h-6 md:h-8 w-12" />
             ) : (
-              <h3 className="text-2xl font-bold">{stats.solutionsReceived}</h3>
+              <h3 className="text-xl md:text-2xl font-bold">{stats.solutionsReceived}</h3>
             )}
           </div>
         </Card>
         
-        <Card className="p-4 flex items-center space-x-4">
+        <Card className="p-4 flex items-center space-x-4 hover:shadow-md transition-shadow">
           <div className="bg-primary/10 p-3 rounded-full">
-            <Users className="h-6 w-6 text-primary" />
+            <Users className="h-5 w-5 md:h-6 md:w-6 text-primary" />
           </div>
           <div>
             <p className="text-sm font-medium text-muted-foreground">Community Size</p>
             {statsLoading ? (
-              <Skeleton className="h-8 w-12" />
+              <Skeleton className="h-6 md:h-8 w-12" />
             ) : (
-              <h3 className="text-2xl font-bold">{stats.communitySize}</h3>
+              <h3 className="text-xl md:text-2xl font-bold">{stats.communitySize}</h3>
             )}
           </div>
         </Card>

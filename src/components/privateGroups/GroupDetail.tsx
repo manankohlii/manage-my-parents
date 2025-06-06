@@ -48,13 +48,13 @@ const GroupDetail = ({ groupId, onBack }: GroupDetailProps) => {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-start">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4">
         <div className="flex items-center gap-3">
           <Button variant="ghost" size="sm" onClick={onBack}>
             <ArrowLeft size={16} />
           </Button>
           <div>
-            <h2 className="text-2xl font-bold flex items-center gap-2">
+            <h2 className="text-xl sm:text-2xl font-bold flex items-center gap-2 flex-wrap">
               {group.name}
               <Badge variant="outline" className="text-xs">
                 {group.members.length} members
@@ -64,18 +64,18 @@ const GroupDetail = ({ groupId, onBack }: GroupDetailProps) => {
           </div>
         </div>
         
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           {/* Member avatars */}
           <div className="flex -space-x-2">
             {group.members.slice(0, 3).map((member) => (
-              <Avatar key={member.id} className="border-2 border-background w-8 h-8">
-                <AvatarFallback>
+              <Avatar key={member.id} className="border-2 border-background w-7 h-7 sm:w-8 sm:h-8">
+                <AvatarFallback className="text-xs">
                   {member.name.split(' ').map(n => n[0]).join('')}
                 </AvatarFallback>
               </Avatar>
             ))}
             {group.members.length > 3 && (
-              <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center text-xs border-2 border-background">
+              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-muted flex items-center justify-center text-xs border-2 border-background">
                 +{group.members.length - 3}
               </div>
             )}
@@ -87,6 +87,7 @@ const GroupDetail = ({ groupId, onBack }: GroupDetailProps) => {
               variant="destructive" 
               size="sm"
               onClick={() => setShowDeleteConfirm(true)}
+              className="whitespace-nowrap"
             >
               Delete Group
             </Button>
@@ -95,30 +96,34 @@ const GroupDetail = ({ groupId, onBack }: GroupDetailProps) => {
       </div>
       
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="mb-6">
-          <TabsTrigger value="chat" className="flex items-center gap-2">
-            <MessageCircle size={16} />
-            Group Chat
-          </TabsTrigger>
-          <TabsTrigger value="issues" className="flex items-center gap-2">
-            <FileText size={16} />
-            Challenges & Solutions
-          </TabsTrigger>
-          <TabsTrigger value="members" className="flex items-center gap-2">
-            <User size={16} />
-            Members
-          </TabsTrigger>
-        </TabsList>
+        <div className="relative">
+          <div className="overflow-x-auto pb-2 -mx-4 px-4 sm:mx-0 sm:px-0">
+            <TabsList className="mb-6 inline-flex min-w-full sm:min-w-0 sm:w-auto gap-2 sm:gap-4">
+              <TabsTrigger value="chat" className="flex items-center gap-2 whitespace-nowrap">
+                <MessageCircle size={16} className="shrink-0" />
+                <span>Group Chat</span>
+              </TabsTrigger>
+              <TabsTrigger value="issues" className="flex items-center gap-2 whitespace-nowrap">
+                <FileText size={16} className="shrink-0" />
+                <span>Challenges & Solutions</span>
+              </TabsTrigger>
+              <TabsTrigger value="members" className="flex items-center gap-2 whitespace-nowrap">
+                <User size={16} className="shrink-0" />
+                <span>Members</span>
+              </TabsTrigger>
+            </TabsList>
+          </div>
+        </div>
         
-        <TabsContent value="chat">
+        <TabsContent value="chat" className="mt-4">
           <GroupChat groupId={groupId} />
         </TabsContent>
         
-        <TabsContent value="issues">
+        <TabsContent value="issues" className="mt-4">
           <GroupIssues groupId={groupId} />
         </TabsContent>
         
-        <TabsContent value="members">
+        <TabsContent value="members" className="mt-4">
           <GroupMembers groupId={groupId} members={group.members} />
         </TabsContent>
       </Tabs>
