@@ -1,135 +1,216 @@
-
-import { ArrowLeft, MessageCircle, ThumbsUp, ThumbsDown } from "lucide-react";
+import { useState } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
-import { Issue, IssueSolution } from "./mockIssueData";
+import { MessageSquare, ThumbsUp, Clock, ArrowLeft } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { Issue } from "./useIssues";
+import { Textarea } from "@/components/ui/textarea";
+import { useToast } from "@/components/ui/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
+
+interface IssueSolution {
+  id: string;
+  text: string;
+  userId: string;
+  userName: string;
+  createdAt: string;
+  votes: number;
+}
 
 interface IssueDetailProps {
   issue: Issue;
   solutions: IssueSolution[];
   formatDate: (dateString: string) => string;
   onBack: () => void;
-  userVotes: Record<string, boolean | null>;
+  userVotes: Record<string, boolean>;
   onVote: (itemId: string, isUpvote: boolean) => void;
+  onSolutionAdd: (solution: IssueSolution) => void;
 }
 
-const IssueDetail = ({ 
-  issue, 
-  solutions, 
-  formatDate, 
+const IssueDetail = ({
+  issue,
+  solutions,
+  formatDate,
   onBack,
   userVotes,
-  onVote
+  onVote,
+  onSolutionAdd
 }: IssueDetailProps) => {
+  const [newSolution, setNewSolution] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { toast } = useToast();
   const { user } = useAuth();
-  
+
+  const handleSubmitSolution = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!user) {
+      toast({
+        title: "Error",
+        description: "Please log in to post a solution.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!newSolution.trim()) {
+      toast({
+        title: "Error",
+        description: "Please enter a solution before submitting.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      // Create a new solution object
+      const newSolutionObj: IssueSolution = {
+        id: `temp-${Date.now()}`, // Temporary ID until saved to database
+        text: newSolution.trim(),
+        userId: user.id,
+        userName: user.user_metadata?.full_name || 'Anonymous',
+        createdAt: new Date().toISOString(),
+        votes: 0
+      };
+
+      // Call the parent component's handler to add the solution
+      onSolutionAdd(newSolutionObj);
+      
+      toast({
+        title: "Success",
+        description: "Your solution has been posted!",
+      });
+      setNewSolution("");
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to post solution. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
-      <div className="flex items-start justify-between">
-        <Button variant="ghost" size="sm" onClick={onBack}>
-          <ArrowLeft size={16} className="mr-2" />
-          Back to issues
+      <div className="flex items-center gap-4">
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={onBack}
+          className="h-8 w-8"
+        >
+          <ArrowLeft className="h-4 w-4" />
         </Button>
-        
-        <div className="flex items-center space-x-2">
-          {user && (
-            <>
-              <Button 
-                variant="ghost" 
-                size="sm"
-                className="flex items-center space-x-1"
-                onClick={() => onVote(issue.id, true)}
-              >
-                <ThumbsUp className={`h-4 w-4 ${userVotes[issue.id] === true ? "text-green-500 fill-green-500" : ""}`} />
-              </Button>
-              <Button 
-                variant="ghost" 
-                size="sm"
-                className="flex items-center space-x-1"
-                onClick={() => onVote(issue.id, false)}
-              >
-                <ThumbsDown className={`h-4 w-4 ${userVotes[issue.id] === false ? "text-red-500 fill-red-500" : ""}`} />
-              </Button>
-            </>
-          )}
-          <span className="text-sm text-muted-foreground">
-            Posted on {formatDate(issue.createdAt)}
-          </span>
-        </div>
+        <h2 className="text-2xl font-semibold">Challenge Details</h2>
       </div>
-      
-      <div>
-        <h2 className="text-2xl font-bold">{issue.title}</h2>
-        <div className="flex flex-wrap gap-2 mt-2">
-          {issue.tags.map((tag) => (
-            <Badge key={tag} variant="outline">{tag}</Badge>
-          ))}
-        </div>
-        <div className="mt-4 text-muted-foreground">
-          Posted by <span className="font-medium text-foreground">{issue.userName}</span>
-        </div>
-      </div>
-      
-      <div className="bg-muted p-4 rounded-lg">
-        <p>{issue.description}</p>
-      </div>
-      
-      <Separator />
-      
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <h3 className="text-lg font-semibold flex items-center gap-2">
-            <MessageCircle size={18} />
-            Solutions
-          </h3>
-        </div>
-        
-        {solutions.length === 0 ? (
-          <div className="text-center p-8 bg-muted/50 rounded-lg">
-            <p className="text-muted-foreground">No solutions yet. Be the first to contribute!</p>
+
+      <Card>
+        <CardHeader>
+          <div className="flex items-start justify-between">
+            <div className="space-y-1">
+              <CardTitle className="text-xl">{issue.title}</CardTitle>
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <span>Posted by {issue.userName}</span>
+                <span>•</span>
+                <span className="flex items-center gap-1">
+                  <Clock className="h-3 w-3" />
+                  {formatDate(issue.createdAt)}
+                </span>
+              </div>
+            </div>
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2">
+                <Badge variant="secondary" className="flex items-center gap-1">
+                  <MessageSquare className="h-3 w-3" />
+                  {solutions.length}
+                </Badge>
+              </div>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className={cn(
+                    "h-8 w-8",
+                    userVotes[issue.id] === true && "text-primary"
+                  )}
+                  onClick={() => onVote(issue.id, true)}
+                >
+                  <ThumbsUp size={16} />
+                </Button>
+                <span className="text-sm font-medium min-w-[1.5rem] text-center">
+                  {issue.votes}
+                </span>
+              </div>
+            </div>
           </div>
-        ) : (
-          <div className="space-y-4">
-            {solutions.map((solution) => (
-              <div key={solution.id} className="bg-muted p-4 rounded-lg">
-                <div className="flex justify-between">
-                  <div>
-                    <p className="font-medium">{solution.userName}</p>
-                    <p className="text-sm text-muted-foreground">
-                      {formatDate(solution.createdAt)}
-                    </p>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    {user && (
-                      <>
-                        <Button 
-                          variant="ghost" 
-                          size="sm"
+        </CardHeader>
+        <CardContent>
+          <p className="text-muted-foreground mb-4">{issue.description}</p>
+          {issue.tags.length > 0 && (
+            <div className="flex flex-wrap gap-2 mb-6">
+              {issue.tags.map((tag) => (
+                <Badge key={tag} variant="outline">
+                  {tag}
+                </Badge>
+              ))}
+            </div>
+          )}
+
+          <div className="space-y-6">
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-semibold">Solutions</h3>
+            </div>
+
+            <form onSubmit={handleSubmitSolution} className="space-y-4">
+              <Textarea
+                placeholder="Share your solution..."
+                value={newSolution}
+                onChange={(e) => setNewSolution(e.target.value)}
+                className="min-h-[100px]"
+              />
+              <Button type="submit" disabled={isSubmitting}>
+                {isSubmitting ? "Posting..." : "Post Solution"}
+              </Button>
+            </form>
+
+            <div className="space-y-4">
+              {solutions.map((solution) => (
+                <Card key={solution.id}>
+                  <CardContent className="p-4">
+                    <div className="flex justify-between items-start gap-4">
+                      <div className="flex-1">
+                        <p className="text-sm">{solution.text}</p>
+                        <div className="mt-2 text-xs text-muted-foreground">
+                          Posted by {solution.userName} • {formatDate(solution.createdAt)}
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className={cn(
+                            "h-8 w-8",
+                            userVotes[solution.id] === true && "text-primary"
+                          )}
                           onClick={() => onVote(solution.id, true)}
                         >
-                          <ThumbsUp className={`h-4 w-4 ${userVotes[solution.id] === true ? "text-green-500 fill-green-500" : ""}`} />
+                          <ThumbsUp size={16} />
                         </Button>
-                        <span className="text-sm font-medium">{solution.votes}</span>
-                        <Button 
-                          variant="ghost" 
-                          size="sm"
-                          onClick={() => onVote(solution.id, false)}
-                        >
-                          <ThumbsDown className={`h-4 w-4 ${userVotes[solution.id] === false ? "text-red-500 fill-red-500" : ""}`} />
-                        </Button>
-                      </>
-                    )}
-                    {!user && <span className="text-sm font-medium">{solution.votes} votes</span>}
-                  </div>
-                </div>
-                <p className="mt-2">{solution.text}</p>
-              </div>
-            ))}
+                        <span className="text-sm font-medium min-w-[1.5rem] text-center">
+                          {solution.votes}
+                        </span>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
           </div>
-        )}
-      </div>
+        </CardContent>
+      </Card>
     </div>
   );
 };

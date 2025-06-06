@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Plus, ThumbsUp, ThumbsDown } from "lucide-react";
+import { Plus } from "lucide-react";
 import IssuesList from "./issues/IssuesList";
 import IssueFilter from "./issues/IssueFilter";
 import IssueForm from "./issues/IssueForm";
@@ -30,41 +30,51 @@ const GroupIssues = ({ groupId }: GroupIssuesProps) => {
     selectIssue,
     getIssueSolutions,
     userVotes,
-    handleVote
+    handleVote,
+    addSolution
   } = useIssues(groupId);
 
   // Determine active tab based on selected issue
   const activeTab = selectedIssue ? "detail" : "list";
 
+  const handleSolutionAdd = (solution: any) => {
+    if (selectedIssue) {
+      addSolution(selectedIssue, solution);
+    }
+  };
+
   return (
     <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <h3 className="text-lg font-semibold">Group Challenges</h3>
+        <Button 
+          onClick={() => setIsAddDialogOpen(true)}
+          className="flex items-center gap-2"
+        >
+          <Plus size={16} />
+          Add New Challenge
+        </Button>
+      </div>
+
       <Tabs value={activeTab} onValueChange={(value) => {
         if (value === "list") {
           selectIssue("");
         }
       }}>
-        <TabsList className="mb-4">
-          <TabsTrigger value="list">All Challenges</TabsTrigger>
-          {selectedIssue && (
+        {selectedIssue && (
+          <TabsList className="mb-4">
             <TabsTrigger value="detail">Challenge Details</TabsTrigger>
-          )}
-        </TabsList>
+          </TabsList>
+        )}
 
         <TabsContent value="list" className="space-y-4">
-          <div className="flex justify-between items-center">
-            <IssueFilter 
-              searchTerm={searchTerm}
-              setSearchTerm={setSearchTerm}
-              filterTag={filterTag}
-              setFilterTag={setFilterTag}
-              allTags={allTags}
-            />
-            
-            <Button onClick={() => setIsAddDialogOpen(true)}>
-              <Plus size={16} className="mr-2" />
-              New Challenge
-            </Button>
-          </div>
+          <IssueFilter 
+            searchTerm={searchTerm}
+            setSearchTerm={setSearchTerm}
+            filterTag={filterTag}
+            setFilterTag={setFilterTag}
+            allTags={allTags}
+          />
           
           <IssuesList 
             issues={issues}
@@ -87,6 +97,7 @@ const GroupIssues = ({ groupId }: GroupIssuesProps) => {
               onBack={() => selectIssue("")}
               userVotes={userVotes}
               onVote={handleVote}
+              onSolutionAdd={handleSolutionAdd}
             />
           </TabsContent>
         )}

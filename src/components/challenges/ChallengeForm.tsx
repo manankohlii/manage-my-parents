@@ -37,26 +37,26 @@ const ChallengeForm = ({ onSubmit, onClose, challenge, onUpdate }: ChallengeForm
   const [allTags, setAllTags] = useState<string[]>([]);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [formData, setFormData] = useState({
-    title: "",
-    description: "",
+      title: "",
+      description: "",
     location: "",
     age_group: "20-34"
   });
-
+  
   // Load user profile data and tags
   useEffect(() => {
     const loadData = async () => {
       if (!user?.id) return;
 
-      try {
+        try {
         // Load user profile
         const { data: profile, error } = await supabase
-          .from("profiles")
-          .select("city, country")
-          .eq("id", user.id)
-          .single();
-
-        if (error) {
+            .from("profiles")
+            .select("city, country")
+            .eq("id", user.id)
+            .single();
+          
+          if (error) {
           console.error("Error loading profile:", error);
         } else if (profile) {
           setFormData(prev => ({
@@ -124,7 +124,7 @@ const ChallengeForm = ({ onSubmit, onClose, challenge, onUpdate }: ChallengeForm
           tags: selectedTags,
           mood: "neutral",
           age_group: formData.age_group
-        }, user.id);
+      }, user.id);
       }
 
       toast({
@@ -156,7 +156,7 @@ const ChallengeForm = ({ onSubmit, onClose, challenge, onUpdate }: ChallengeForm
       setLoading(false);
     }
   };
-
+  
   return (
     <div className="relative">
       <Button
@@ -242,7 +242,7 @@ const ChallengeForm = ({ onSubmit, onClose, challenge, onUpdate }: ChallengeForm
             ))}
           </div>
         </div>
-
+        
         <div className="space-y-2">
           <Label htmlFor="age_group">Age Group</Label>
           <Select

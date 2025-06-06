@@ -1,20 +1,42 @@
 import { useState, useEffect, useCallback } from "react";
 import { useToast } from "@/components/ui/use-toast";
-import { mockIssues, mockSolutions, Issue, IssueSolution } from "./mockIssueData";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
+import { supabase } from "@/lib/supabase";
+
+export interface Issue {
+  id: string;
+  title: string;
+  description: string;
+  userId: string;
+  userName: string;
+  createdAt: string;
+  tags: string[];
+  solutionCount: number;
+  votes: number;
+}
+
+export interface IssueSolution {
+  id: string;
+  issueId: string;
+  text: string;
+  userId: string;
+  userName: string;
+  createdAt: string;
+  votes: number;
+}
 
 export const useIssues = (groupId: string) => {
   const [issues, setIssues] = useState<Issue[]>([]);
+  const [solutions, setSolutions] = useState<Record<string, IssueSolution[]>>({});
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
-  const [filterTag, setFilterTag] = useState("");
-  const [selectedIssue, setSelectedIssue] = useState<string | null>(null);
-  const [solutions, setSolutions] = useState<Record<string, IssueSolution[]>>({});
-  const [userVotes, setUserVotes] = useState<Record<string, boolean | null>>({});
+  const [filterTag, setFilterTag] = useState<string | null>(null);
+  const [selectedIssue, setSelectedIssue] = useState<string>("");
+  const [userVotes, setUserVotes] = useState<Record<string, boolean>>({});
   
-  const { toast: uiToast } = useToast();
   const { user } = useAuth();
+  const { toast: uiToast } = useToast();
 
   useEffect(() => {
     // Simulate loading issues data
@@ -24,61 +46,47 @@ export const useIssues = (groupId: string) => {
         setLoading(true);
         await new Promise(resolve => setTimeout(resolve, 800));
         
-        // Use our mock data with additional tags for better filtering
-        setIssues(mockIssues);
-        setSolutions(mockSolutions);
-
-        // Initialize mock user votes
-        const initialVotes: Record<string, boolean | null> = {};
-        // Set some initial votes for demo purposes
-        if (user) {
-          initialVotes[mockIssues[0].id] = true; // Upvoted first issue
-          if (mockSolutions[mockIssues[0].id]?.[0]) {
-            initialVotes[mockSolutions[mockIssues[0].id][0].id] = true; // Upvoted first solution
-          }
-        }
-        setUserVotes(initialVotes);
+        // Start with empty list
+        setIssues([]);
+        setSolutions({});
+        
+        // Initialize empty user votes
+        setUserVotes({});
+        
       } catch (error) {
         console.error("Error loading issues:", error);
         uiToast({
-          title: "Failed to load issues",
-          description: "Could not load group issues. Please try again.",
+          title: "Error loading challenges",
+          description: "Could not load the challenges. Please try again.",
           variant: "destructive",
         });
       } finally {
         setLoading(false);
       }
     };
-    
+
     loadIssues();
-  }, [groupId, uiToast, user]);
+  }, [groupId, uiToast]);
 
-  // Format date display
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return new Intl.DateTimeFormat('en-US', { 
-      month: 'short', 
-      day: 'numeric',
-      year: 'numeric'
-    }).format(date);
-  };
-
-  // Filter issues based on search term and tag
+  // Filter issues based on search term and selected tag
   const filteredIssues = issues.filter(issue => {
-    const matchesSearch = searchTerm === "" || 
-      issue.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      issue.description.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    const matchesTag = filterTag === "" || 
-      issue.tags.some(tag => tag.toLowerCase() === filterTag.toLowerCase());
-    
+    const matchesSearch = issue.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         issue.description.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesTag = !filterTag || issue.tags.includes(filterTag);
     return matchesSearch && matchesTag;
   });
 
   // Get all unique tags from issues
-  const allTags = Array.from(
-    new Set(issues.flatMap(issue => issue.tags))
-  ).sort();
+  const allTags = Array.from(new Set(issues.flatMap(issue => issue.tags)));
+
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric'
+    });
+  };
 
   const addIssue = useCallback((newIssue: Issue) => {
     setIssues(prev => [newIssue, ...prev]);
@@ -91,6 +99,24 @@ export const useIssues = (groupId: string) => {
   const getIssueSolutions = useCallback((issueId: string) => {
     return solutions[issueId] || [];
   }, [solutions]);
+
+  const addSolution = useCallback((issueId: string, solution: IssueSolution) => {
+    setSolutions(prev => ({
+      ...prev,
+      [issueId]: [...(prev[issueId] || []), solution]
+    }));
+
+    // Update the solution count for the issue
+    setIssues(prev => prev.map(issue => {
+      if (issue.id === issueId) {
+        return {
+          ...issue,
+          solutionCount: issue.solutionCount + 1
+        };
+      }
+      return issue;
+    }));
+  }, []);
 
   // Handle voting for issue or solution
   const handleVote = useCallback((itemId: string, isUpvote: boolean) => {
@@ -171,6 +197,7 @@ export const useIssues = (groupId: string) => {
     getIssueSolutions,
     solutions,
     userVotes,
-    handleVote
+    handleVote,
+    addSolution
   };
 };
