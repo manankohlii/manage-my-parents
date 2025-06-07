@@ -1,25 +1,33 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import IssuesList from "./issues/IssuesList";
-import IssueFilter from "./issues/IssueFilter";
-import IssueForm from "./issues/IssueForm";
+// import IssueFilter from "./issues/IssueFilter";
 import { useIssues } from "./issues/useIssues";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import IssueDetail from "./issues/IssueDetail";
+import ChallengeForm from "@/components/challenges/ChallengeForm";
+import ChallengeFilters from "@/components/explore/ChallengeFilters";
 
 interface GroupIssuesProps {
   groupId: string;
 }
 
 const GroupIssues = ({ groupId }: GroupIssuesProps) => {
-  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
-  
+  const [showAddForm, setShowAddForm] = useState(false);
+  const formRef = useRef<HTMLDivElement>(null);
+
+  // New filter state for group challenges
+  const [searchTerm, setSearchTerm] = useState("");
+  const [sortBy, setSortBy] = useState("most_upvotes");
+  const [filterLocation, setFilterLocation] = useState("all");
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
+
   const {
     issues,
     loading,
-    searchTerm,
-    setSearchTerm,
+    // searchTerm,
+    // setSearchTerm,
     filterTag,
     setFilterTag,
     filteredIssues,
@@ -31,7 +39,7 @@ const GroupIssues = ({ groupId }: GroupIssuesProps) => {
     getIssueSolutions,
     userVotes,
     handleVote,
-    addSolution
+    // addSolution
   } = useIssues(groupId);
 
   // Determine active tab based on selected issue
@@ -39,22 +47,90 @@ const GroupIssues = ({ groupId }: GroupIssuesProps) => {
 
   const handleSolutionAdd = (solution: any) => {
     if (selectedIssue) {
-      addSolution(selectedIssue, solution);
+      // addSolution(selectedIssue, solution);
     }
   };
+
+  // Handler for when a challenge is submitted
+  const handleChallengeSubmit = () => {
+    setShowAddForm(false);
+    // Optionally reload issues here if needed
+  };
+
+  // Scroll to form when adding
+  useEffect(() => {
+    if (showAddForm && formRef.current) {
+      formRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }, [showAddForm]);
+
+  // Filter challenges based on search, tags, location, sort
+  const issuesWithLocation = issues.map(challenge => ({ ...challenge, location: challenge.location || "" }));
+  const filteredChallenges = issuesWithLocation.filter(challenge => {
+    const matchesSearch =
+      !searchTerm ||
+      challenge.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      challenge.description.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesTags =
+      selectedTags.length === 0 ||
+      (challenge.tags && selectedTags.some(tag => challenge.tags.includes(tag)));
+    const matchesLocation =
+      filterLocation === "all" || challenge.location === filterLocation;
+    return matchesSearch && matchesTags && matchesLocation;
+  }).sort((a, b) => {
+    if (sortBy === "newest") {
+      return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+    } else if (sortBy === "oldest") {
+      return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+    } else if (sortBy === "most_upvotes") {
+      return (b.votes || 0) - (a.votes || 0);
+    } else if (sortBy === "most_solutions") {
+      return (b.solutionCount || 0) - (a.solutionCount || 0);
+    }
+    return 0;
+  });
 
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h3 className="text-lg font-semibold">Group Challenges</h3>
         <Button 
-          onClick={() => setIsAddDialogOpen(true)}
+          onClick={() => setShowAddForm(true)}
           className="flex items-center gap-2"
         >
           <Plus size={16} />
-          Add New Challenge
+          Share Challenge
         </Button>
       </div>
+
+      {/* Divider for visual separation */}
+      <div className="border-b border-gray-200 dark:border-gray-700 my-4" />
+
+      {showAddForm && (
+        <div ref={formRef} className="mb-6">
+          <ChallengeForm 
+            onSubmit={handleChallengeSubmit} 
+            onClose={() => setShowAddForm(false)} 
+            onSubmitChallenge={addIssue}
+          />
+        </div>
+      )}
+
+      {/* Use ChallengeFilters from explore for consistent UI */}
+      <ChallengeFilters
+        searchTerm={searchTerm}
+        setSearchTerm={setSearchTerm}
+        sortBy={sortBy}
+        setSortBy={setSortBy}
+        filterAgeGroup={""}
+        setFilterAgeGroup={() => {}}
+        filterLocation={filterLocation}
+        setFilterLocation={setFilterLocation}
+        selectedTags={selectedTags}
+        setSelectedTags={setSelectedTags}
+        allTags={allTags}
+        challenges={issuesWithLocation}
+      />
 
       <Tabs value={activeTab} onValueChange={(value) => {
         if (value === "list") {
@@ -68,20 +144,12 @@ const GroupIssues = ({ groupId }: GroupIssuesProps) => {
           )}
 
         <TabsContent value="list" className="space-y-4">
-            <IssueFilter 
-              searchTerm={searchTerm}
-              setSearchTerm={setSearchTerm}
-              filterTag={filterTag}
-              setFilterTag={setFilterTag}
-              allTags={allTags}
-            />
-          
           <IssuesList 
             issues={issues}
-            filteredIssues={filteredIssues}
+            filteredIssues={filteredChallenges}
             loading={loading}
             formatDate={formatDate}
-            onOpenAddDialog={() => setIsAddDialogOpen(true)}
+            onOpenAddDialog={() => setShowAddForm(true)}
             onSelectIssue={selectIssue}
             userVotes={userVotes}
             onVote={handleVote}
@@ -92,22 +160,14 @@ const GroupIssues = ({ groupId }: GroupIssuesProps) => {
           <TabsContent value="detail">
             <IssueDetail 
               issue={issues.find(i => i.id === selectedIssue)!}
-              solutions={getIssueSolutions(selectedIssue)}
               formatDate={formatDate}
               onBack={() => selectIssue("")}
               userVotes={userVotes}
               onVote={handleVote}
-              onSolutionAdd={handleSolutionAdd}
             />
           </TabsContent>
         )}
       </Tabs>
-      
-      <IssueForm
-        isOpen={isAddDialogOpen}
-        onOpenChange={setIsAddDialogOpen}
-        onIssueCreate={addIssue}
-      />
     </div>
   );
 };

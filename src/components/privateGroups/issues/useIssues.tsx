@@ -2,18 +2,13 @@ import { useState, useEffect, useCallback } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
-import { supabase } from "@/lib/supabase";
+import { getGroupChallenges, createGroupChallenge, GroupChallenge } from "@/services/groupChallengesService";
 
-export interface Issue {
-  id: string;
-  title: string;
-  description: string;
-  userId: string;
-  userName: string;
-  createdAt: string;
-  tags: string[];
-  solutionCount: number;
-  votes: number;
+export interface Issue extends GroupChallenge {
+  userName?: string;
+  solutionCount?: number;
+  votes?: number;
+  location?: string;
 }
 
 export interface IssueSolution {
@@ -39,22 +34,15 @@ export const useIssues = (groupId: string) => {
   const { toast: uiToast } = useToast();
 
   useEffect(() => {
-    // Simulate loading issues data
     const loadIssues = async () => {
       try {
-        // Would fetch from Supabase in a real implementation
         setLoading(true);
-        await new Promise(resolve => setTimeout(resolve, 800));
-        
-        // Start with empty list
-        setIssues([]);
-        setSolutions({});
-
-        // Initialize empty user votes
+        const data = await getGroupChallenges(groupId);
+        setIssues(data.map(challenge => ({ ...challenge, location: "" })));
+        setSolutions({}); // TODO: fetch solutions if needed
         setUserVotes({});
-        
       } catch (error) {
-        console.error("Error loading issues:", error);
+        console.error("Error loading group challenges:", error);
         uiToast({
           title: "Error loading challenges",
           description: "Could not load the challenges. Please try again.",
@@ -64,7 +52,6 @@ export const useIssues = (groupId: string) => {
         setLoading(false);
       }
     };
-    
     loadIssues();
   }, [groupId, uiToast]);
 
@@ -72,12 +59,12 @@ export const useIssues = (groupId: string) => {
   const filteredIssues = issues.filter(issue => {
     const matchesSearch = issue.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          issue.description.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesTag = !filterTag || issue.tags.includes(filterTag);
+    const matchesTag = !filterTag || (issue.tags && issue.tags.includes(filterTag));
     return matchesSearch && matchesTag;
   });
 
   // Get all unique tags from issues
-  const allTags = Array.from(new Set(issues.flatMap(issue => issue.tags)));
+  const allTags = Array.from(new Set(issues.flatMap(issue => issue.tags || [])));
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -88,9 +75,17 @@ export const useIssues = (groupId: string) => {
     });
   };
 
-  const addIssue = useCallback((newIssue: Issue) => {
-    setIssues(prev => [newIssue, ...prev]);
-  }, []);
+  // Add a new group challenge
+  const addIssue = useCallback(async (challengeData: { title: string; description: string; tags: string[] }) => {
+    if (!user) return;
+    try {
+      const newChallenge = await createGroupChallenge(groupId, user.id, challengeData);
+      setIssues(prev => [newChallenge, ...prev]);
+      toast.success("Challenge added to group!");
+    } catch (error) {
+      toast.error("Failed to add challenge to group");
+    }
+  }, [groupId, user]);
 
   const selectIssue = useCallback((issueId: string) => {
     setSelectedIssue(issueId);
@@ -105,81 +100,37 @@ export const useIssues = (groupId: string) => {
       ...prev,
       [issueId]: [...(prev[issueId] || []), solution]
     }));
-
-    // Update the solution count for the issue
     setIssues(prev => prev.map(issue => {
       if (issue.id === issueId) {
         return {
           ...issue,
-          solutionCount: issue.solutionCount + 1
+          solutionCount: (issue.solutionCount || 0) + 1
         };
       }
       return issue;
     }));
   }, []);
 
-  // Handle voting for issue or solution
+  // Handle voting for issue or solution (mocked)
   const handleVote = useCallback((itemId: string, isUpvote: boolean) => {
     if (!user) {
       toast.error("Please log in to vote");
       return;
     }
-
     setUserVotes(prev => {
       const currentVote = prev[itemId];
-      
-      // If voting the same way, remove the vote
       if (currentVote === isUpvote) {
         const newVotes = { ...prev };
         delete newVotes[itemId];
         return newVotes;
       }
-      
-      // Otherwise set or change the vote
       return {
         ...prev,
         [itemId]: isUpvote
       };
     });
-
-    // Update solution votes if it's a solution
-    setSolutions(prev => {
-      const updatedSolutions: Record<string, IssueSolution[]> = { ...prev };
-      
-      // Check all solution groups
-      for (const issueId in updatedSolutions) {
-        updatedSolutions[issueId] = updatedSolutions[issueId].map(solution => {
-          if (solution.id === itemId) {
-            // Calculate vote change
-            const currentVote = userVotes[itemId];
-            let voteChange = 0;
-            
-            if (currentVote === undefined || currentVote === null) {
-              // New vote
-              voteChange = isUpvote ? 1 : -1;
-            } else if (currentVote === isUpvote) {
-              // Removing vote
-              voteChange = isUpvote ? -1 : 1;
-            } else {
-              // Changing vote direction
-              voteChange = isUpvote ? 2 : -2;
-            }
-            
-            return {
-              ...solution,
-              votes: solution.votes + voteChange
-            };
-          }
-          return solution;
-        });
-      }
-      
-      return updatedSolutions;
-    });
-    
-    // In a real app, we would call an API to persist the vote
     toast.success(isUpvote ? "Upvoted!" : "Downvoted!");
-  }, [user, userVotes]);
+  }, [user]);
 
   return {
     issues,
@@ -198,6 +149,5 @@ export const useIssues = (groupId: string) => {
     solutions,
     userVotes,
     handleVote,
-    addSolution
   };
 };

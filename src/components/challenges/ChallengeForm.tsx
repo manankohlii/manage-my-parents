@@ -27,9 +27,10 @@ interface ChallengeFormProps {
   onClose?: () => void;
   challenge?: Challenge | null;
   onUpdate?: (id: string, data: any) => Promise<void>;
+  onSubmitChallenge?: (data: { title: string; description: string; tags: string[] }) => Promise<void>;
 }
 
-const ChallengeForm = ({ onSubmit, onClose, challenge, onUpdate }: ChallengeFormProps) => {
+const ChallengeForm = ({ onSubmit, onClose, challenge, onUpdate, onSubmitChallenge }: ChallengeFormProps) => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { toast } = useToast();
@@ -141,7 +142,13 @@ const ChallengeForm = ({ onSubmit, onClose, challenge, onUpdate }: ChallengeForm
 
     setLoading(true);
     try {
-      if (challenge && onUpdate) {
+      if (onSubmitChallenge) {
+        await onSubmitChallenge({
+          title: formData.title,
+          description: formData.description,
+          tags: selectedTags,
+        });
+      } else if (challenge && onUpdate) {
         await onUpdate(challenge.id, {
           title: formData.title,
           description: formData.description,

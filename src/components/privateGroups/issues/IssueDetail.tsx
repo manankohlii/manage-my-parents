@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -6,93 +6,74 @@ import { MessageSquare, ThumbsUp, Clock, ArrowLeft } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Issue } from "./useIssues";
 import { Textarea } from "@/components/ui/textarea";
-import { useToast } from "@/components/ui/use-toast";
+import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
-
-interface IssueSolution {
-  id: string;
-  text: string;
-  userId: string;
-  userName: string;
-  createdAt: string;
-  votes: number;
-}
+import { getGroupSolutions, createGroupSolution, GroupSolution } from "@/services/groupSolutionsService";
 
 interface IssueDetailProps {
   issue: Issue;
-  solutions: IssueSolution[];
   formatDate: (dateString: string) => string;
   onBack: () => void;
   userVotes: Record<string, boolean>;
   onVote: (itemId: string, isUpvote: boolean) => void;
-  onSolutionAdd: (solution: IssueSolution) => void;
 }
 
 const IssueDetail = ({ 
   issue, 
-  solutions, 
   formatDate, 
   onBack,
   userVotes,
-  onVote,
-  onSolutionAdd
+  onVote
 }: IssueDetailProps) => {
+  const [solutions, setSolutions] = useState<GroupSolution[]>([]);
   const [newSolution, setNewSolution] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { toast } = useToast();
   const { user } = useAuth();
+
+  useEffect(() => {
+    const loadSolutions = async () => {
+      try {
+        const data = await getGroupSolutions(issue.id);
+        setSolutions(data);
+      } catch (error) {
+        console.error("Error loading solutions:", error);
+        toast.error("Failed to load solutions");
+      }
+    };
+    loadSolutions();
+  }, [issue.id]);
 
   const handleSubmitSolution = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user) {
-      toast({
-        title: "Error",
-        description: "Please log in to post a solution.",
-        variant: "destructive",
-      });
+    
+    if (!user?.id) {
+      toast.error("You must be logged in to submit a solution");
       return;
     }
-
+    
     if (!newSolution.trim()) {
-      toast({
-        title: "Error",
-        description: "Please enter a solution before submitting.",
-        variant: "destructive",
-      });
+      toast.error("Solution cannot be empty");
       return;
     }
 
     setIsSubmitting(true);
+    
     try {
-      // Create a new solution object
-      const newSolutionObj: IssueSolution = {
-        id: `temp-${Date.now()}`, // Temporary ID until saved to database
-        text: newSolution.trim(),
-        userId: user.id,
-        userName: user.user_metadata?.full_name || 'Anonymous',
-        createdAt: new Date().toISOString(),
-        votes: 0
-      };
-
-      // Call the parent component's handler to add the solution
-      onSolutionAdd(newSolutionObj);
+      const solution = await createGroupSolution(issue.id, user.id, newSolution.trim());
       
-      toast({
-        title: "Success",
-        description: "Your solution has been posted!",
-      });
-      setNewSolution("");
+      if (solution) {
+        setSolutions(prev => [solution, ...prev]);
+        setNewSolution("");
+        toast.success("Solution submitted successfully!");
+      }
     } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to post solution. Please try again.",
-        variant: "destructive",
-      });
+      console.error("Error submitting solution:", error);
+      toast.error("Failed to submit solution");
     } finally {
       setIsSubmitting(false);
     }
   };
-  
+
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-4">
@@ -117,7 +98,7 @@ const IssueDetail = ({
                 <span>•</span>
                 <span className="flex items-center gap-1">
                   <Clock className="h-3 w-3" />
-                  {formatDate(issue.createdAt)}
+                  {formatDate(issue.created_at)}
                 </span>
               </div>
             </div>
@@ -129,54 +110,60 @@ const IssueDetail = ({
                 </Badge>
               </div>
               <div className="flex items-center gap-2">
-              <Button 
-                variant="ghost" 
+                <Button 
+                  variant="ghost" 
                   size="icon"
                   className={cn(
                     "h-8 w-8",
                     userVotes[issue.id] === true && "text-primary"
                   )}
-                onClick={() => onVote(issue.id, true)}
-              >
+                  onClick={() => onVote(issue.id, true)}
+                >
                   <ThumbsUp size={16} />
-              </Button>
+                </Button>
                 <span className="text-sm font-medium min-w-[1.5rem] text-center">
                   {issue.votes}
-          </span>
-        </div>
-      </div>
+                </span>
+              </div>
+            </div>
           </div>
         </CardHeader>
         <CardContent>
           <p className="text-muted-foreground mb-4">{issue.description}</p>
           {issue.tags.length > 0 && (
             <div className="flex flex-wrap gap-2 mb-6">
-          {issue.tags.map((tag) => (
+              {issue.tags.map((tag) => (
                 <Badge key={tag} variant="outline">
                   {tag}
                 </Badge>
-          ))}
-        </div>
+              ))}
+            </div>
           )}
-      
+
           <div className="space-y-6">
             <div className="flex items-center justify-between">
               <h3 className="text-lg font-semibold">Solutions</h3>
-      </div>
-      
-            <form onSubmit={handleSubmitSolution} className="space-y-4">
+            </div>
+
+            <form onSubmit={handleSubmitSolution} className="px-6 py-4 border-t">
+              <h3 className="text-sm font-medium mb-2">Contribute a solution</h3>
               <Textarea
-                placeholder="Share your solution..."
+                placeholder={user ? "Share your solution..." : "Log in to contribute a solution"}
                 value={newSolution}
                 onChange={(e) => setNewSolution(e.target.value)}
-                className="min-h-[100px]"
+                className="min-h-[100px] mb-2"
+                disabled={!user || isSubmitting}
               />
-              <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting ? "Posting..." : "Post Solution"}
+              <Button 
+                type="submit" 
+                disabled={!user || !newSolution.trim() || isSubmitting}
+                className="w-full sm:w-auto"
+              >
+                {isSubmitting ? "Submitting..." : "Submit Solution"}
               </Button>
             </form>
-      
-      <div className="space-y-4">
+
+            <div className="space-y-4">
               {solutions.map((solution) => (
                 <Card key={solution.id}>
                   <CardContent className="p-4">
@@ -184,30 +171,14 @@ const IssueDetail = ({
                       <div className="flex-1">
                         <p className="text-sm">{solution.text}</p>
                         <div className="mt-2 text-xs text-muted-foreground">
-                          Posted by {solution.userName} • {formatDate(solution.createdAt)}
-        </div>
-          </div>
-                      <div className="flex items-center gap-2">
-                        <Button 
-                          variant="ghost" 
-                          size="icon"
-                          className={cn(
-                            "h-8 w-8",
-                            userVotes[solution.id] === true && "text-primary"
-                          )}
-                          onClick={() => onVote(solution.id, true)}
-                        >
-                          <ThumbsUp size={16} />
-                        </Button>
-                        <span className="text-sm font-medium min-w-[1.5rem] text-center">
-                          {solution.votes}
-                        </span>
-                  </div>
-                </div>
+                          {formatDate(solution.created_at)}
+                        </div>
+                      </div>
+                    </div>
                   </CardContent>
                 </Card>
               ))}
-              </div>
+            </div>
           </div>
         </CardContent>
       </Card>
