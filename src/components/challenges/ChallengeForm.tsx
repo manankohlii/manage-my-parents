@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { createChallenge } from "@/services/challenges";
@@ -42,6 +42,9 @@ const ChallengeForm = ({ onSubmit, onClose, challenge, onUpdate }: ChallengeForm
     location: "",
     age_group: "20-34"
   });
+  const [tagInput, setTagInput] = useState("");
+  const tagInputRef = useRef<HTMLInputElement>(null);
+  const [showTagDropdown, setShowTagDropdown] = useState(false);
   
   // Load challenge data if editing
   useEffect(() => {
@@ -102,14 +105,35 @@ const ChallengeForm = ({ onSubmit, onClose, challenge, onUpdate }: ChallengeForm
   }, [user?.id, challenge]);
 
   const handleAddTag = (tag: string) => {
-    if (!selectedTags.includes(tag)) {
-      setSelectedTags([...selectedTags, tag]);
+    const trimmed = tag.trim();
+    if (trimmed && !selectedTags.includes(trimmed)) {
+      setSelectedTags([...selectedTags, trimmed]);
     }
+    setTagInput("");
+    setShowTagDropdown(false);
+    if (tagInputRef.current) tagInputRef.current.focus();
   };
 
   const handleRemoveTag = (tagToRemove: string) => {
     setSelectedTags(selectedTags.filter(tag => tag !== tagToRemove));
   };
+
+  const handleTagInputKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      if (tagInput.trim()) {
+        handleAddTag(tagInput);
+      }
+    } else if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+      setShowTagDropdown(true);
+    }
+  };
+
+  const filteredTagSuggestions = allTags.filter(
+    tag =>
+      tag.toLowerCase().includes(tagInput.toLowerCase()) &&
+      !selectedTags.includes(tag)
+  );
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -205,17 +229,6 @@ const ChallengeForm = ({ onSubmit, onClose, challenge, onUpdate }: ChallengeForm
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="location">Location</Label>
-          <Input
-            id="location"
-            placeholder="Where are you located?"
-            value={formData.location}
-            onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-            required
-          />
-        </div>
-
-        <div className="space-y-2">
           <Label>Tags</Label>
           <div className="flex flex-wrap gap-2 mb-2">
             {selectedTags.map(tag => (
@@ -235,43 +248,36 @@ const ChallengeForm = ({ onSubmit, onClose, challenge, onUpdate }: ChallengeForm
               </div>
             ))}
           </div>
-          <div className="flex flex-wrap gap-2">
-            {allTags.map(tag => (
-              <button
-                key={tag}
-                type="button"
-                onClick={() => handleAddTag(tag)}
-                className={`flex items-center gap-1 px-2 py-1 rounded-md text-sm border transition-colors ${
-                  selectedTags.includes(tag)
-                    ? "bg-primary/10 text-primary border-primary"
-                    : "bg-background hover:bg-accent border-border"
-                }`}
-              >
-                <Tag size={14} />
-                {tag}
-              </button>
-            ))}
+          <div className="relative w-48">
+            <Input
+              ref={tagInputRef}
+              type="text"
+              placeholder="Add or search for a tag"
+              value={tagInput}
+              onChange={e => {
+                setTagInput(e.target.value);
+                setShowTagDropdown(true);
+              }}
+              onFocus={() => setShowTagDropdown(true)}
+              onBlur={() => setTimeout(() => setShowTagDropdown(false), 100)}
+              onKeyDown={handleTagInputKeyDown}
+            />
+            {showTagDropdown && filteredTagSuggestions.length > 0 && (
+              <div className="absolute z-10 mt-1 w-full bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded shadow-lg max-h-40 overflow-auto">
+                {filteredTagSuggestions.map(tag => (
+                  <div
+                    key={tag}
+                    className="px-3 py-2 cursor-pointer hover:bg-primary/10"
+                    onMouseDown={() => handleAddTag(tag)}
+                  >
+                    {tag}
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
         
-        <div className="space-y-2">
-          <Label htmlFor="age_group">Age Group</Label>
-          <Select
-            value={formData.age_group}
-            onValueChange={(value) => setFormData({ ...formData, age_group: value })}
-          >
-            <SelectTrigger id="age_group">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="13-19">Teenager (13-19)</SelectItem>
-              <SelectItem value="20-34">Young Adult (20-34)</SelectItem>
-              <SelectItem value="35-59">Middle-Aged Adult (35-59)</SelectItem>
-              <SelectItem value="60+">Senior (60+)</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-
         <Button type="submit" disabled={loading}>
           {loading ? (challenge ? "Updating..." : "Creating...") : (challenge ? "Update Challenge" : "Share Challenge")}
         </Button>
