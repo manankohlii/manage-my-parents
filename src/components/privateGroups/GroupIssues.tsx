@@ -8,6 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import IssueDetail from "./issues/IssueDetail";
 import ChallengeForm from "@/components/challenges/ChallengeForm";
 import ChallengeFilters from "@/components/explore/ChallengeFilters";
+import { Card, CardContent } from "@/components/ui/card";
 
 interface GroupIssuesProps {
   groupId: string;
@@ -107,13 +108,15 @@ const GroupIssues = ({ groupId }: GroupIssuesProps) => {
       <div className="border-b border-gray-200 dark:border-gray-700 my-4" />
 
       {showAddForm && (
-        <div ref={formRef} className="mb-6">
-          <ChallengeForm 
-            onSubmit={handleChallengeSubmit} 
-            onClose={() => setShowAddForm(false)} 
-            onSubmitChallenge={addIssue}
-          />
-        </div>
+        <Card ref={formRef} className="border-2 border-primary/20">
+          <CardContent className="pt-6">
+            <ChallengeForm 
+              onSubmit={handleChallengeSubmit} 
+              onClose={() => setShowAddForm(false)} 
+              onSubmitChallenge={addIssue}
+            />
+          </CardContent>
+        </Card>
       )}
 
       {/* Use ChallengeFilters from explore for consistent UI */}
