@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -15,6 +14,7 @@ interface Profile {
   display_name: string;
   city: string;
   country: string;
+  age_group: string;
 }
 
 const ProfilePage = () => {
@@ -27,6 +27,7 @@ const ProfilePage = () => {
     display_name: "",
     city: "",
     country: "",
+    age_group: "",
   });
 
   useEffect(() => {
@@ -40,7 +41,7 @@ const ProfilePage = () => {
       setLoading(true);
       const { data, error } = await supabase
         .from("profiles")
-        .select("first_name, last_name, display_name, city, country")
+        .select("first_name, last_name, display_name, city, country, age_group")
         .eq("id", user?.id)
         .single();
 
@@ -56,7 +57,7 @@ const ProfilePage = () => {
     }
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setProfile((prev) => ({ ...prev, [name]: value }));
   };
@@ -73,6 +74,7 @@ const ProfilePage = () => {
           display_name: profile.display_name,
           city: profile.city,
           country: profile.country,
+          age_group: profile.age_group,
         })
         .eq("id", user?.id);
 
@@ -180,6 +182,24 @@ const ProfilePage = () => {
                   onChange={handleChange}
                   disabled={!isEditing}
                 />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="age_group">Age Group</Label>
+                <select
+                  id="age_group"
+                  name="age_group"
+                  value={profile.age_group || ""}
+                  onChange={handleChange}
+                  disabled={!isEditing}
+                  className="block w-full border rounded px-3 py-2 text-sm"
+                >
+                  <option value="">Select age group</option>
+                  <option value="20-34">20-34</option>
+                  <option value="35-49">35-49</option>
+                  <option value="50-64">50-64</option>
+                  <option value="65+">65+</option>
+                </select>
               </div>
             </div>
 
