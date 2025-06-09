@@ -2,11 +2,10 @@ import React, { useState } from "react";
 import { formatDistanceToNow } from "date-fns";
 import TagBadge from "../TagBadge";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
-import { MessageCircle, ThumbsUp } from "lucide-react";
+import { ThumbsUp, MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Challenge } from "@/services/challenges/types";
 import SolutionsList from "./SolutionsList";
-import SolutionForm from "./SolutionForm";
 import { Solution } from "@/services/solutionsService";
 
 interface ChallengeCardProps {
@@ -22,6 +21,14 @@ interface ChallengeCardProps {
   solutions?: Solution[];
   handleVote: (challengeId: string, solutionId: string | null, voteType: 'up' | 'down') => Promise<void>;
   onSolutionDeleted?: () => void;
+  showSolutions?: boolean;
+  onToggleSolutions?: () => void;
+  solutionText?: string;
+  onSolutionTextChange?: (text: string) => void;
+  onSolutionSubmit?: () => void;
+  solutionLoading?: boolean;
+  SolutionsListComponent?: React.ComponentType<any>;
+  solutionsListProps?: any;
 }
 
 const ChallengeCard = ({
@@ -36,9 +43,18 @@ const ChallengeCard = ({
   user,
   solutions = [],
   handleVote,
-  onSolutionDeleted
+  onSolutionDeleted,
+  showSolutions: showSolutionsProp,
+  onToggleSolutions,
+  solutionText,
+  onSolutionTextChange,
+  onSolutionSubmit,
+  solutionLoading,
+  SolutionsListComponent,
+  solutionsListProps
 }: ChallengeCardProps) => {
-  const [showSolutions, setShowSolutions] = useState(false);
+  const [showSolutionsState, setShowSolutions] = useState(false);
+  const showSolutions = showSolutionsProp !== undefined ? showSolutionsProp : showSolutionsState;
   
   const handleSolutionSubmit = async (solutionText: string) => {
     if (!solutionText.trim()) {
@@ -48,7 +64,11 @@ const ChallengeCard = ({
   };
 
   const toggleSolutions = () => {
-    setShowSolutions(!showSolutions);
+    if (onToggleSolutions) {
+      onToggleSolutions();
+    } else {
+      setShowSolutions(!showSolutions);
+    }
   };
 
   return (
@@ -86,27 +106,30 @@ const ChallengeCard = ({
           </div>
         </div>
         
-        {/* Add the Solution Form */}
-        <SolutionForm
-          challengeId={challenge.id}
-          onSubmit={handleSolutionSubmit}
-          loading={loadingSolution}
-          user={user}
-          solutions={solutions || []}
-        />
+        {/* Solution Form always visible below challenge content */}
+        <form onSubmit={e => { e.preventDefault(); onSolutionSubmit && onSolutionSubmit(); }} className="px-6 py-4 border-t">
+          <h3 className="text-sm font-medium mb-2">Contribute a solution</h3>
+          <textarea
+            placeholder="Share your solution..."
+            value={solutionText || ''}
+            onChange={e => onSolutionTextChange && onSolutionTextChange(e.target.value)}
+            className="min-h-[100px] mb-2 w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+            disabled={solutionLoading}
+          />
+          <Button
+            type="submit"
+            disabled={!solutionText?.trim() || solutionLoading}
+            className="w-full sm:w-auto"
+          >
+            {solutionLoading ? 'Submitting...' : 'Submit Solution'}
+          </Button>
+        </form>
+        
+        {/* Only show the solutions list when showSolutions is true, and use the custom component if provided */}
+        {showSolutions && SolutionsListComponent && (
+          <SolutionsListComponent {...solutionsListProps} />
+        )}
       </CardContent>
-      
-      {/* Only show solutions if expanded */}
-      {showSolutions && (
-        <SolutionsList 
-          challengeId={challenge.id}
-          solutions={solutions || []}
-          handleVote={handleVote}
-          userVotes={userVotes}
-          user={user}
-          onSolutionDeleted={onSolutionDeleted}
-        />
-      )}
       
       <CardFooter className="flex items-center justify-end">
         <Button 

@@ -75,7 +75,7 @@ const IssueDetail = ({
       setIsSubmitting(false);
     }
   };
-
+  
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-4">
@@ -112,41 +112,41 @@ const IssueDetail = ({
                 </Badge>
               </div>
               <div className="flex items-center gap-2">
-                <Button 
-                  variant="ghost" 
+              <Button 
+                variant="ghost" 
                   size="icon"
                   className={cn(
                     "h-8 w-8",
                     userVotes[issue.id] === true && "text-primary"
                   )}
-                  onClick={() => onVote(issue.id, true)}
-                >
+                onClick={() => onVote(issue.id, true)}
+              >
                   <ThumbsUp size={16} />
-                </Button>
+              </Button>
                 <span className="text-sm font-medium min-w-[1.5rem] text-center">
                   {issue.votes}
-                </span>
-              </div>
-            </div>
+          </span>
+        </div>
+      </div>
           </div>
         </CardHeader>
         <CardContent>
           <p className="text-muted-foreground mb-4">{issue.description}</p>
           {issue.tags.length > 0 && (
             <div className="flex flex-wrap gap-2 mb-6">
-              {issue.tags.map((tag) => (
+          {issue.tags.map((tag) => (
                 <Badge key={tag} variant="outline">
                   {tag}
                 </Badge>
-              ))}
-            </div>
+          ))}
+        </div>
           )}
-
+      
           <div className="space-y-6">
             <div className="flex items-center justify-between">
               <h3 className="text-lg font-semibold">Solutions</h3>
-            </div>
-
+      </div>
+      
             {/* Always show the solution form, disable if not logged in */}
             <form onSubmit={handleSubmitSolution} className="px-6 py-4 border-t">
               <h3 className="text-sm font-medium mb-2">Contribute a solution</h3>
@@ -166,8 +166,8 @@ const IssueDetail = ({
               </Button>
             </form>
 
-            <div className="space-y-4">
-              {solutions.map((solution) => (
+          <div className="space-y-4">
+            {solutions.map((solution) => (
                 <Card key={solution.id}>
                   <CardContent className="p-4">
                     <div className="flex justify-between items-start gap-4">
@@ -175,13 +175,13 @@ const IssueDetail = ({
                         <p className="text-sm">{solution.text}</p>
                         <div className="mt-2 text-xs text-muted-foreground">
                           {formatDate(solution.created_at)}
-                        </div>
-                      </div>
-                    </div>
+                  </div>
+                  </div>
+                </div>
                   </CardContent>
                 </Card>
               ))}
-            </div>
+              </div>
           </div>
         </CardContent>
       </Card>

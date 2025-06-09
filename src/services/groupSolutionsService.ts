@@ -15,7 +15,7 @@ export const createGroupSolution = async (
   text: string
 ) => {
   const { data, error } = await supabase
-    .from("group_solutions")
+    .from("group_solutions" as any)
     .insert({
       group_challenge_id: groupChallengeId,
       user_id: userId,
@@ -29,10 +29,19 @@ export const createGroupSolution = async (
 
 export const getGroupSolutions = async (groupChallengeId: string) => {
   const { data, error } = await supabase
-    .from("group_solutions")
+    .from("group_solutions" as any)
     .select("*")
     .eq("group_challenge_id", groupChallengeId)
     .order("created_at", { ascending: false });
   if (error) throw error;
   return data as GroupSolution[];
+};
+
+export const deleteGroupSolution = async (solutionId: string) => {
+  const { error } = await supabase
+    .from("group_solutions" as any)
+    .delete()
+    .eq("id", solutionId);
+  if (error) throw error;
+  return true;
 }; 
