@@ -48,6 +48,9 @@ const IssueDetail = ({
 
   const handleSubmitSolution = async (e: React.FormEvent) => {
     e.preventDefault();
+    console.log("handleSubmitSolution called");
+    console.log("Current user:", user);
+    console.log("Current newSolution:", newSolution);
     if (!user?.id) {
       toast.error("You must be logged in to submit a solution");
       return;
@@ -59,6 +62,7 @@ const IssueDetail = ({
     setIsSubmitting(true);
     try {
       const solution = await createGroupSolution(issue.id, user.id, newSolution.trim());
+      console.log("createGroupSolution result:", solution);
       if (solution) {
         setSolutions(prev => [solution, ...prev]);
         setNewSolution("");
