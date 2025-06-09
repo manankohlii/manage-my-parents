@@ -30,6 +30,9 @@ const IssueDetail = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { user } = useAuth();
 
+  // Debug log for user
+  console.log("Auth user in IssueDetail:", user);
+
   useEffect(() => {
     const loadSolutions = async () => {
       try {
@@ -45,22 +48,17 @@ const IssueDetail = ({
 
   const handleSubmitSolution = async (e: React.FormEvent) => {
     e.preventDefault();
-    
     if (!user?.id) {
       toast.error("You must be logged in to submit a solution");
       return;
     }
-    
     if (!newSolution.trim()) {
       toast.error("Solution cannot be empty");
       return;
     }
-
     setIsSubmitting(true);
-    
     try {
       const solution = await createGroupSolution(issue.id, user.id, newSolution.trim());
-      
       if (solution) {
         setSolutions(prev => [solution, ...prev]);
         setNewSolution("");
@@ -145,6 +143,7 @@ const IssueDetail = ({
               <h3 className="text-lg font-semibold">Solutions</h3>
             </div>
 
+            {/* Always show the solution form, disable if not logged in */}
             <form onSubmit={handleSubmitSolution} className="px-6 py-4 border-t">
               <h3 className="text-sm font-medium mb-2">Contribute a solution</h3>
               <Textarea
