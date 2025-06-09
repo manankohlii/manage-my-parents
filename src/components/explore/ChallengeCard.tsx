@@ -53,22 +53,101 @@ const ChallengeCard = ({
   SolutionsListComponent,
   solutionsListProps
 }: ChallengeCardProps) => {
-  const [showSolutionsState, setShowSolutions] = useState(false);
+  const [showSolutionsState, setShowSolutionsState] = useState(false);
+  const [localSolutionText, setLocalSolutionText] = useState("");
   const showSolutions = showSolutionsProp !== undefined ? showSolutionsProp : showSolutionsState;
-  
-  const handleSolutionSubmit = async (solutionText: string) => {
-    if (!solutionText.trim()) {
-      return;
-    }
-    await handleSubmitSolution(challenge.id, solutionText);
-  };
 
-  const toggleSolutions = () => {
-    if (onToggleSolutions) {
-      onToggleSolutions();
-    } else {
-      setShowSolutions(!showSolutions);
-    }
+  // If group challenge mode (SolutionsListComponent provided), use controlled props
+  if (SolutionsListComponent) {
+    return (
+      <Card className="w-full">
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <h3 className="text-lg font-semibold">{challenge.title}</h3>
+            <div className="text-sm text-gray-500">
+              {formatDistanceToNow(new Date(challenge.created_at), {
+                addSuffix: true,
+              })}
+            </div>
+          </div>
+          <div className="flex flex-wrap gap-2 mt-2">
+            {challenge.tags?.map((tag) => (
+              <TagBadge key={tag} text={tag} />
+            ))}
+          </div>
+        </CardHeader>
+        <CardContent>
+          <p className="text-sm text-gray-700 mb-4">{challenge.description}</p>
+          
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-2">
+              <Button 
+                variant="ghost" 
+                size="sm"
+                onClick={() => handleUpvote(challenge.id)}
+                disabled={!user}
+                className="flex items-center"
+              >
+                <ThumbsUp className={`h-4 w-4 mr-1 ${userVotes[challenge.id] === true ? "text-primary fill-primary" : ""}`} />
+                <span>{challenge.likes_count || 0}</span>
+              </Button>
+            </div>
+          </div>
+          
+          <form onSubmit={e => { e.preventDefault(); onSolutionSubmit && onSolutionSubmit(); }} className="px-6 py-4 border-t">
+            <h3 className="text-sm font-medium mb-2">Contribute a solution</h3>
+            <textarea
+              placeholder="Share your solution..."
+              value={solutionText || ''}
+              onChange={e => onSolutionTextChange && onSolutionTextChange(e.target.value)}
+              className="min-h-[100px] mb-2 w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+              disabled={solutionLoading}
+            />
+            <Button
+              type="submit"
+              disabled={!solutionText?.trim() || solutionLoading}
+              className="w-full sm:w-auto"
+            >
+              {solutionLoading ? 'Submitting...' : 'Submit Solution'}
+            </Button>
+          </form>
+          
+          {showSolutions && SolutionsListComponent && (
+            <SolutionsListComponent {...solutionsListProps} />
+          )}
+        </CardContent>
+        
+        <CardFooter className="flex items-center justify-end">
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={() => {
+              if (onToggleSolutions) {
+                onToggleSolutions();
+              } else {
+                setShowSolutionsState((prev) => !prev);
+              }
+            }}
+            className="flex items-center"
+          >
+            <MessageCircle className="h-4 w-4 mr-1" />
+            {challenge.solutions_count || 0} Solutions
+            {showSolutions ? ' (Hide)' : ' (View)'}
+          </Button>
+        </CardFooter>
+      </Card>
+    );
+  }
+
+  // Default explore challenge mode: use internal state for form and toggling
+  const [exploreShowSolutions, setExploreShowSolutions] = useState(false);
+  const [exploreSolutionText, setExploreSolutionText] = useState("");
+
+  const handleFormSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!exploreSolutionText.trim()) return;
+    await handleSubmitSolution(challenge.id, exploreSolutionText);
+    setExploreSolutionText("");
   };
 
   return (
@@ -90,7 +169,6 @@ const ChallengeCard = ({
       </CardHeader>
       <CardContent>
         <p className="text-sm text-gray-700 mb-4">{challenge.description}</p>
-        
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2">
             <Button 
@@ -105,42 +183,44 @@ const ChallengeCard = ({
             </Button>
           </div>
         </div>
-        
-        {/* Solution Form always visible below challenge content */}
-        <form onSubmit={e => { e.preventDefault(); onSolutionSubmit && onSolutionSubmit(); }} className="px-6 py-4 border-t">
+        <form onSubmit={handleFormSubmit} className="px-6 py-4 border-t">
           <h3 className="text-sm font-medium mb-2">Contribute a solution</h3>
           <textarea
             placeholder="Share your solution..."
-            value={solutionText || ''}
-            onChange={e => onSolutionTextChange && onSolutionTextChange(e.target.value)}
+            value={exploreSolutionText}
+            onChange={e => setExploreSolutionText(e.target.value)}
             className="min-h-[100px] mb-2 w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-            disabled={solutionLoading}
+            disabled={loadingSolution}
           />
           <Button
             type="submit"
-            disabled={!solutionText?.trim() || solutionLoading}
+            disabled={!exploreSolutionText.trim() || loadingSolution}
             className="w-full sm:w-auto"
           >
-            {solutionLoading ? 'Submitting...' : 'Submit Solution'}
+            {loadingSolution ? 'Submitting...' : 'Submit Solution'}
           </Button>
         </form>
-        
-        {/* Only show the solutions list when showSolutions is true, and use the custom component if provided */}
-        {showSolutions && SolutionsListComponent && (
-          <SolutionsListComponent {...solutionsListProps} />
+        {exploreShowSolutions && (
+          <SolutionsList
+            challengeId={challenge.id}
+            solutions={solutions || []}
+            handleVote={handleVote}
+            userVotes={userVotes}
+            user={user}
+            onSolutionDeleted={onSolutionDeleted}
+          />
         )}
       </CardContent>
-      
       <CardFooter className="flex items-center justify-end">
         <Button 
           variant="ghost" 
           size="sm" 
-          onClick={toggleSolutions}
+          onClick={() => setExploreShowSolutions((prev) => !prev)}
           className="flex items-center"
         >
           <MessageCircle className="h-4 w-4 mr-1" />
           {challenge.solutions_count || 0} Solutions
-          {showSolutions ? ' (Hide)' : ' (View)'}
+          {exploreShowSolutions ? ' (Hide)' : ' (View)'}
         </Button>
       </CardFooter>
     </Card>
