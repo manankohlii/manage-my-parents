@@ -107,10 +107,10 @@ const ChallengeFilters = ({
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Age Groups</SelectItem>
-            <SelectItem value="20-34">20-34</SelectItem>
-            <SelectItem value="35-49">35-49</SelectItem>
-            <SelectItem value="50-64">50-64</SelectItem>
-            <SelectItem value="65+">65+</SelectItem>
+            <SelectItem value="13-19">Teenager (13-19)</SelectItem>
+            <SelectItem value="20-34">Young Adult (20-34)</SelectItem>
+            <SelectItem value="35-59">Middle-Aged Adult (35-59)</SelectItem>
+            <SelectItem value="60+">Senior (60+)</SelectItem>
           </SelectContent>
         </Select>
       </div>

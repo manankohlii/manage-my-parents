@@ -195,10 +195,10 @@ const ProfilePage = () => {
                   className="block w-full border rounded px-3 py-2 text-sm"
                 >
                   <option value="">Select age group</option>
-                  <option value="20-34">20-34</option>
-                  <option value="35-49">35-49</option>
-                  <option value="50-64">50-64</option>
-                  <option value="65+">65+</option>
+                  <option value="13-19">Teenager (13-19)</option>
+                  <option value="20-34">Young Adult (20-34)</option>
+                  <option value="35-59">Middle-Aged Adult (35-59)</option>
+                  <option value="60+">Senior (60+)</option>
                 </select>
               </div>
             </div>
