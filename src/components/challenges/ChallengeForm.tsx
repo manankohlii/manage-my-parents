@@ -282,6 +282,7 @@ const ChallengeForm = ({ onSubmit, onClose, challenge, onUpdate, onSubmitChallen
                 ))}
               </div>
             )}
+            <p className="text-xs text-muted-foreground mt-2 bg-muted/50 p-1.5 rounded-md">Press Enter to add a tag</p>
           </div>
         </div>
         

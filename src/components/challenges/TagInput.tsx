@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -55,21 +54,24 @@ const TagInput = ({
   };
   
   return (
-    <div className="flex gap-2 relative">
-      <Input
-        value={tagInput}
-        onChange={(e) => setTagInput(e.target.value)}
-        placeholder="Add relevant tags..."
-        onKeyDown={(e) => {
-          if (e.key === 'Enter') {
-            e.preventDefault();
-            handleAddTag();
-          }
-        }}
-        onFocus={() => tagInput && setShowAutocomplete(filteredTags.length > 0)}
-        onBlur={() => setTimeout(() => setShowAutocomplete(false), 100)}
-      />
-      <Button type="button" onClick={handleAddTag}>Add Tag</Button>
+    <div className="space-y-2">
+      <div className="flex gap-2 relative">
+        <Input
+          value={tagInput}
+          onChange={(e) => setTagInput(e.target.value)}
+          placeholder="Add relevant tags..."
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') {
+              e.preventDefault();
+              handleAddTag();
+            }
+          }}
+          onFocus={() => tagInput && setShowAutocomplete(filteredTags.length > 0)}
+          onBlur={() => setTimeout(() => setShowAutocomplete(false), 100)}
+        />
+        <Button type="button" onClick={handleAddTag}>Add Tag</Button>
+      </div>
+      <p className="text-xs text-muted-foreground mt-2 bg-muted/50 p-1.5 rounded-md">Press Enter to add a tag</p>
       
       {/* Tag Autocomplete dropdown */}
       {showAutocomplete && filteredTags.length > 0 && (

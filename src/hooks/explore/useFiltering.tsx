@@ -3,7 +3,7 @@ import { Challenge } from "@/services/challenges/types";
 
 export const useFiltering = () => {
   const [searchTerm, setSearchTerm] = useState("");
-  const [sortBy, setSortBy] = useState("most_upvotes");
+  const [sortBy, setSortBy] = useState("");
   const [filterAgeGroup, setFilterAgeGroup] = useState("");
   const [filterLocation, setFilterLocation] = useState("all");
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
@@ -29,13 +29,14 @@ export const useFiltering = () => {
         (challenge.tags && challenge.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase())))
       )
       .sort((a, b) => {
-        if (sortBy === "newest") {
+        const effectiveSortBy = sortBy || "most_upvotes";
+        if (effectiveSortBy === "newest") {
           return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
-        } else if (sortBy === "oldest") {
+        } else if (effectiveSortBy === "oldest") {
           return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
-        } else if (sortBy === "most_upvotes") {
+        } else if (effectiveSortBy === "most_upvotes") {
           return (b.likes_count || 0) - (a.likes_count || 0);
-        } else if (sortBy === "most_solutions") {
+        } else if (effectiveSortBy === "most_solutions") {
           return (b.solutions_count || 0) - (a.solutions_count || 0);
         }
         return 0;

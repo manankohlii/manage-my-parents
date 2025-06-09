@@ -129,8 +129,8 @@ const IssueForm = ({ isOpen, onOpenChange, onIssueCreate }: IssueFormProps) => {
               placeholder="e.g. teens, emotional-support, boundaries (comma separated)"
               disabled={submitting}
             />
-            <p className="text-xs text-muted-foreground">
-              Separate tags with commas
+            <p className="text-xs text-muted-foreground mt-1.5">
+              Press Enter to add a tag, or separate tags with commas
             </p>
           </div>
         </div>
