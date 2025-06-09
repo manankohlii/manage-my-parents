@@ -36,7 +36,7 @@ const GroupSolutionsList = ({
           <div className="flex-1">
             <p className="text-sm">{solution.text}</p>
             <p className="text-xs text-muted-foreground mt-1">
-              By {(user && solution.user_id === user.id && user.display_name) ? user.display_name : "Anonymous User"} • {new Date(solution.created_at).toLocaleDateString()}
+              By {solution.display_name || "Anonymous User"} • {new Date(solution.created_at).toLocaleDateString()}
             </p>
           </div>
           <div className="flex items-center gap-2 min-w-[60px] justify-end">

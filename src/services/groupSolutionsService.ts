@@ -7,6 +7,7 @@ export interface GroupSolution {
   text: string;
   created_at: string;
   updated_at: string;
+  display_name?: string;
 }
 
 export const createGroupSolution = async (
@@ -29,12 +30,15 @@ export const createGroupSolution = async (
 
 export const getGroupSolutions = async (groupChallengeId: string) => {
   const { data, error } = await supabase
-    .from("group_solutions" as any)
-    .select("*")
+    .from("group_solutions")
+    .select("*, profile:profiles(display_name)")
     .eq("group_challenge_id", groupChallengeId)
     .order("created_at", { ascending: false });
   if (error) throw error;
-  return data as GroupSolution[];
+  return (data as any[]).map(sol => ({
+    ...sol,
+    display_name: sol.profile?.display_name || "Anonymous User"
+  }));
 };
 
 export const deleteGroupSolution = async (solutionId: string) => {
