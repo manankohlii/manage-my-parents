@@ -204,10 +204,9 @@ const GroupInvitations = ({ onGroupJoined }: GroupInvitationsProps) => {
 
       // Remove the invitation from the local state immediately
       setInvitations(prev => prev.filter(inv => inv.id !== invitationId));
-      
-      // Refresh the invitation count and reload invitations
-      await refreshCount();
-      await loadInvitations();
+      await refreshCount(); // Immediately update the badge count
+      // Optionally, you can refetch invitations here if needed
+      // await loadInvitations();
     } catch (error) {
       console.error('❌ Error responding to invitation:', error);
       toast({
