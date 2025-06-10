@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { X, Users, UserPlus } from "lucide-react";
@@ -26,6 +26,11 @@ const GroupMembers = ({ groupId, members, onMembersChange }: GroupMembersProps) 
   const { user } = useAuth();
   const { removeMember, refreshGroup } = useGroupDetail(groupId);
   const [memberToRemove, setMemberToRemove] = useState<Member | null>(null);
+  const [localMembers, setLocalMembers] = useState<Member[]>(members);
+
+  useEffect(() => {
+    setLocalMembers(members);
+  }, [members]);
 
   const handleInviteSent = () => {
     onMembersChange?.();
@@ -39,7 +44,7 @@ const GroupMembers = ({ groupId, members, onMembersChange }: GroupMembersProps) 
     if (memberToRemove) {
       await removeMember(memberToRemove.id);
       setMemberToRemove(null);
-      // Refresh both the group data and notify parent
+      setLocalMembers(prev => prev.filter(m => m.id !== memberToRemove.id));
       await refreshGroup();
       onMembersChange?.();
     }
@@ -77,7 +82,7 @@ const GroupMembers = ({ groupId, members, onMembersChange }: GroupMembersProps) 
       <Card className="p-4">
         <h4 className="text-sm font-medium mb-4">Member List</h4>
         <div className="space-y-4">
-          {members.map((member) => (
+          {localMembers.map((member) => (
             <div key={member.id} className="flex justify-between items-center">
               <div className="flex items-center gap-3">
                 <Avatar>
