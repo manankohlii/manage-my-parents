@@ -34,6 +34,7 @@ interface ChallengeCardProps {
   canEditOrDelete?: boolean;
   onEdit?: (challenge: Challenge) => void;
   onDelete?: (challenge: Challenge) => void;
+  solutionsCount?: number;
 }
 
 const ChallengeCard = ({
@@ -60,7 +61,8 @@ const ChallengeCard = ({
   isGroupChallenge,
   canEditOrDelete,
   onEdit,
-  onDelete
+  onDelete,
+  solutionsCount
 }: ChallengeCardProps) => {
   const [showSolutionsState, setShowSolutionsState] = useState(false);
   const [localSolutionText, setLocalSolutionText] = useState("");
@@ -183,7 +185,9 @@ const ChallengeCard = ({
             className="flex items-center"
           >
             <MessageCircle className="h-4 w-4 mr-1" />
-            {challenge.solutions_count || 0} Solutions
+            {isGroupChallenge && typeof solutionsCount === 'number'
+              ? solutionsCount
+              : challenge.solutions_count || 0} Solutions
             {showSolutions ? ' (Hide)' : ' (View)'}
           </Button>
         </CardFooter>

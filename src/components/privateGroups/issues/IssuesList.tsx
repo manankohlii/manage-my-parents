@@ -271,6 +271,7 @@ const IssuesList = ({
             canEditOrDelete={issue.user_id === user?.id}
             onEdit={challenge => handleEdit((challenge as unknown) as Issue)}
             onDelete={challenge => handleDeleteChallenge(challenge.id)}
+            solutionsCount={solutions[issue.id]?.filter(sol => !sol.parent_solution_id).length || 0}
           />
         )
       ))}
