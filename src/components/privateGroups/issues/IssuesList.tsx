@@ -263,10 +263,9 @@ const IssuesList = ({
             SolutionsListComponent={GroupSolutionsList}
             solutionsListProps={{
               solutions: solutions[issue.id] || [],
+              challengeId: issue.id,
+              user: user,
               onDelete: (solutionId: string) => handleDeleteGroupSolution(issue.id, solutionId),
-              userVotes: userVotes,
-              onVote: onVote,
-              challengeId: issue.id
             }}
             isGroupChallenge={true}
             canEditOrDelete={issue.user_id === user?.id}

@@ -8,12 +8,14 @@ export interface GroupSolution {
   created_at: string;
   updated_at: string;
   display_name?: string;
+  parent_solution_id?: string;
 }
 
 export const createGroupSolution = async (
   groupChallengeId: string,
   userId: string,
-  text: string
+  text: string,
+  parentSolutionId?: string
 ) => {
   const { data, error } = await supabase
     .from("group_solutions" as any)
@@ -21,11 +23,12 @@ export const createGroupSolution = async (
       group_challenge_id: groupChallengeId,
       user_id: userId,
       text,
+      parent_solution_id: parentSolutionId || null
     })
     .select()
     .single();
   if (error) throw error;
-  return data as GroupSolution;
+  return data as unknown as GroupSolution;
 };
 
 export const getGroupSolutions = async (groupChallengeId: string) => {

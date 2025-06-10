@@ -1,6 +1,7 @@
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { ThumbsUp, Trash2 } from "lucide-react";
-import { GroupSolution } from '@/services/groupSolutionsService';
+import { GroupSolution, createGroupSolution } from '@/services/groupSolutionsService';
 
 interface GroupSolutionsListProps {
   solutions: GroupSolution[];
@@ -15,7 +16,41 @@ const GroupSolutionsList = ({
   user,
   onDelete
 }: GroupSolutionsListProps) => {
-  const hasSolutions = Array.isArray(solutions) && solutions.length > 0;
+  const [replyingTo, setReplyingTo] = useState<string | null>(null);
+  const [replyText, setReplyText] = useState("");
+  const [localSolutions, setLocalSolutions] = useState(solutions);
+
+  // Organize solutions into parent/replies
+  const parentSolutions = localSolutions.filter(sol => !sol.parent_solution_id);
+  const repliesByParent: Record<string, GroupSolution[]> = {};
+  localSolutions.forEach(sol => {
+    if (sol.parent_solution_id) {
+      if (!repliesByParent[sol.parent_solution_id]) repliesByParent[sol.parent_solution_id] = [];
+      repliesByParent[sol.parent_solution_id].push(sol);
+    }
+  });
+
+  const handleReply = (solutionId: string) => {
+    setReplyingTo(solutionId);
+    setReplyText("");
+  };
+
+  const handleSubmitReply = async (parentSolutionId: string) => {
+    if (!replyText.trim()) return;
+    const newReply = await createGroupSolution(challengeId, user.id, replyText.trim(), parentSolutionId);
+    if (newReply) {
+      setLocalSolutions(prev => [...prev, newReply]);
+      setReplyingTo(null);
+      setReplyText("");
+    }
+  };
+
+  const handleDeleteSolution = (solutionId: string) => {
+    onDelete(solutionId);
+    setLocalSolutions(prev => prev.filter(sol => sol.id !== solutionId));
+  };
+
+  const hasSolutions = parentSolutions.length > 0;
 
   if (!hasSolutions) {
     return (
@@ -27,36 +62,81 @@ const GroupSolutionsList = ({
 
   return (
     <div className="px-6 space-y-3 pb-4">
-      <h3 className="text-lg font-medium">Solutions ({solutions.length})</h3>
-      {solutions.map((solution) => (
+      <h3 className="text-lg font-medium">Solutions ({parentSolutions.length})</h3>
+      {parentSolutions.map((solution) => (
         <div 
           key={solution.id} 
-          className="bg-muted/90 dark:bg-muted/60 p-3 rounded-md flex justify-between items-start"
+          className="bg-muted/90 dark:bg-muted/60 p-3 rounded-md flex flex-col gap-2"
         >
-          <div className="flex-1">
-            <p className="text-sm">{solution.text}</p>
-            <p className="text-xs text-muted-foreground mt-1">
-              By {solution.display_name || "Anonymous User"} • {new Date(solution.created_at).toLocaleDateString()}
-            </p>
+          <div className="flex justify-between items-start">
+            <div className="flex-1">
+              <p className="text-sm">{solution.text}</p>
+              <p className="text-xs text-muted-foreground mt-1">
+                By {solution.display_name || "Anonymous User"} • {new Date(solution.created_at).toLocaleDateString()}
+              </p>
+            </div>
+            <div className="flex items-center gap-2 min-w-[60px] justify-end">
+              {user && solution.user_id === user.id ? (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950"
+                  onClick={() => handleDeleteSolution(solution.id)}
+                >
+                  <Trash2 size={16} />
+                </Button>
+              ) : (
+                <span className="h-8 w-8 inline-block" style={{ visibility: 'hidden' }}>
+                  <Trash2 size={16} />
+                </span>
+              )}
+            </div>
           </div>
-          <div className="flex items-center gap-2 min-w-[60px] justify-end">
-            {/* Only show delete button for the user who posted the solution */}
-            {user && solution.user_id === user.id ? (
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8 text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950"
-                onClick={() => {
-                  console.log("Delete button clicked", { solutionId: solution.id });
-                  onDelete(solution.id);
-                }}
-              >
-                <Trash2 size={16} />
-              </Button>
-            ) : (
-              <span className="h-8 w-8 inline-block" style={{ visibility: 'hidden' }}>
-                <Trash2 size={16} />
-              </span>
+          {/* Reply button and form */}
+          <div className="ml-2 mt-2">
+            <Button variant="link" size="sm" onClick={() => handleReply(solution.id)}>
+              Reply
+            </Button>
+            {replyingTo === solution.id && (
+              <div className="mt-2 flex gap-2">
+                <input
+                  className="flex-1 border rounded px-2 py-1 text-sm"
+                  placeholder="Write a reply..."
+                  value={replyText}
+                  onChange={e => setReplyText(e.target.value)}
+                />
+                <Button size="sm" onClick={() => handleSubmitReply(solution.id)}>
+                  Submit
+                </Button>
+                <Button size="sm" variant="ghost" onClick={() => setReplyingTo(null)}>
+                  Cancel
+                </Button>
+              </div>
+            )}
+            {/* Render replies */}
+            {repliesByParent[solution.id]?.length > 0 && (
+              <div className="ml-6 mt-2 space-y-2 border-l-2 border-muted-foreground/20 pl-4 bg-muted/40 rounded-md">
+                {repliesByParent[solution.id].map(reply => (
+                  <div key={reply.id} className="flex justify-between items-center py-1">
+                    <div>
+                      <p className="text-xs">{reply.text}</p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        By {reply.display_name || "Anonymous User"} • {new Date(reply.created_at).toLocaleDateString()}
+                      </p>
+                    </div>
+                    {user && reply.user_id === user.id ? (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-6 w-6 text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950 ml-2"
+                        onClick={() => handleDeleteSolution(reply.id)}
+                      >
+                        <Trash2 size={14} />
+                      </Button>
+                    ) : null}
+                  </div>
+                ))}
+              </div>
             )}
           </div>
         </div>
