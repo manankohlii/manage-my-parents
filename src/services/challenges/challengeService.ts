@@ -68,7 +68,8 @@ export const createChallenge = async (challengeData: ChallengeInput, userId: str
         description: challengeData.description,
         age_group: challengeData.age_group,
         location: challengeData.location,
-        user_id: userId
+        user_id: userId,
+        tags: challengeData.tags
       })
       .select()
       .single();
@@ -118,6 +119,7 @@ export const updateChallenge = async (challengeId: string, challengeData: Challe
         description: challengeData.description,
         age_group: challengeData.age_group,
         location: challengeData.location,
+        tags: challengeData.tags,
         updated_at: new Date().toISOString()
       })
       .eq("id", challengeId)
