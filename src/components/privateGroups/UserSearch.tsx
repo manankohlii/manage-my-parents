@@ -25,6 +25,7 @@ const UserSearch = ({ groupId, onInviteSent, existingMemberIds }: UserSearchProp
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [inviting, setInviting] = useState<string | null>(null);
+  const [invitedUsers, setInvitedUsers] = useState<string[]>([]);
   const { toast } = useToast();
 
   const loadUsers = async () => {
@@ -102,6 +103,8 @@ const UserSearch = ({ groupId, onInviteSent, existingMemberIds }: UserSearchProp
       setUsers(prev => prev.filter(u => u.id !== userId));
       await loadUsers(); // Reload the user list to ensure it's up to date
 
+      setInvitedUsers(prev => [...prev, userId]);
+
       onInviteSent();
     } catch (error) {
       console.error('Error sending invitation:', error);
@@ -165,10 +168,12 @@ const UserSearch = ({ groupId, onInviteSent, existingMemberIds }: UserSearchProp
               <Button 
                 size="sm" 
                 onClick={() => sendInvitation(user.id)}
-                disabled={inviting === user.id}
+                disabled={inviting === user.id || invitedUsers.includes(user.id)}
               >
                 {inviting === user.id ? (
                   "Sending..."
+                ) : invitedUsers.includes(user.id) ? (
+                  "Invited"
                 ) : (
                   <>
                     <UserPlus size={14} className="mr-1" />
