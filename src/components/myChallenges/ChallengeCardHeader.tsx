@@ -1,6 +1,7 @@
 import { CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Edit, Trash2 } from "lucide-react";
+import { AlertDialog, AlertDialogTrigger, AlertDialogContent, AlertDialogHeader as DialogHeader, AlertDialogTitle, AlertDialogFooter, AlertDialogCancel, AlertDialogAction } from "@/components/ui/alert-dialog";
 
 interface ChallengeCardHeaderProps {
   title: string;
@@ -21,13 +22,26 @@ const ChallengeCardHeader = ({ title, onEdit, onDelete }: ChallengeCardHeaderPro
           >
             <Edit size={18} />
           </Button>
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            onClick={onDelete}
-          >
-            <Trash2 size={18} />
-          </Button>
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button 
+                variant="ghost" 
+                size="icon"
+                aria-label="Delete Challenge"
+              >
+                <Trash2 size={18} />
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <DialogHeader>
+                <AlertDialogTitle>Are you sure you want to delete this challenge?</AlertDialogTitle>
+              </DialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction onClick={onDelete} className="bg-red-500 hover:bg-red-600 text-white">Delete</AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </div>
       </div>
     </CardHeader>

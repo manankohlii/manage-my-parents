@@ -66,7 +66,6 @@ export const createChallenge = async (challengeData: ChallengeInput, userId: str
       .insert({
         title: challengeData.title,
         description: challengeData.description,
-        mood: challengeData.mood,
         age_group: challengeData.age_group,
         location: challengeData.location,
         user_id: userId
@@ -117,7 +116,6 @@ export const updateChallenge = async (challengeId: string, challengeData: Challe
       .update({
         title: challengeData.title,
         description: challengeData.description,
-        mood: challengeData.mood,
         age_group: challengeData.age_group,
         location: challengeData.location,
         updated_at: new Date().toISOString()

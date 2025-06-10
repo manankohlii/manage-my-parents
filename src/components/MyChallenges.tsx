@@ -25,7 +25,8 @@ const MyChallenges = () => {
     searchTerm,
     setSearchTerm,
     handleDeleteChallenge,
-    handleUpdateChallenge
+    handleUpdateChallenge,
+    handleAddChallenge
   } = useChallenges();
 
   // Scroll to form when editing or adding
@@ -85,6 +86,7 @@ const MyChallenges = () => {
               onClose={handleFormClose}
               challenge={editingChallenge}
               onUpdate={handleUpdateChallenge}
+              onSubmitChallenge={handleAddChallenge}
             />
           </CardContent>
         </Card>

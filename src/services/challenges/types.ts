@@ -2,7 +2,6 @@ export interface Challenge {
   id: string;
   title: string;
   description: string;
-  mood: string;
   location: string;
   age_group: string;
   created_at: string;
@@ -18,7 +17,6 @@ export interface Challenge {
 export interface ChallengeInput {
   title: string;
   description: string;
-  mood: string;
   age_group: string;
   location: string;
   tags: string[];

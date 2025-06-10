@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { getUserChallenges, deleteChallenge, updateChallenge, Challenge } from "@/services/challenges";
+import { getUserChallenges, deleteChallenge, updateChallenge, createChallenge, Challenge } from "@/services/challenges";
 import { useAuth } from "@/contexts/AuthContext";
 
 export const useChallenges = () => {
@@ -38,6 +38,14 @@ export const useChallenges = () => {
     }
   };
 
+  const handleAddChallenge = async (challengeData: any) => {
+    if (!user?.id) return;
+    const newChallenge = await createChallenge(challengeData, user.id);
+    if (newChallenge) {
+      setChallenges(prev => [newChallenge, ...prev]);
+    }
+  };
+
   const getFilteredChallenges = () => {
     return challenges
       .filter(challenge => 
@@ -67,6 +75,7 @@ export const useChallenges = () => {
     setSearchTerm,
     handleDeleteChallenge,
     handleUpdateChallenge,
+    handleAddChallenge,
     filteredChallenges: getFilteredChallenges()
   };
 };

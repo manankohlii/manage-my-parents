@@ -27,7 +27,7 @@ interface ChallengeFormProps {
   onClose?: () => void;
   challenge?: Challenge | null;
   onUpdate?: (id: string, data: any) => Promise<void>;
-  onSubmitChallenge?: (data: { title: string; description: string; tags: string[] }) => Promise<void>;
+  onSubmitChallenge?: (data: { title: string; description: string; tags: string[]; age_group: string; location: string }) => Promise<void>;
 }
 
 const ChallengeForm = ({ onSubmit, onClose, challenge, onUpdate, onSubmitChallenge }: ChallengeFormProps) => {
@@ -142,30 +142,22 @@ const ChallengeForm = ({ onSubmit, onClose, challenge, onUpdate, onSubmitChallen
 
     setLoading(true);
     try {
-      if (onSubmitChallenge) {
-        await onSubmitChallenge({
-          title: formData.title,
-          description: formData.description,
-          tags: selectedTags,
-        });
-      } else if (challenge && onUpdate) {
+      if (challenge && onUpdate) {
         await onUpdate(challenge.id, {
           title: formData.title,
           description: formData.description,
           location: formData.location,
           tags: selectedTags,
-          mood: challenge.mood || "neutral",
           age_group: formData.age_group
         });
-      } else {
-        await createChallenge({
+      } else if (onSubmitChallenge) {
+        await onSubmitChallenge({
           title: formData.title,
           description: formData.description,
-          location: formData.location,
           tags: selectedTags,
-          mood: "neutral",
-          age_group: formData.age_group
-        }, user.id);
+          age_group: formData.age_group,
+          location: formData.location,
+        });
       }
 
       toast({
