@@ -62,8 +62,14 @@ const ProfilePage = () => {
     setProfile((prev) => ({ ...prev, [name]: value }));
   };
 
+  const handleEdit = () => {
+    console.log("Edit Profile button clicked", profile);
+    setIsEditing(true);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    console.log("Save Profile button clicked", profile);
     
     try {
       const { error } = await supabase
@@ -216,7 +222,12 @@ const ProfilePage = () => {
                   <Button type="submit">Save Changes</Button>
                 </>
               ) : (
-                <Button type="button" onClick={() => setIsEditing(true)}>
+                <Button
+                  type="button"
+                  onClick={handleEdit}
+                  className="w-full mt-4"
+                  disabled={isEditing}
+                >
                   Edit Profile
                 </Button>
               )}
