@@ -17,11 +17,12 @@ interface GroupDetailProps {
 }
 
 const GroupDetail = ({ groupId, onBack }: GroupDetailProps) => {
-  const { group, loading } = useGroupDetail(groupId);
+  const { group, loading, leaveGroup } = useGroupDetail(groupId);
   const { deleteGroup } = usePrivateGroups();
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState("chat");
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
 
   const handleDeleteGroup = async () => {
     if (!group) return;
@@ -81,8 +82,8 @@ const GroupDetail = ({ groupId, onBack }: GroupDetailProps) => {
             )}
           </div>
           
-          {/* Delete button for admins */}
-          {isAdmin && (
+          {/* Delete button for admins, Leave button for non-admins */}
+          {isAdmin ? (
             <Button 
               variant="destructive" 
               size="sm"
@@ -90,6 +91,15 @@ const GroupDetail = ({ groupId, onBack }: GroupDetailProps) => {
               className="whitespace-nowrap"
             >
               Delete Group
+            </Button>
+          ) : (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowLeaveConfirm(true)}
+              className="whitespace-nowrap"
+            >
+              Leave Group
             </Button>
           )}
         </div>
@@ -142,6 +152,30 @@ const GroupDetail = ({ groupId, onBack }: GroupDetailProps) => {
               </Button>
               <Button variant="destructive" onClick={handleDeleteGroup}>
                 Delete Permanently
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Leave confirmation dialog for non-admins */}
+      {showLeaveConfirm && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-background p-6 rounded-lg max-w-md w-full mx-4">
+            <h3 className="text-lg font-semibold mb-2">Leave Group</h3>
+            <p className="text-muted-foreground mb-4">
+              Are you sure you want to leave "{group.name}"? You will lose access to all group content.
+            </p>
+            <div className="flex gap-2 justify-end">
+              <Button variant="outline" onClick={() => setShowLeaveConfirm(false)}>
+                Cancel
+              </Button>
+              <Button variant="destructive" onClick={async () => {
+                await leaveGroup();
+                setShowLeaveConfirm(false);
+                onBack();
+              }}>
+                Leave Group
               </Button>
             </div>
           </div>

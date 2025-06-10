@@ -296,6 +296,30 @@ export const useGroupDetail = (groupId: string) => {
     }
   };
 
+  const leaveGroup = async () => {
+    if (!user || !groupId) return;
+    try {
+      const { error } = await supabase
+        .from('group_members')
+        .delete()
+        .eq('group_id', groupId)
+        .eq('user_id', user.id);
+      if (error) throw error;
+      toast({
+        title: "Left group",
+        description: "You have left the group.",
+      });
+    } catch (error) {
+      console.error('Error leaving group:', error);
+      toast({
+        title: "Failed to leave group",
+        description: "Could not leave the group. Please try again.",
+        variant: "destructive",
+      });
+      throw error;
+    }
+  };
+
   useEffect(() => {
     loadGroup();
   }, [groupId]);
@@ -303,8 +327,9 @@ export const useGroupDetail = (groupId: string) => {
   return {
     group,
     loading,
+    loadGroup,
     inviteMember,
     removeMember,
-    refreshGroup: loadGroup
+    leaveGroup,
   };
 };
