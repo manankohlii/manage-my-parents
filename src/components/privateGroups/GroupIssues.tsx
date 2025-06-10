@@ -40,6 +40,8 @@ const GroupIssues = ({ groupId }: GroupIssuesProps) => {
     getIssueSolutions,
     userVotes,
     handleVote,
+    deleteIssue,
+    updateIssue,
     // addSolution
   } = useIssues(groupId);
 
@@ -156,6 +158,8 @@ const GroupIssues = ({ groupId }: GroupIssuesProps) => {
             onSelectIssue={selectIssue}
             userVotes={userVotes}
             onVote={handleVote}
+            onIssueDeleted={deleteIssue}
+            updateIssue={updateIssue}
           />
         </TabsContent>
 

@@ -1,13 +1,15 @@
 import { useState, useEffect } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import ChallengeCard from "@/components/explore/ChallengeCard";
-import { Issue } from "./useIssues";
 import { createGroupSolution, getGroupSolutions, GroupSolution, deleteGroupSolution } from '@/services/groupSolutionsService';
 import { useAuth } from '@/contexts/AuthContext';
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import GroupSolutionsList from "@/components/privateGroups/issues/GroupSolutionsList";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { deleteGroupChallenge } from "@/services/groupChallengesService";
 
 interface IssuesListProps {
   issues: Issue[];
@@ -18,6 +20,8 @@ interface IssuesListProps {
   onSelectIssue: (issueId: string) => void;
   userVotes: Record<string, boolean>;
   onVote: (itemId: string, isUpvote: boolean) => void;
+  onIssueDeleted?: (issueId: string) => void;
+  updateIssue: (issueId: string, data: { title: string; description: string; tags: string[] }) => Promise<any>;
 }
 
 const IssuesList = ({
@@ -28,16 +32,20 @@ const IssuesList = ({
   onOpenAddDialog,
   onSelectIssue,
   userVotes,
-  onVote
+  onVote,
+  onIssueDeleted,
+  updateIssue
 }: IssuesListProps) => {
   const { toast: uiToast } = useToast();
   const [selectedIssue, setSelectedIssue] = useState<Issue | null>(null);
   const { user } = useAuth();
   const [solutions, setSolutions] = useState<Record<string, GroupSolution[]>>({});
   const [loadingSolution, setLoadingSolution] = useState<Record<string, boolean>>({});
-  const [issuesState, setIssuesState] = useState<Issue[]>(issues);
   const [expandedSolutions, setExpandedSolutions] = useState<Record<string, boolean>>({});
   const [newSolutions, setNewSolutions] = useState<Record<string, string>>({});
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [editChallenge, setEditChallenge] = useState<Issue | null>(null);
+  const [editForm, setEditForm] = useState({ title: '', description: '', tags: '' });
 
   // Load solutions for all visible issues on mount or when filteredIssues changes
   useEffect(() => {
@@ -55,10 +63,6 @@ const IssuesList = ({
     };
     loadAllSolutions();
   }, [filteredIssues]);
-
-  useEffect(() => {
-    setIssuesState(issues);
-  }, [issues]);
 
   const handleSubmitGroupSolution = async (challengeId: string) => {
     if (!user?.id) {
@@ -83,11 +87,6 @@ const IssuesList = ({
           delete newState[challengeId];
           return newState;
         });
-        setIssuesState(prevIssues => prevIssues.map(issue =>
-          issue.id === challengeId
-            ? { ...issue, solutionCount: (issue.solutionCount || 0) + 1 }
-            : issue
-        ));
         toast.success("Solution submitted successfully!");
       }
     } catch (error) {
@@ -106,11 +105,6 @@ const IssuesList = ({
         ...prev,
         [challengeId]: (prev[challengeId] || []).filter(sol => sol.id !== solutionId)
       }));
-      setIssuesState(prevIssues => prevIssues.map(issue =>
-        issue.id === challengeId
-          ? { ...issue, solutionCount: Math.max((issue.solutionCount || 1) - 1, 0) }
-          : issue
-      ));
       toast.success("Solution deleted successfully!");
     } catch (error) {
       console.error("Error deleting group solution:", error);
@@ -122,6 +116,79 @@ const IssuesList = ({
     console.log("Challenge card clicked:", issue);
     setSelectedIssue(issue);
     onSelectIssue(issue.id);
+  };
+
+  const handleEdit = (challenge: Issue) => {
+    setEditChallenge(challenge);
+    setEditForm({
+      title: challenge.title,
+      description: challenge.description,
+      tags: (challenge.tags || []).join(', '),
+    });
+    setEditDialogOpen(true);
+  };
+
+  const handleEditFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setEditForm(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleEditSave = async () => {
+    if (!editChallenge) return;
+    try {
+      const updatedChallenge = await updateIssue(editChallenge.id, {
+        title: editForm.title,
+        description: editForm.description,
+        tags: editForm.tags.split(',').map(t => t.trim()).filter(t => t),
+      });
+      
+      setEditDialogOpen(false);
+      setEditChallenge(null);
+      toast.success("Challenge updated successfully");
+    } catch (error) {
+      console.error("Error saving edit:", error);
+      toast.error("Failed to update challenge");
+    }
+  };
+
+  const handleDeleteChallenge = async (challengeId: string) => {
+    console.log("Attempting to delete challenge:", challengeId);
+    try {
+      const result = await deleteGroupChallenge(challengeId);
+      console.log("Delete result:", result);
+      
+      // Also update the solutions state
+      setSolutions(prev => {
+        const newState = { ...prev };
+        delete newState[challengeId];
+        return newState;
+      });
+
+      // Update expanded solutions state
+      setExpandedSolutions(prev => {
+        const newState = { ...prev };
+        delete newState[challengeId];
+        return newState;
+      });
+
+      // Update new solutions state
+      setNewSolutions(prev => {
+        const newState = { ...prev };
+        delete newState[challengeId];
+        return newState;
+      });
+
+      // Notify parent component about the deletion
+      onIssueDeleted?.(challengeId);
+
+      toast.success("Challenge deleted successfully");
+    } catch (error) {
+      console.error("Error deleting challenge:", error);
+      if (error instanceof Error) {
+        console.error("Error details:", error.message);
+      }
+      toast.error("Failed to delete challenge");
+    }
   };
 
   if (loading) {
@@ -153,55 +220,86 @@ const IssuesList = ({
 
   return (
     <div className="space-y-4">
-      {filteredIssues.map((issue) => {
-        const issueWithUpdatedCount = issuesState.find(i => i.id === issue.id) || issue;
-        return (
-          <div key={issue.id} className="space-y-4">
-            <ChallengeCard
-              challenge={{
-                ...issueWithUpdatedCount,
-                likes_count: issueWithUpdatedCount.votes || 0,
-                solutions_count: (solutions[issue.id]?.length) ?? issueWithUpdatedCount.solutionCount ?? 0,
-                created_at: issueWithUpdatedCount.created_at,
-                tags: issueWithUpdatedCount.tags,
-                mood: '',
-                location: '',
-                age_group: '',
-              }}
-              handleUpvote={() => onVote(issue.id, true)}
-              handleDownvote={() => {}}
-              handleVote={async (challengeId, solutionId, voteType) => {
-                if (!solutionId) {
-                  onVote(challengeId, voteType === 'up');
-                }
-                return Promise.resolve();
-              }}
-              loadingSolution={!!loadingSolution[issue.id]}
-              userVotes={{ [issue.id]: userVotes[issue.id] }}
-              openSolutionForm={false}
-              setOpenSolutionForm={() => {}}
-              user={user}
-              handleSubmitSolution={async (challengeId, solutionText) => {
-                await handleSubmitGroupSolution(challengeId);
-                return Promise.resolve();
-              }}
-              showSolutions={!!expandedSolutions[issue.id]}
-              onToggleSolutions={() => setExpandedSolutions(prev => ({ ...prev, [issue.id]: !prev[issue.id] }))}
-              solutionText={newSolutions[issue.id] || ''}
-              onSolutionTextChange={text => setNewSolutions(prev => ({ ...prev, [issue.id]: text }))}
-              onSolutionSubmit={() => handleSubmitGroupSolution(issue.id)}
-              solutionLoading={!!loadingSolution[issue.id]}
-              SolutionsListComponent={GroupSolutionsList}
-              solutionsListProps={{
-                solutions: solutions[issue.id] || [],
-                challengeId: issue.id,
-                user: user,
-                onDelete: (solutionId: string) => handleDeleteGroupSolution(issue.id, solutionId)
-              }}
+      {filteredIssues.map((issue) => (
+        <ChallengeCard
+          key={issue.id}
+          challenge={issue as any}
+          handleUpvote={() => onVote(issue.id, true)}
+          handleDownvote={() => onVote(issue.id, false)}
+          handleSubmitSolution={handleSubmitGroupSolution}
+          loadingSolution={loadingSolution[issue.id] || false}
+          userVotes={userVotes}
+          openSolutionForm={false}
+          setOpenSolutionForm={() => {}}
+          user={user}
+          solutions={(solutions[issue.id] || []) as any}
+          handleVote={async () => {}}
+          onSolutionDeleted={() => handleDeleteGroupSolution(issue.id, '')}
+          showSolutions={expandedSolutions[issue.id]}
+          onToggleSolutions={() => setExpandedSolutions(prev => ({
+            ...prev,
+            [issue.id]: !prev[issue.id]
+          }))}
+          solutionText={newSolutions[issue.id]}
+          onSolutionTextChange={(text) => setNewSolutions(prev => ({
+            ...prev,
+            [issue.id]: text
+          }))}
+          onSolutionSubmit={() => handleSubmitGroupSolution(issue.id)}
+          solutionLoading={loadingSolution[issue.id] || false}
+          SolutionsListComponent={GroupSolutionsList}
+          solutionsListProps={{
+            solutions: solutions[issue.id] || [],
+            onDelete: (solutionId: string) => handleDeleteGroupSolution(issue.id, solutionId),
+            userVotes: userVotes,
+            onVote: onVote,
+            challengeId: issue.id
+          }}
+          isGroupChallenge={true}
+          onEdit={challenge => handleEdit((challenge as unknown) as Issue)}
+          onDelete={challenge => handleDeleteChallenge(challenge.id)}
+        />
+      ))}
+      {/* Edit Dialog */}
+      <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Challenge</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <label htmlFor="edit-title">Title</label>
+            <Input
+              id="edit-title"
+              name="title"
+              value={editForm.title}
+              onChange={handleEditFormChange}
+              placeholder="Challenge title"
+            />
+            <label htmlFor="edit-description">Description</label>
+            <Textarea
+              id="edit-description"
+              name="description"
+              value={editForm.description}
+              onChange={handleEditFormChange}
+              placeholder="Challenge description"
+            />
+            <label htmlFor="edit-tags">Tags (comma separated)</label>
+            <Input
+              id="edit-tags"
+              name="tags"
+              value={editForm.tags}
+              onChange={handleEditFormChange}
+              placeholder="e.g. sad, social"
             />
           </div>
-        );
-      })}
+          <DialogFooter>
+            <Button onClick={handleEditSave}>Save</Button>
+            <DialogClose asChild>
+              <Button variant="outline">Cancel</Button>
+            </DialogClose>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

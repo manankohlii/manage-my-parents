@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
-import { getGroupChallenges, createGroupChallenge, GroupChallenge } from "@/services/groupChallengesService";
+import { getGroupChallenges, createGroupChallenge, GroupChallenge, deleteGroupChallenge, updateGroupChallenge } from "@/services/groupChallengesService";
 
 export interface Issue extends GroupChallenge {
   userName?: string;
@@ -132,6 +132,34 @@ export const useIssues = (groupId: string) => {
     toast.success(isUpvote ? "Upvoted!" : "Downvoted!");
   }, [user]);
 
+  const deleteIssue = useCallback(async (issueId: string) => {
+    try {
+      await deleteGroupChallenge(issueId);
+      setIssues(prev => prev.filter(issue => issue.id !== issueId));
+      toast.success("Challenge deleted successfully");
+    } catch (error) {
+      console.error("Error deleting challenge:", error);
+      toast.error("Failed to delete challenge");
+    }
+  }, []);
+
+  const updateIssue = useCallback(async (issueId: string, data: { title: string; description: string; tags: string[] }) => {
+    try {
+      const updatedChallenge = await updateGroupChallenge(issueId, data);
+      setIssues(prev => prev.map(issue => 
+        issue.id === issueId 
+          ? { ...issue, ...updatedChallenge }
+          : issue
+      ));
+      toast.success("Challenge updated successfully");
+      return updatedChallenge;
+    } catch (error) {
+      console.error("Error updating challenge:", error);
+      toast.error("Failed to update challenge");
+      throw error;
+    }
+  }, []);
+
   return {
     issues,
     loading,
@@ -149,5 +177,7 @@ export const useIssues = (groupId: string) => {
     solutions,
     userVotes,
     handleVote,
+    deleteIssue,
+    updateIssue,
   };
 };

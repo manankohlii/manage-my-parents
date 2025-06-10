@@ -2,11 +2,12 @@ import React, { useState } from "react";
 import { formatDistanceToNow } from "date-fns";
 import TagBadge from "../TagBadge";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
-import { ThumbsUp, MessageCircle } from "lucide-react";
+import { ThumbsUp, MessageCircle, Pencil, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Challenge } from "@/services/challenges/types";
 import SolutionsList from "./SolutionsList";
 import { Solution } from "@/services/solutionsService";
+import { AlertDialog, AlertDialogTrigger, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogFooter, AlertDialogCancel, AlertDialogAction } from "@/components/ui/alert-dialog";
 
 interface ChallengeCardProps {
   challenge: Challenge;
@@ -29,6 +30,9 @@ interface ChallengeCardProps {
   solutionLoading?: boolean;
   SolutionsListComponent?: React.ComponentType<any>;
   solutionsListProps?: any;
+  isGroupChallenge?: boolean;
+  onEdit?: (challenge: Challenge) => void;
+  onDelete?: (challenge: Challenge) => void;
 }
 
 const ChallengeCard = ({
@@ -51,7 +55,10 @@ const ChallengeCard = ({
   onSolutionSubmit,
   solutionLoading,
   SolutionsListComponent,
-  solutionsListProps
+  solutionsListProps,
+  isGroupChallenge,
+  onEdit,
+  onDelete
 }: ChallengeCardProps) => {
   const [showSolutionsState, setShowSolutionsState] = useState(false);
   const [localSolutionText, setLocalSolutionText] = useState("");
@@ -64,10 +71,50 @@ const ChallengeCard = ({
         <CardHeader>
           <div className="flex items-center justify-between">
             <h3 className="text-lg font-semibold">{challenge.title}</h3>
-            <div className="text-sm text-gray-500">
-              {formatDistanceToNow(new Date(challenge.created_at), {
-                addSuffix: true,
-              })}
+            <div className="flex items-center gap-2">
+              <div className="text-sm text-gray-500">
+                {formatDistanceToNow(new Date(challenge.created_at), {
+                  addSuffix: true,
+                })}
+              </div>
+              {isGroupChallenge && (
+                <>
+                  {onEdit && (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => onEdit(challenge)}
+                      className="ml-2"
+                      aria-label="Edit Challenge"
+                    >
+                      <Pencil className="h-4 w-4" />
+                    </Button>
+                  )}
+                  {onDelete && (
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="ml-2"
+                          aria-label="Delete Challenge"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Are you sure you want to delete this challenge?</AlertDialogTitle>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogAction onClick={() => onDelete(challenge)} className="bg-red-500 hover:bg-red-600 text-white">Delete</AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  )}
+                </>
+              )}
             </div>
           </div>
           <div className="flex flex-wrap gap-2 mt-2">
