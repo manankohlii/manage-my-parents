@@ -12,6 +12,7 @@ export interface Challenge {
   votes_count?: number;
   likes_count?: number;
   dislikes_count?: number;
+  display_name?: string;
 }
 
 export interface ChallengeInput {

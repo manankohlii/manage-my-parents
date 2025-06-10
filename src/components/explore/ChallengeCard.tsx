@@ -124,6 +124,9 @@ const ChallengeCard = ({
               <TagBadge key={tag} text={tag} />
             ))}
           </div>
+          <div className="text-xs text-muted-foreground mt-1">
+            By {challenge.display_name || "Anonymous User"}
+          </div>
         </CardHeader>
         <CardContent>
           <p className="text-sm text-gray-700 mb-4">{challenge.description}</p>
@@ -204,16 +207,21 @@ const ChallengeCard = ({
       <CardHeader>
         <div className="flex items-center justify-between">
           <h3 className="text-lg font-semibold">{challenge.title}</h3>
-          <div className="text-sm text-gray-500">
-            {formatDistanceToNow(new Date(challenge.created_at), {
-              addSuffix: true,
-            })}
+          <div className="flex items-center gap-2">
+            <div className="text-sm text-gray-500">
+              {formatDistanceToNow(new Date(challenge.created_at), {
+                addSuffix: true,
+              })}
+            </div>
           </div>
         </div>
         <div className="flex flex-wrap gap-2 mt-2">
           {challenge.tags?.map((tag) => (
             <TagBadge key={tag} text={tag} />
           ))}
+        </div>
+        <div className="text-xs text-muted-foreground mt-1">
+          By {challenge.display_name || "Anonymous User"}
         </div>
       </CardHeader>
       <CardContent>

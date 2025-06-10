@@ -7,10 +7,10 @@ import { enrichChallengeWithMetadata, enrichUserChallengeWithMetadata } from "./
 // Get all challenges with vote counts and tag names
 export const getAllChallenges = async () => {
   try {
-    // First get the challenges
+    // First get the challenges with display_name from profiles
     const { data: challenges, error } = await supabase
       .from("challenges")
-      .select("*")
+      .select("*, profile:profiles(display_name)")
       .order("created_at", { ascending: false });
 
     if (error) throw error;
@@ -18,7 +18,11 @@ export const getAllChallenges = async () => {
     // Enrich challenges with tags, solution counts, and votes
     const enrichedChallenges = await Promise.all(
       challenges.map(async (challenge) => {
-        return await enrichChallengeWithMetadata(challenge);
+        const enriched = await enrichChallengeWithMetadata(challenge);
+        return {
+          ...enriched,
+          display_name: challenge.profile?.display_name || "Anonymous User"
+        };
       })
     );
 
