@@ -10,6 +10,7 @@ export interface Solution {
   updated_at: string;
   votes?: number;
   author_name?: string;
+  parent_solution_id?: string;
 }
 
 // Get solutions for a challenge
@@ -72,7 +73,8 @@ export const getSolutions = async (challengeId: string) => {
 export const createSolution = async (
   challengeId: string, 
   text: string, 
-  userId: string
+  userId: string,
+  parentSolutionId?: string
 ) => {
   try {
     const { data, error } = await supabase
@@ -80,7 +82,8 @@ export const createSolution = async (
       .insert({
         challenge_id: challengeId,
         user_id: userId,
-        text
+        text,
+        parent_solution_id: parentSolutionId || null
       })
       .select()
       .single();
