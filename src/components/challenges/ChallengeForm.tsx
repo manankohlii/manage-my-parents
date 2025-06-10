@@ -192,14 +192,13 @@ const ChallengeForm = ({ onSubmit, onClose, challenge, onUpdate, onSubmitChallen
   };
   
   return (
-    <div className="relative">
+    <div className="bg-white rounded-lg shadow-md p-6">
       <Button
         type="button"
         onClick={onClose}
         variant="ghost"
         size="sm"
-        className="absolute -right-2 -top-2 text-destructive hover:text-destructive/80 hover:bg-transparent"
-        aria-label="Close dialog"
+        className="absolute top-2 right-2 text-red-500"
       >
         Cancel
       </Button>
