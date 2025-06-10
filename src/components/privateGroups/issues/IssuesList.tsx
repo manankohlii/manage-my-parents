@@ -269,6 +269,7 @@ const IssuesList = ({
               challengeId: issue.id
             }}
             isGroupChallenge={true}
+            canEditOrDelete={issue.user_id === user?.id}
             onEdit={challenge => handleEdit((challenge as unknown) as Issue)}
             onDelete={challenge => handleDeleteChallenge(challenge.id)}
           />

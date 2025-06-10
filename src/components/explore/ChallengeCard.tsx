@@ -31,6 +31,7 @@ interface ChallengeCardProps {
   SolutionsListComponent?: React.ComponentType<any>;
   solutionsListProps?: any;
   isGroupChallenge?: boolean;
+  canEditOrDelete?: boolean;
   onEdit?: (challenge: Challenge) => void;
   onDelete?: (challenge: Challenge) => void;
 }
@@ -57,6 +58,7 @@ const ChallengeCard = ({
   SolutionsListComponent,
   solutionsListProps,
   isGroupChallenge,
+  canEditOrDelete,
   onEdit,
   onDelete
 }: ChallengeCardProps) => {
@@ -77,7 +79,7 @@ const ChallengeCard = ({
                   addSuffix: true,
                 })}
               </div>
-              {isGroupChallenge && (
+              {isGroupChallenge && canEditOrDelete && (
                 <>
                   {onEdit && (
                     <Button
