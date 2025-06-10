@@ -4,7 +4,7 @@ import { Challenge } from "@/services/challenges/types";
 export const useFiltering = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [sortBy, setSortBy] = useState("");
-  const [filterAgeGroup, setFilterAgeGroup] = useState("");
+  const [filterAgeGroup, setFilterAgeGroup] = useState("all");
   const [filterLocation, setFilterLocation] = useState("all");
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
 
@@ -12,9 +12,9 @@ export const useFiltering = () => {
   const getFilteredChallenges = (challenges: Challenge[]) => {
     return challenges
       .filter(challenge => {
-        // Keep the age group filter logic but it will now always return true
-        // since we've removed the UI element and default to empty string
-        if (filterAgeGroup === "") return true;
+        // If filterAgeGroup is 'all', show all challenges
+        if (filterAgeGroup === "all") return true;
+        // Otherwise, filter by the selected age group
         return challenge.age_group === filterAgeGroup;
       })
       .filter(challenge => filterLocation === "all" || challenge.location === filterLocation)
