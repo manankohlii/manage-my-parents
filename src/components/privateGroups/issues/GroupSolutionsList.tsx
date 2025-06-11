@@ -104,19 +104,30 @@ const GroupSolutionsList = ({
               Reply
             </Button>
             {replyingTo === solution.id && (
-              <div className="mt-2 flex gap-2">
+              <div className="mt-2 w-full">
                 <input
-                  className="flex-1 border rounded px-2 py-1 text-sm"
+                  className="block border rounded px-2 py-1 text-sm w-full max-w-full mb-2"
                   placeholder="Write a reply..."
                   value={replyText}
                   onChange={e => setReplyText(e.target.value)}
                 />
-                <Button size="sm" onClick={() => handleSubmitReply(solution.id)}>
-                  Submit
-                </Button>
-                <Button size="sm" variant="ghost" onClick={() => setReplyingTo(null)}>
-                  Cancel
-                </Button>
+                <div className="block w-full space-y-2 sm:flex sm:space-y-0 sm:space-x-2">
+                  <Button
+                    size="sm"
+                    className="block w-full sm:w-auto"
+                    onClick={() => handleSubmitReply(solution.id)}
+                  >
+                    Submit
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="block w-full sm:w-auto"
+                    onClick={() => setReplyingTo(null)}
+                  >
+                    Cancel
+                  </Button>
+                </div>
               </div>
             )}
             {/* Render replies */}
