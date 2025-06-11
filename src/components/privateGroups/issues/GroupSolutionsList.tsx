@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { ThumbsUp, Trash2 } from "lucide-react";
-import { GroupSolution, createGroupSolution } from '@/services/groupSolutionsService';
+import { GroupSolution, createGroupSolution, voteGroupSolution } from '@/services/groupSolutionsService';
 
 interface GroupSolutionsListProps {
   solutions: GroupSolution[];
@@ -19,6 +19,7 @@ const GroupSolutionsList = ({
   const [replyingTo, setReplyingTo] = useState<string | null>(null);
   const [replyText, setReplyText] = useState("");
   const [localSolutions, setLocalSolutions] = useState(solutions);
+  const [solutionVotes, setSolutionVotes] = useState<Record<string, { likes_count: number, user_vote: boolean | null }>>({});
 
   // Organize solutions into parent/replies
   const parentSolutions = localSolutions.filter(sol => !sol.parent_solution_id);
@@ -48,6 +49,25 @@ const GroupSolutionsList = ({
   const handleDeleteSolution = (solutionId: string) => {
     onDelete(solutionId);
     setLocalSolutions(prev => prev.filter(sol => sol.id !== solutionId));
+  };
+
+  // Upvote handler
+  const handleUpvote = async (solution: GroupSolution) => {
+    if (!user) return;
+    const prev = solutionVotes[solution.id] || { likes_count: (solution as any).likes_count || 0, user_vote: (solution as any).user_vote ?? null };
+    let newLikes = prev.likes_count;
+    let newVote = prev.user_vote;
+    if (prev.user_vote) {
+      newLikes = Math.max(0, newLikes - 1);
+      newVote = null;
+    } else {
+      newLikes = newLikes + 1;
+      newVote = true;
+    }
+    setSolutionVotes(v => ({ ...v, [solution.id]: { likes_count: newLikes, user_vote: newVote } }));
+    try {
+      await voteGroupSolution(solution.id, user.id, !prev.user_vote);
+    } catch {}
   };
 
   const hasSolutions = parentSolutions.length > 0;
@@ -82,6 +102,17 @@ const GroupSolutionsList = ({
               </p>
             </div>
             <div className="flex items-center gap-2 min-w-[60px] justify-end">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => handleUpvote(solution)}
+                disabled={!user}
+              >
+                <ThumbsUp className={solutionVotes[solution.id]?.user_vote ? "text-primary fill-primary" : ""} />
+              </Button>
+              <span className="text-sm font-medium min-w-[1.5rem] text-center">
+                {solutionVotes[solution.id]?.likes_count ?? (solution as any).likes_count ?? 0}
+              </span>
               {user && solution.user_id === user.id ? (
                 <Button
                   variant="ghost"
