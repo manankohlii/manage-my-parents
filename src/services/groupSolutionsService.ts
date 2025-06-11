@@ -25,22 +25,27 @@ export const createGroupSolution = async (
       text,
       parent_solution_id: parentSolutionId || null
     })
-    .select()
+    .select("*, profiles:profiles!fk_user_id(display_name)")
     .single();
   if (error) throw error;
-  return data as unknown as GroupSolution;
+  if (!data) return null;
+  return {
+    ...data,
+    display_name: data && data.profiles && data.profiles.display_name ? data.profiles.display_name : "Anonymous User"
+  } as GroupSolution;
 };
 
 export const getGroupSolutions = async (groupChallengeId: string) => {
   const { data, error } = await supabase
     .from("group_solutions")
-    .select("*, profile:profiles(display_name)")
+    .select("*, profiles:profiles!fk_user_id(display_name)")
     .eq("group_challenge_id", groupChallengeId)
     .order("created_at", { ascending: false });
   if (error) throw error;
-  return (data as any[]).map(sol => ({
+  if (!Array.isArray(data)) return [];
+  return data.map((sol: any) => ({
     ...sol,
-    display_name: sol.profile?.display_name || "Anonymous User"
+    display_name: sol && sol.profiles && sol.profiles.display_name ? sol.profiles.display_name : "Anonymous User"
   }));
 };
 

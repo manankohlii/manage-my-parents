@@ -67,6 +67,12 @@ const GroupSolutionsList = ({
         <div 
           key={solution.id} 
           className="bg-muted/90 dark:bg-muted/60 p-3 rounded-md flex flex-col gap-2"
+          onClick={() => {
+            console.log('Solution clicked:', solution);
+            if (user) {
+              console.log('Current user:', user);
+            }
+          }}
         >
           <div className="flex justify-between items-start">
             <div className="flex-1">
