@@ -20,16 +20,21 @@ export const useChallengeVoting = (
       const challenge = challenges.find(c => c.id === challengeId);
       if (challenge) {
         const currentVote = userVotes[challengeId];
+        let voteChange = 0;
         
-        // Update likes count
         if (currentVote === null) {
           // New upvote - add one
-          updateChallengeStats(challengeId, 'likes_count', (challenge.likes_count || 0) + 1);
-        } else {
+          voteChange = 1;
+        } else if (currentVote === true) {
           // Remove upvote - subtract one
-          const newLikesCount = Math.max(0, (challenge.likes_count || 0) - 1);
-          updateChallengeStats(challengeId, 'likes_count', newLikesCount);
+          voteChange = -1;
+        } else {
+          // Change from downvote to upvote - add two
+          voteChange = 2;
         }
+        
+        // Update likes count in UI immediately
+        updateChallengeStats(challengeId, 'likes_count', (challenge.likes_count || 0) + voteChange);
         
         // Then persist to database
         await handleVote(challengeId, null, 'up');

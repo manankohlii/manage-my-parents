@@ -1,4 +1,3 @@
-
 import { useAuth } from "@/contexts/AuthContext";
 import { useChallenges } from "@/hooks/explore/useChallenges";
 import { useFiltering } from "@/hooks/explore/useFiltering";
@@ -34,6 +33,7 @@ export const useChallengeListing = () => {
   
   const {
     userVotes,
+    setUserVotes,
     loadUserVotesForChallenges,
     updateUserVotesForSolutions,
     handleVote
@@ -108,19 +108,17 @@ export const useChallengeListing = () => {
           voteChange = isUpvote ? 2 : -2;
         }
         
-        // Update vote count in UI immediately
+        // Update upvote count in UI immediately
         updateChallengeStats(
           challengeId, 
-          'votes_count', 
-          (challenge.votes_count || 0) + voteChange
+          'likes_count', 
+          (challenge.likes_count || 0) + voteChange
         );
-        
-        // Update user vote state immediately
-        const updatedUserVotes = { 
-          ...userVotes, 
-          [challengeId]: currentVote === isUpvote ? null : isUpvote 
-        };
-        
+        // Update userVotes immediately
+        setUserVotes(prev => ({
+          ...prev,
+          [challengeId]: currentVote === isUpvote ? null : isUpvote
+        }));
         // Then persist to database
         await handleVote(challengeId, null, voteType);
       }

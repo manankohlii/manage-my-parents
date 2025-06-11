@@ -115,7 +115,7 @@ const GroupsList = ({ onSelectGroup, refreshTrigger }: GroupsListProps) => {
           </CardHeader>
           <CardContent>
             <p className="text-sm text-muted-foreground line-clamp-2">
-              Private group for collaboration and communication
+              {group.description?.trim() ? group.description : "Private group for collaboration and communication"}
             </p>
           </CardContent>
           <CardFooter>

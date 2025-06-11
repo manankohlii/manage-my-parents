@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
-import { getGroupChallenges, createGroupChallenge, GroupChallenge, deleteGroupChallenge, updateGroupChallenge } from "@/services/groupChallengesService";
+import { getGroupChallenges, createGroupChallenge, GroupChallenge, deleteGroupChallenge, updateGroupChallenge, voteGroupChallenge } from "@/services/groupChallengesService";
 
 export interface Issue extends GroupChallenge {
   userName?: string;
@@ -37,7 +37,7 @@ export const useIssues = (groupId: string) => {
     const loadIssues = async () => {
       try {
         setLoading(true);
-        const data = await getGroupChallenges(groupId);
+        const data = await getGroupChallenges(groupId, user?.id);
         setIssues(data.map(challenge => ({ ...challenge, location: "" })));
         setSolutions({}); // TODO: fetch solutions if needed
         setUserVotes({});
@@ -53,7 +53,7 @@ export const useIssues = (groupId: string) => {
       }
     };
     loadIssues();
-  }, [groupId, uiToast]);
+  }, [groupId, uiToast, user?.id]);
 
   // Filter issues based on search term and selected tag
   const filteredIssues = issues.filter(issue => {
@@ -111,24 +111,38 @@ export const useIssues = (groupId: string) => {
     }));
   }, []);
 
-  // Handle voting for issue or solution (mocked)
-  const handleVote = useCallback((itemId: string, isUpvote: boolean) => {
+  // Handle voting for issue or solution
+  const handleVote = useCallback(async (itemId: string, isUpvote: boolean) => {
     if (!user) {
       toast.error("Please log in to vote");
       return;
     }
-    setUserVotes(prev => {
-      const currentVote = prev[itemId];
-      if (currentVote === isUpvote) {
-        const newVotes = { ...prev };
-        delete newVotes[itemId];
-        return newVotes;
+    // Optimistically update UI
+    setIssues(prev => prev.map(issue => {
+      if (issue.id !== itemId) return issue;
+      const currentVote = issue.user_vote;
+      let newLikes = typeof issue.likes_count === 'number' ? issue.likes_count : 0;
+      let newVote = currentVote;
+      if (currentVote) {
+        // User is removing their upvote
+        newLikes = Math.max(0, newLikes - 1);
+        newVote = null;
+      } else {
+        // User is adding an upvote
+        newLikes = newLikes + 1;
+        newVote = true;
       }
       return {
-        ...prev,
-        [itemId]: isUpvote
+        ...issue,
+        likes_count: newLikes,
+        user_vote: newVote
       };
-    });
+    }));
+    try {
+      await voteGroupChallenge(itemId, user.id, isUpvote);
+    } catch (error) {
+      toast.error("Failed to register your vote");
+    }
     toast.success(isUpvote ? "Upvoted!" : "Downvoted!");
   }, [user]);
 

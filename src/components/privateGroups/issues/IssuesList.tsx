@@ -236,12 +236,12 @@ const IssuesList = ({
         ) : (
           <ChallengeCard
             key={issue.id}
-            challenge={issue as any}
+            challenge={{ ...issue, likes_count: issue.likes_count || 0, age_group: issue.age_group || "" }}
             handleUpvote={() => onVote(issue.id, true)}
             handleDownvote={() => onVote(issue.id, false)}
             handleSubmitSolution={handleSubmitGroupSolution}
             loadingSolution={loadingSolution[issue.id] || false}
-            userVotes={userVotes}
+            userVotes={{ [issue.id]: issue.user_vote }}
             openSolutionForm={false}
             setOpenSolutionForm={() => {}}
             user={user}

@@ -8,6 +8,7 @@ export interface Group {
   name: string;
   created_by: string;
   created_at: string;
+  description?: string;
   memberCount?: number;
   lastActive?: string;
   unreadMessages?: number;
@@ -331,7 +332,8 @@ export const usePrivateGroups = () => {
         .from('private_groups')
         .insert({
           name: name.trim(),
-          created_by: user.id
+          created_by: user.id,
+          description: description?.trim() || ''
         })
         .select()
         .single();

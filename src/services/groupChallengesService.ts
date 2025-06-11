@@ -24,15 +24,40 @@ export const createGroupChallenge = async (
   return result as GroupChallenge;
 };
 
-export const getGroupChallenges = async (groupId: string) => {
-  const { data, error } = await supabase
+export const getGroupChallenges = async (groupId: string, userId?: string) => {
+  // Step 1: Fetch all group challenges
+  const { data: challenges, error: challengesError } = await supabase
     .from("group_challenges")
     .select("*")
     .eq("group_id", groupId)
     .order("created_at", { ascending: false });
 
-  if (error) throw error;
-  return data as GroupChallenge[];
+  if (challengesError) throw challengesError;
+
+  if (!challenges || challenges.length === 0) return [];
+
+  // Step 2: Fetch all votes for these challenges
+  const challengeIds = challenges.map((c: any) => c.id);
+  const { data: votes, error: votesError } = await (supabase as any)
+    .from("group_challenge_votes")
+    .select("group_challenge_id, user_id, is_upvote")
+    .in("group_challenge_id", challengeIds);
+
+  if (votesError) throw votesError;
+
+  // Step 3: Aggregate likes_count and user_vote
+  return challenges.map((challenge: any) => {
+    const challengeVotes = votes?.filter((v: any) => v.group_challenge_id === challenge.id) || [];
+    const likes_count = challengeVotes.filter((v: any) => v.is_upvote).length;
+    const user_vote = userId
+      ? (challengeVotes.find((v: any) => v.user_id === userId)?.is_upvote ?? null)
+      : null;
+    return {
+      ...challenge,
+      likes_count,
+      user_vote
+    };
+  });
 };
 
 export const deleteGroupChallenge = async (challengeId: string) => {
@@ -99,5 +124,52 @@ export const updateGroupChallenge = async (
   } catch (error) {
     console.error("Error in updateGroupChallenge:", error);
     throw error;
+  }
+};
+
+export const voteGroupChallenge = async (
+  groupChallengeId: string,
+  userId: string,
+  isUpvote: boolean
+) => {
+  // Check if the user has already voted
+  const { data: existingVote, error: checkError } = await supabase
+    .from("group_challenge_votes")
+    .select("*")
+    .eq("group_challenge_id", groupChallengeId)
+    .eq("user_id", userId)
+    .maybeSingle();
+
+  if (checkError) throw checkError;
+
+  if (existingVote) {
+    if (existingVote.is_upvote === isUpvote) {
+      // Remove vote
+      const { error: deleteError } = await supabase
+        .from("group_challenge_votes")
+        .delete()
+        .eq("id", existingVote.id);
+      if (deleteError) throw deleteError;
+      return null;
+    } else {
+      // Change vote direction
+      const { error: updateError } = await supabase
+        .from("group_challenge_votes")
+        .update({ is_upvote: isUpvote })
+        .eq("id", existingVote.id);
+      if (updateError) throw updateError;
+      return isUpvote;
+    }
+  } else {
+    // New vote
+    const { error: insertError } = await supabase
+      .from("group_challenge_votes")
+      .insert({
+        group_challenge_id: groupChallengeId,
+        user_id: userId,
+        is_upvote: isUpvote
+      });
+    if (insertError) throw insertError;
+    return isUpvote;
   }
 }; 

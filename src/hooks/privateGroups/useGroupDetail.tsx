@@ -16,6 +16,7 @@ export interface GroupDetail {
   name: string;
   created_by: string;
   created_at: string;
+  description?: string;
   members: GroupMember[];
 }
 
@@ -155,6 +156,7 @@ export const useGroupDetail = (groupId: string) => {
 
       setGroup({
         ...groupData,
+        description: groupData.description,
         members
       });
     } catch (error) {
