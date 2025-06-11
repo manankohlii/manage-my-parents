@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { formatDistanceToNow } from "date-fns";
 import TagBadge from "../TagBadge";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
-import { ThumbsUp, MessageCircle, Pencil, Trash2 } from "lucide-react";
+import { ThumbsUp, MessageCircle, Edit, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Challenge } from "@/services/challenges/types";
 import SolutionsList from "./SolutionsList";
@@ -96,7 +96,7 @@ const ChallengeCard = ({
                       className="ml-2"
                       aria-label="Edit Challenge"
                     >
-                      <Pencil className="h-4 w-4" />
+                      <Edit className="h-4 w-4" />
                     </Button>
                   )}
                   {onDelete && (
@@ -132,7 +132,7 @@ const ChallengeCard = ({
             ))}
           </div>
           <div className="text-xs text-muted-foreground mt-1">
-            By {challenge.display_name || challenge.user_display_name || "Anonymous User"}
+            By {challenge.display_name || "Anonymous User"}
           </div>
         </CardHeader>
         <CardContent>
@@ -222,10 +222,10 @@ const ChallengeCard = ({
             }
           }}>{challenge.title}</h3>
           <div className="flex items-center gap-2">
-            <div className="text-sm text-gray-500">
-              {formatDistanceToNow(new Date(challenge.created_at), {
-                addSuffix: true,
-              })}
+          <div className="text-sm text-gray-500">
+            {formatDistanceToNow(new Date(challenge.created_at), {
+              addSuffix: true,
+            })}
             </div>
           </div>
         </div>
@@ -235,7 +235,7 @@ const ChallengeCard = ({
           ))}
         </div>
         <div className="text-xs text-muted-foreground mt-1">
-          By {challenge.display_name || challenge.user_display_name || "Anonymous User"}
+          By {challenge.display_name || "Anonymous User"}
         </div>
       </CardHeader>
       <CardContent>
@@ -272,15 +272,15 @@ const ChallengeCard = ({
           </Button>
         </form>
         {exploreShowSolutions && (
-          <SolutionsList
-            challengeId={challenge.id}
-            solutions={solutions || []}
-            handleVote={handleVote}
-            userVotes={userVotes}
-            user={user}
+        <SolutionsList 
+          challengeId={challenge.id}
+          solutions={solutions || []}
+          handleVote={handleVote}
+          userVotes={userVotes}
+          user={user}
             onSolutionDeleted={onSolutionDeleted}
-          />
-        )}
+        />
+      )}
       </CardContent>
       <CardFooter className="flex items-center justify-end">
         <Button 

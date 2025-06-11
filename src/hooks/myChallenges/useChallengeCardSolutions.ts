@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { getSolutions, voteSolution, Solution } from "@/services/solutionsService";
 import { toast } from "sonner";
@@ -80,6 +79,7 @@ export const useChallengeCardSolutions = (challengeId: string, userId?: string) 
     showSolutions,
     setShowSolutions,
     solutions,
+    setSolutions,
     loading,
     userVotes,
     handleViewSolutions,

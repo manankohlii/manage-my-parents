@@ -75,15 +75,15 @@ const ChallengeForm = ({ onSubmit, onClose, challenge, onUpdate, onSubmitChallen
     const loadData = async () => {
       if (!user?.id || challenge) return; // Skip if editing or no user
 
-      try {
+        try {
         // Load user profile
         const { data: profile, error } = await supabase
-          .from("profiles")
-          .select("city, country")
-          .eq("id", user.id)
-          .single();
-        
-        if (error) {
+            .from("profiles")
+            .select("city, country")
+            .eq("id", user.id)
+            .single();
+          
+          if (error) {
           console.error("Error loading profile:", error);
         } else if (profile && !challenge) { // Only set location if not editing
           setFormData(prev => ({
@@ -167,7 +167,7 @@ const ChallengeForm = ({ onSubmit, onClose, challenge, onUpdate, onSubmitChallen
           : "Your challenge has been shared with the community.",
       });
 
-      // Reset form
+        // Reset form
       setFormData({
         title: "",
         description: "",
@@ -192,7 +192,7 @@ const ChallengeForm = ({ onSubmit, onClose, challenge, onUpdate, onSubmitChallen
   };
   
   return (
-    <div className="bg-white rounded-lg shadow-md p-6">
+    <div className="relative bg-white rounded-lg shadow-md p-6">
       <Button
         type="button"
         onClick={onClose}
