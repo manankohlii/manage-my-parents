@@ -81,29 +81,16 @@ const SolutionsList = ({
       {parentSolutions.map((solution) => (
         <div 
           key={solution.id} 
-          className="bg-muted/90 dark:bg-muted/60 p-3 rounded-md flex flex-col gap-2"
+          className="bg-muted/90 dark:bg-muted/60 p-3 rounded-md flex flex-col gap-2 w-full mx-0"
         >
           <div className="flex justify-between items-start">
             <div className="flex-1">
-              <p className="text-sm">{solution.text}</p>
+              <p className="text-base break-words whitespace-pre-line mb-2 w-full">{solution.text}</p>
               <p className="text-xs text-muted-foreground mt-1">
                 By {solution.author_name || "Anonymous User"} • {new Date(solution.created_at).toLocaleDateString()}
               </p>
             </div>
             <div className="flex items-center gap-2 min-w-[120px] justify-end">
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                className="h-8 w-8"
-                onClick={() => handleVote(challengeId, solution.id, 'up')}
-                disabled={!user}
-              >
-                <ThumbsUp 
-                  size={16} 
-                  className={userVotes[solution.id] === true ? "text-green-500 fill-green-500" : ""} 
-                />
-              </Button>
-              <span className="text-sm font-medium min-w-[24px] text-center">{solution.votes || 0}</span>
               {user && solution.user_id === user.id ? (
                 <Button
                   variant="ghost"
@@ -156,9 +143,9 @@ const SolutionsList = ({
             {repliesByParent[solution.id]?.length > 0 && (
               <div className="ml-6 mt-2 space-y-2 border-l-2 border-muted-foreground/20 pl-4 bg-muted/40 rounded-md">
                 {repliesByParent[solution.id].map(reply => (
-                  <div key={reply.id} className="flex justify-between items-center py-1">
+                  <div key={reply.id} className="flex justify-between items-center py-1 w-full">
                     <div>
-                      <p className="text-xs">{reply.text}</p>
+                      <p className="text-xs break-words whitespace-pre-line mb-1 w-full">{reply.text}</p>
                       <p className="text-xs text-muted-foreground mt-1">
                         By {reply.author_name || "Anonymous User"} • {new Date(reply.created_at).toLocaleDateString()}
                       </p>

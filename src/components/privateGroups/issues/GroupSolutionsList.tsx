@@ -66,7 +66,7 @@ const GroupSolutionsList = ({
       {parentSolutions.map((solution) => (
         <div 
           key={solution.id} 
-          className="bg-muted/90 dark:bg-muted/60 p-3 rounded-md flex flex-col gap-2"
+          className="bg-muted/90 dark:bg-muted/60 p-3 rounded-md flex flex-col gap-2 w-full mx-0"
           onClick={() => {
             console.log('Solution clicked:', solution);
             if (user) {
@@ -74,9 +74,9 @@ const GroupSolutionsList = ({
             }
           }}
         >
-          <div className="flex justify-between items-start">
-            <div className="flex-1">
-              <p className="text-sm">{solution.text}</p>
+          <div className="flex justify-between items-start w-full">
+            <div className="flex-1 w-full">
+              <p className="text-base break-words whitespace-pre-line mb-2 w-full">{solution.text}</p>
               <p className="text-xs text-muted-foreground mt-1">
                 By {solution.display_name || "Anonymous User"} • {new Date(solution.created_at).toLocaleDateString()}
               </p>
@@ -132,11 +132,11 @@ const GroupSolutionsList = ({
             )}
             {/* Render replies */}
             {repliesByParent[solution.id]?.length > 0 && (
-              <div className="ml-6 mt-2 space-y-2 border-l-2 border-muted-foreground/20 pl-4 bg-muted/40 rounded-md">
+              <div className="ml-6 mt-2 space-y-2 border-l-2 border-muted-foreground/20 pl-4 bg-muted/40 rounded-md w-full">
                 {repliesByParent[solution.id].map(reply => (
-                  <div key={reply.id} className="flex justify-between items-center py-1">
-                    <div>
-                      <p className="text-xs">{reply.text}</p>
+                  <div key={reply.id} className="flex justify-between items-center py-1 w-full">
+                    <div className="w-full">
+                      <p className="text-xs break-words whitespace-pre-line mb-1 w-full">{reply.text}</p>
                       <p className="text-xs text-muted-foreground mt-1">
                         By {reply.display_name || "Anonymous User"} • {new Date(reply.created_at).toLocaleDateString()}
                       </p>
