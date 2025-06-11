@@ -74,7 +74,12 @@ const ChallengeCard = ({
       <Card className="w-full">
         <CardHeader>
           <div className="flex items-center justify-between">
-            <h3 className="text-lg font-semibold">{challenge.title}</h3>
+            <h3 className="text-lg font-semibold" onClick={() => {
+              console.log('Challenge clicked:', challenge);
+              if (user) {
+                console.log('Current user:', user);
+              }
+            }}>{challenge.title}</h3>
             <div className="flex items-center gap-2">
               <div className="text-sm text-gray-500">
                 {formatDistanceToNow(new Date(challenge.created_at), {
@@ -127,7 +132,7 @@ const ChallengeCard = ({
             ))}
           </div>
           <div className="text-xs text-muted-foreground mt-1">
-            By {challenge.display_name || "Anonymous User"}
+            By {challenge.display_name || challenge.user_display_name || "Anonymous User"}
           </div>
         </CardHeader>
         <CardContent>
@@ -210,7 +215,12 @@ const ChallengeCard = ({
     <Card className="w-full">
       <CardHeader>
         <div className="flex items-center justify-between">
-          <h3 className="text-lg font-semibold">{challenge.title}</h3>
+          <h3 className="text-lg font-semibold" onClick={() => {
+            console.log('Challenge clicked:', challenge);
+            if (user) {
+              console.log('Current user:', user);
+            }
+          }}>{challenge.title}</h3>
           <div className="flex items-center gap-2">
             <div className="text-sm text-gray-500">
               {formatDistanceToNow(new Date(challenge.created_at), {
@@ -225,7 +235,7 @@ const ChallengeCard = ({
           ))}
         </div>
         <div className="text-xs text-muted-foreground mt-1">
-          By {challenge.display_name || "Anonymous User"}
+          By {challenge.display_name || challenge.user_display_name || "Anonymous User"}
         </div>
       </CardHeader>
       <CardContent>

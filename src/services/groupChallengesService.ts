@@ -28,7 +28,7 @@ export const getGroupChallenges = async (groupId: string, userId?: string) => {
   // Step 1: Fetch all group challenges
   const { data: challenges, error: challengesError } = await supabase
     .from("group_challenges")
-    .select("*")
+    .select("*, profile:profiles(display_name)")
     .eq("group_id", groupId)
     .order("created_at", { ascending: false });
 
@@ -55,7 +55,8 @@ export const getGroupChallenges = async (groupId: string, userId?: string) => {
     return {
       ...challenge,
       likes_count,
-      user_vote
+      user_vote,
+      display_name: challenge.profile?.display_name || "Anonymous User"
     };
   });
 };
