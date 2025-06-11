@@ -17,12 +17,6 @@ const ChallengeCardContent = ({ description, tags, location }: ChallengeCardCont
           <TagBadge key={tag} text={tag} />
         ))}
       </div>
-      
-      <div className="text-sm text-muted-foreground">
-        <div className="flex items-center justify-between">
-          <span>Location: {location}</span>
-        </div>
-      </div>
     </CardContent>
   );
 };
