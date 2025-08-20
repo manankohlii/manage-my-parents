@@ -107,24 +107,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       if (signUpError) throw signUpError;
 
-      // Create profile in profiles table
+      // Rely on DB trigger to create the profile row.
+      // If a session exists immediately (email confirmations off), best-effort update profile fields.
       if (authData.user) {
-        const { error: profileError } = await supabase
-          .from('profiles')
-          .insert({
-            id: authData.user.id,
-            first_name: userData.firstName,
-            last_name: userData.lastName || "",
-            display_name: userData.displayName,
-            city: userData.city || "",
-            country: userData.country || "",
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString()
-          });
-
-        if (profileError) {
-          console.error("Error creating profile:", profileError);
-          throw profileError;
+        try {
+          const { data: { session: activeSession } } = await supabase.auth.getSession();
+          if (activeSession) {
+            await supabase
+              .from('profiles')
+              .update({
+                first_name: userData.firstName,
+                last_name: userData.lastName || "",
+                display_name: userData.displayName,
+                city: userData.city || "",
+                country: userData.country || "",
+                updated_at: new Date().toISOString()
+              })
+              .eq('id', authData.user.id);
+          }
+        } catch (e) {
+          console.error('Deferred profile update failed (will be hydrated later):', e);
         }
       }
 

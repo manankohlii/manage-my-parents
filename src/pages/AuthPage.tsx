@@ -150,7 +150,7 @@ const RegisterForm = () => {
       );
       
       if (success) {
-        toast.success("Registration successful! Check your email to confirm your account.");
+        toast.success("Account created!");
       } else if (error) {
         setError(error.message);
       }
